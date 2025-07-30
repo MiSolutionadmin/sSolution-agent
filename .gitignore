@@ -1,0 +1,77 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# Flutter / Dart
+# ─────────────────────────────────────────────────────────────────────────────
+
+# Dart tool, 패키지, 플러그인 캐시
+.dart_tool/
+.packages
+.pub/
+.pub-cache/
+.flutter-plugins
+.flutter-plugins-dependencies
+
+# 빌드 출력물
+build/
+
+# 환경 변수 스크립트 (Optional)
+flutter_export_environment.sh
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Android
+# ─────────────────────────────────────────────────────────────────────────────
+android/.gradle/
+android/local.properties        # 안드로이드 SDK 경로
+android/app/debug.keystore      # 디버그 키스토어
+
+# ─────────────────────────────────────────────────────────────────────────────
+# iOS
+# ─────────────────────────────────────────────────────────────────────────────
+ios/Flutter/Generated.xcconfig
+ios/Flutter/Flutter.podspec
+ios/Pods/
+ios/Podfile.lock
+ios/.symlinks/
+ios/Runner.xcworkspace/
+ios/Runner.xcodeproj/project.xcworkspace/
+# Xcode 사용자 설정 (Optional)
+*.xcuserstate
+*.xcuserdata
+
+# ─────────────────────────────────────────────────────────────────────────────
+# macOS
+# ─────────────────────────────────────────────────────────────────────────────
+macos/Flutter/GeneratedPluginRegistrant.swift
+macos/Pods/
+macos/Podfile.lock
+macos/.symlinks/
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Windows / Linux
+# ─────────────────────────────────────────────────────────────────────────────
+windows/flutter/ephemeral/
+linux/flutter/ephemeral/
+
+# ─────────────────────────────────────────────────────────────────────────────
+# IDE / Editor
+# ─────────────────────────────────────────────────────────────────────────────
+# IntelliJ / Android Studio
+.idea/
+*.iml
+
+# VS Code
+.vscode/
+
+# ─────────────────────────────────────────────────────────────────────────────
+# 기타
+# ─────────────────────────────────────────────────────────────────────────────
+# 로그 파일
+*.log
+
+# 테스트 커버리지
+coverage/
+
+# 임시 파일
+*.tmp
+*.temp
+*.swp
+*.lock
