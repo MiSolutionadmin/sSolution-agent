@@ -10,7 +10,7 @@ Future<List> getAlimNotification(String docId) async {
 
 
   final us = Get.put(UserState());
-  final url = '${config.apiUrl}/getNotificationData?docId=${docId}';
+  final url = '${config.baseUrl}/getNotificationData?docId=${docId}';
   final response = await http.get(Uri.parse(url));
   List<dynamic> dataList = json.decode(response.body);
   return dataList;
@@ -24,7 +24,7 @@ Future<Map<String, dynamic>> getAllNotificationData() async {
     final token = await secureStorage.read(key: "jwt_token");
 
     final response = await http.get(
-      Uri.parse('${config.apiUrl}/notis'),
+      Uri.parse('${config.baseUrl}/notis'),
       headers: {
         "Content-Type": "application/json",
         "authorization": "Bearer $token", // ✅ 토큰 포함 필수

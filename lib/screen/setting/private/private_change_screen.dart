@@ -9,7 +9,7 @@ import 'package:http/http.dart' as http;
 import '../../../components/dialog.dart';
 import '../../../db/user_table.dart';
 import '../../../provider/user_state.dart';
-import '../../login/login_name_screen.dart';
+import '../../login/login_view.dart';
 import '../../login/pw_change_screen.dart';
 import '../../../utils/bootpay.dart';
 import '../../../utils/font/font.dart';
@@ -117,7 +117,7 @@ class _PrivateChangeState extends State<PrivateChange> {
                   showConfirmTapDialog(context, '회원탈퇴하시겠습니까?', ()async{
                     await deleteUser('${us.userList[0]['email']}');
                     showOnlyConfirmTapDialog(context, '탈퇴가 완료되었습니다', () {
-                      Get.offAll(()=>LoginName());
+                      Get.offAll(()=>LoginView());
                     });
                   });
                 },

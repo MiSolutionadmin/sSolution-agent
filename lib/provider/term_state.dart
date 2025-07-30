@@ -18,7 +18,7 @@ class TermState extends GetxController{
     privateContext.value = "";
 
     try {
-      final url = '${config.apiUrl}/getTermHtmlByDate?date=$date&type=$type';
+      final url = '${config.baseUrl}/getTermHtmlByDate?date=$date&type=$type';
       final response = await http.get(Uri.parse(url));
 
       if (response.statusCode == 200) {
@@ -43,7 +43,7 @@ class TermState extends GetxController{
     termDateList.clear();
 
     try {
-      final url = '${config.apiUrl}/ssolutionTermList?type=$type';
+      final url = '${config.baseUrl}/ssolutionTermList?type=$type';
       final response = await http.get(Uri.parse(url));
       List<dynamic> termList = jsonDecode(response.body);
       termDateList.addAll(termList);

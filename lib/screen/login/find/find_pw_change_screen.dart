@@ -7,7 +7,7 @@ import '../../../base_config/config.dart';
 import '../../../components/dialog.dart';
 import '../../../utils/encryption.dart';
 import '../../../utils/font/font.dart';
-import '../login_name_screen.dart';
+import '../login_view.dart';
 
 
 class FindPwChange extends StatefulWidget {
@@ -196,7 +196,7 @@ class _FindPwChangeState extends State<FindPwChange> {
             }
             else if (_pwCon2.text.trim().isNotEmpty) {
               await changePw(_pwCon2.text.trim());
-              showOnlyConfirmTapDialog(context, '비밀번호가 변경되었습니다', () {Get.offAll(() => LoginName());});
+              showOnlyConfirmTapDialog(context, '비밀번호가 변경되었습니다', () {Get.offAll(() => LoginView());});
             } else {
               showOnlyConfirmDialog(context, '입력되지 않은 값이 있습니다');
             }
@@ -258,7 +258,7 @@ class _FindPwChangeState extends State<FindPwChange> {
     };
 
     final response = await http.post(
-        Uri.parse('${config.apiUrl}/changepw'),
+        Uri.parse('${config.baseUrl}/changepw'),
         body: body
     );
 

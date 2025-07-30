@@ -17,7 +17,7 @@ import '../components/dialog.dart';
 import '../db/camera_table.dart';
 import '../provider/camera_state.dart';
 import '../provider/notification_state.dart';
-import '../screen/bottom_navigator.dart';
+import '../screen/navigation/bottom_navigator_view.dart';
 import '../screen/monitoring/monitoring_main_screen.dart';
 import '../vstarcam/main/main_logic.dart';
 import '../vstarcam/play/play_logic.dart';

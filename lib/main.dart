@@ -20,8 +20,8 @@ import 'components/updateVersion.dart';
 import 'db/user_table.dart';
 import 'provider/user_state.dart';
 import 'routes/app_routes.dart';
-import 'screen/bottom_navigator.dart';
-import 'screen/login/login_name_screen.dart';
+import 'screen/navigation/bottom_navigator_view.dart';
+import 'screen/login/login_view.dart';
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
 void main() async {

@@ -8,7 +8,7 @@ import 'package:package_info_plus/package_info_plus.dart';
 import '../../components/dialog.dart';
 import '../../db/user_table.dart';
 import '../../provider/user_state.dart';
-import '../login/login_name_screen.dart';
+import '../login/login_view.dart';
 import '../../../utils/font/font.dart';
 import 'admin/admin_setting_screen.dart';
 import 'notification/setting_notification_screen.dart';
@@ -71,7 +71,7 @@ class _SettingMainState extends State<SettingMain> {
   //       await tokenDelete();
   //       await storage.delete(key: 'pws');
   //       us.userList.clear();
-  //       Get.offAll(()=>LoginName());
+  //       Get.offAll(()=>LoginView());
   //     }
   //   });
   // }

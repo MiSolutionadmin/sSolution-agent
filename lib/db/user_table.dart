@@ -7,14 +7,14 @@ import 'package:http/http.dart' as http;
 import '../base_config/config.dart';
 import '../components/dialog.dart';
 import '../provider/user_state.dart';
-import '../screen/login/login_name_screen.dart';
+import '../screen/login/login_view.dart';
 import '../utils/font/font.dart';
 
 
 final config = AppConfig();
 /// 선택된 관리자 삭제시키는 버튼
 Future<void> deleteUser(String email) async{
-  final url = '${config.apiUrl}/deleteSetting?id=${email}';
+  final url = '${config.baseUrl}/deleteSetting?id=${email}';
   final response = await http.get(Uri.parse(url));
   if (response.statusCode != 200) {
     print('에러에러');
@@ -38,7 +38,7 @@ Future<Map<String, dynamic>> getUser(String id, String pw) async {
   try {
     print("로그인 시도중...${body}");
     final response = await http.post(
-        Uri.parse('${config.apiUrl}/auth/agent'),
+        Uri.parse('${config.baseUrl}/auth/agent'),
         body: body
     );
 
@@ -57,7 +57,7 @@ Future<Map<String, dynamic>> getUser(String id, String pw) async {
 
 Future<void> getUserWithOutToken(String id) async {
   final us = Get.put(UserState());
-  final url = '${config.apiUrl}/loginWithoutToken?id=${id}';
+  final url = '${config.baseUrl}/loginWithoutToken?id=${id}';
   final response = await http.get(Uri.parse(url));
 
   List<dynamic> dataList = json.decode(response.body);
@@ -71,7 +71,7 @@ Future<void> getUserWithOutToken(String id) async {
 }
 /// 로그아웃했을 시 토큰 업데이트
 Future<void> tokenDelete(context) async {
-  final url = '${config.apiUrl}/agent/${us.userData["id"]}/token';
+  final url = '${config.baseUrl}/agent/${us.userData["id"]}/token';
   try {
     final response = await http.delete(Uri.parse(url));
     if (response.statusCode != 200) {
@@ -85,7 +85,7 @@ Future<void> tokenDelete(context) async {
 /// 토큰 업데이트
 Future<void> userTokenUpdate(String token) async {
   final us = Get.put(UserState());
-  final url = '${config.apiUrl}/insertToken?docId=${us.userList[0]['docId']}&token=${token}';
+  final url = '${config.baseUrl}/insertToken?docId=${us.userList[0]['docId']}&token=${token}';
   final response = await http.get(Uri.parse(url));
   if (response.statusCode != 200) {
     print('에러에러');
@@ -96,7 +96,7 @@ Future<void> userTokenUpdate(String token) async {
 /// 핸드폰 번호 변경
 Future<void> changePhoneNumber(String phone) async {
   final us = Get.put(UserState());
-  final url = '${config.apiUrl}/changePhone?id=${us.userList[0]['email']}&phone=${phone}';
+  final url = '${config.baseUrl}/changePhone?id=${us.userList[0]['email']}&phone=${phone}';
   final response = await http.get(Uri.parse(url));
   if (response.statusCode != 200) {
     throw Exception('Failed');
@@ -106,7 +106,7 @@ Future<void> changePhoneNumber(String phone) async {
 /// 버전 정보 가져오기
 Future<List> getVersion() async {
   final us = Get.put(UserState());
-  final url = '${config.apiUrl}/getVersion';
+  final url = '${config.baseUrl}/getVersion';
   final response = await http.get(Uri.parse(url));
   List<dynamic> dataList = json.decode(response.body);
   return dataList;
@@ -119,7 +119,7 @@ Future<List> getVersion() async {
 /// 버전 정보 가져오기
 Future<void> updateVersion(String field) async {
   final us = Get.put(UserState());
-  final url = '${config.apiUrl}/updateVersion';
+  final url = '${config.baseUrl}/updateVersion';
   final body = ({
     'field':'${field}',
     'docId': '${us.userList[0]['docId']}'
@@ -134,7 +134,7 @@ Future<void> updateVersion(String field) async {
 Future<void> checkDuplicateLogin(BuildContext context) async {
 
   final us = Get.put(UserState());
-  final url = '${config.apiUrl}/checkDuplicateLogin';
+  final url = '${config.baseUrl}/checkDuplicateLogin';
   final body = ({
     'token':'${us.userList[0]['token']}'
   });
@@ -144,7 +144,7 @@ Future<void> checkDuplicateLogin(BuildContext context) async {
       // await tokenDelete();
       await storage.delete(key: 'pws');
       us.userList.clear();
-      Get.offAll(()=>LoginName());
+      Get.offAll(()=>LoginView());
     });
   }
   if (response.statusCode != 200) {

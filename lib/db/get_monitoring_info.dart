@@ -8,7 +8,7 @@ final config = AppConfig();
 /// 모니터링 정보 가져오기
 Future<void> MonitoringInfo() async{
   final us = Get.put(UserState());
-  final url = '${config.apiUrl}/monitoInfo?id=${us.userList[0]['mms']}';
+  final url = '${config.baseUrl}/monitoInfo?id=${us.userList[0]['mms']}';
   final response = await http.get(Uri.parse(url));
   Map<String, dynamic> dataList = json.decode(response.body);
   if(response.body !='{}'){
@@ -23,7 +23,7 @@ Future<void> MonitoringInfo() async{
 /// 페이지 모니터링 정보 가져오기
 Future<void> pageMonitoringInfo(String mms) async{
   final us = Get.put(UserState());
-  final url = '${config.apiUrl}/monitoInfo?id=${mms}';
+  final url = '${config.baseUrl}/monitoInfo?id=${mms}';
   final response = await http.get(Uri.parse(url));
   Map<String, dynamic> dataList = json.decode(response.body);
   if(response.body !='{}'){
@@ -39,7 +39,7 @@ Future<void> pageMonitoringInfo(String mms) async{
 /// 알람 모니터링 정보 가져오기
 Future<void> alimMonitoringInfo(String mms) async{
   final us = Get.put(UserState());
-  final url = '${config.apiUrl}/monitoInfo?id=${mms}';
+  final url = '${config.baseUrl}/monitoInfo?id=${mms}';
   final response = await http.get(Uri.parse(url));
   Map<String, dynamic> dataList = json.decode(response.body);
   if(response.body !='{}'){
@@ -176,7 +176,7 @@ Future<void> allSwitch(String field) async {
 /// mms 타이머 초기화
 Future<void> alimTimerClear(String mms,String field,String timeField) async {
   final us = Get.put(UserState());
-  final url = '${config.apiUrl}/mmsTimerClear';
+  final url = '${config.baseUrl}/mmsTimerClear';
   final body = {
     'mms': mms,
     'field': field,
@@ -266,9 +266,9 @@ Future<void> getMmsList() async {
   final us = Get.put(UserState());
   String? url;
   if(emails.contains(us.userList[0]['email'])){
-    url = '${config.apiUrl}/getTestIndexmms?email=${us.userList[0]['email']}';
+    url = '${config.baseUrl}/getTestIndexmms?email=${us.userList[0]['email']}';
   }else{
-    url = '${config.apiUrl}/getIndexmms?headDocId=${us.userList[0]['headDocId']}&userDocId=${us.userList[0]['docId']}';
+    url = '${config.baseUrl}/getIndexmms?headDocId=${us.userList[0]['headDocId']}&userDocId=${us.userList[0]['docId']}';
   }
 
   final response = await http.get(Uri.parse(url));
@@ -295,7 +295,7 @@ Future<void> getMmsList() async {
 /// 유저에 있는 mms 업데이트
 Future<void> userMmsUpdate(String mms) async{
   final us = Get.put(UserState());
-  final url = '${config.apiUrl}/updatemms?mms=${mms}&email=${us.userList[0]['email']}';
+  final url = '${config.baseUrl}/updatemms?mms=${mms}&email=${us.userList[0]['email']}';
   final response = await http.get(Uri.parse(url));
   if (response.statusCode != 200) {
     print('에러에러');
@@ -307,7 +307,7 @@ Future<void> userMmsUpdate(String mms) async{
 Future<void> userMmsListUpdate(List mmsList) async{
   final us = Get.put(UserState());
   final response = await http.post(
-      Uri.parse('${config.apiUrl}/getMmsIndexUpdate'),
+      Uri.parse('${config.baseUrl}/getMmsIndexUpdate'),
       headers: {
         'Content-Type': 'application/json',
       },

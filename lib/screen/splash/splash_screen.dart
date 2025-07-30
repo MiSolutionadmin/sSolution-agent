@@ -16,8 +16,9 @@ import '../../db/user_table.dart';
 import '../../provider/term_state.dart';
 import '../../provider/user_state.dart';
 import '../alim/alim_main_page.dart';
-import '../bottom_navigator.dart';
-import '../login/login_name_screen.dart';
+import '../navigation/bottom_navigator_view.dart';
+import '../login/login_view.dart';
+import '../login/login_view_model.dart';
 
 class SplashPage extends StatefulWidget {
   const SplashPage({Key? key}) : super(key: key);
@@ -149,8 +150,8 @@ class _SplashPageState extends State<SplashPage> {
 
       us.userData.value = data["user"];
 
-      // Get.offAll(() => AlimScreen());
-      Get.offAll(() => BottomNavigator());
+      // 공통 로그인 성공 처리 함수 사용
+      await LoginViewModel.handleLoginSuccess(data["user"]);
 
     }catch(e){
       if (e.toString().contains('로그인 실패'))
@@ -159,7 +160,7 @@ class _SplashPageState extends State<SplashPage> {
       } else {
         showOnlyConfirmDialog(context, "서버 오류로 로그인에 실패했습니다.\n잠시 후 다시 시도해주세요.");
       }
-      Get.offAll(() => LoginName());
+      Get.offAll(() => LoginView());
     }
   }
 
@@ -186,8 +187,8 @@ class _SplashPageState extends State<SplashPage> {
       ),
       screenFunction: () async {
         return us.userList.length == 1 ?
-        BottomNavigator() : /// ✅ 메인화면
-        LoginName(); /// ✅ 로그인화면
+        BottomNavigatorView() : /// ✅ 메인화면
+        LoginView(); /// ✅ 로그인화면
       },
     );
   }

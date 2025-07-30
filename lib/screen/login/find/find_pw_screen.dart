@@ -145,7 +145,7 @@ class _FindPwState extends State<FindPw> {
 
   /// 아이디 찾기
   Future<String> findId(String phoneNum) async{
-    final url = '${config.apiUrl}/findid?phoneNumber=$phoneNum';
+    final url = '${config.baseUrl}/findid?phoneNumber=$phoneNum';
     final response = await http.get(Uri.parse(url));
     if (response.statusCode != 200) {
       throw Exception('Failed');

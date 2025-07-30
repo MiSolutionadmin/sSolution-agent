@@ -3,8 +3,11 @@ import 'dart:io';
 import 'package:get/get.dart';
 import 'package:path_provider/path_provider.dart';
 import '../db/camera_table.dart';
+import '../base_config/config.dart';
 import 'package:http/http.dart' as http;
+
 class UserState extends GetxController{
+  final config = AppConfig();
   /// ✅ 유저데이터 (단일)
   final userList = [].obs;
 
@@ -122,7 +125,7 @@ class UserState extends GetxController{
   /// 상수도 유입 밸브 알림 추가 함수
   Future<void> alimAdd(String mms,String title,String bodys,String cameraUid,String ipCamId,String num,String fieldCheck,String mmsName)async{
     try{
-      final url = '${config.apiUrl}/notiAdd';
+      final url = '${config.baseUrl}/notiAdd';
       final body = ({
         'mms':'${mms}',
         "title": "${title}",
@@ -156,7 +159,7 @@ class UserState extends GetxController{
     releaseNote.clear();
 
     try{
-      final url = '${config.apiUrl}/getReleaseNoteList';
+      final url = '${config.baseUrl}/getReleaseNoteList';
       /// get data
       final response = await http.get(Uri.parse(url));
       print("response ${response.body}");
@@ -178,7 +181,7 @@ class UserState extends GetxController{
     final body = jsonEncode({'email': email}); // JSON 형식으로 변환
 
     try{
-      final url = '${config.apiUrl}/changeReleaseNoteStatus';
+      final url = '${config.baseUrl}/changeReleaseNoteStatus';
       /// get data
       final response = await http.post(
           Uri.parse(url),

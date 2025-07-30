@@ -4,7 +4,7 @@ import 'package:get/get.dart';
 import 'package:http/http.dart' as http;
 import '../../base_config/config.dart';
 import '../../utils/font/font.dart';
-import '../bottom_navigator.dart';
+import '../navigation/bottom_navigator_view.dart';
 import '../../components/dialog.dart';
 import '../../provider/user_state.dart';
 import '../../utils/encryption.dart';
@@ -165,7 +165,7 @@ class _PwChangeState extends State<PwChange> {
             }
             else if (_pwCon2.text.trim().isNotEmpty) {
               await changePw(_pwCon2.text.trim());
-              showOnlyConfirmTapDialogWillpop(context, '비밀번호가 변경되었습니다', () {Get.offAll(() => BottomNavigator());});
+              showOnlyConfirmTapDialogWillpop(context, '비밀번호가 변경되었습니다', () {Get.offAll(() => BottomNavigatorView());});
             } else {
               showOnlyConfirmDialog(context, '입력되지 않은 값이 있습니다');
             }
@@ -237,7 +237,7 @@ class _PwChangeState extends State<PwChange> {
     };
 
     final response = await http.post(
-        Uri.parse('${config.apiUrl}/changepw'),
+        Uri.parse('${config.baseUrl}/changepw'),
         body: body
     );
 

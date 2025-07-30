@@ -99,7 +99,7 @@ class _FireSettingScreenState extends State<SettingNotificationScreen> {
   Future<void> GetUserNoti() async {
     final us = Get.put(UserState());
     final url =
-        '${config.apiUrl}/getUserAlim?docId=${us.userList[0]['docId']}';
+        '${config.baseUrl}/getUserAlim?docId=${us.userList[0]['docId']}';
     final response = await http.get(Uri.parse(url));
     Map<String, dynamic> dataList = json.decode(response.body);
     alimList = [dataList];
@@ -114,7 +114,7 @@ class _FireSettingScreenState extends State<SettingNotificationScreen> {
   Future<void> updateNoti(String field, bool value) async {
     final us = Get.put(UserState());
     final url =
-        '${config.apiUrl}/updateNoti?docId=${alimList[0]['docId']}&field=${field}&value=${value}';
+        '${config.baseUrl}/updateNoti?docId=${alimList[0]['docId']}&field=${field}&value=${value}';
     final response = await http.get(Uri.parse(url));
 
     if (response.statusCode != 200) {

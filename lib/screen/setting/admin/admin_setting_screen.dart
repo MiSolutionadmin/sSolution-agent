@@ -249,7 +249,7 @@ class _AdminSettingState extends State<AdminSetting> {
   /// 같은 mms 정보 가져오기
   Future<void> getUserInfo() async{
     final us= Get.put(UserState());
-    final url = '${config.apiUrl}/selectSetting?id=${us.userList[0]['headDocId']}';
+    final url = '${config.baseUrl}/selectSetting?id=${us.userList[0]['headDocId']}';
     final response = await http.get(Uri.parse(url));
     List<dynamic> dataList = json.decode(response.body);
     us.userSettingData.value = dataList;
@@ -275,7 +275,7 @@ class _AdminSettingState extends State<AdminSetting> {
 
   /// 선택된 관리자 삭제시키는 버튼
   Future<void> deleteUser(String email) async{
-    final url = '${config.apiUrl}/deleteSetting?id=${email}';
+    final url = '${config.baseUrl}/deleteSetting?id=${email}';
     final response = await http.get(Uri.parse(url));
     if (response.statusCode != 200) {
       print('에러에러');
@@ -284,7 +284,7 @@ class _AdminSettingState extends State<AdminSetting> {
   }
   /// 주관리자가 일반에게 권한 넘겨주기
   Future<void> updateHead(String email, String docId, String mms) async{
-    final url = '${config.apiUrl}/headUpdate?email=${email}&myEmail=${us.userList[0]['email']}&docId=${docId}&mms=${mms}&headDocId=${us.userList[0]['headDocId']}';
+    final url = '${config.baseUrl}/headUpdate?email=${email}&myEmail=${us.userList[0]['email']}&docId=${docId}&mms=${mms}&headDocId=${us.userList[0]['headDocId']}';
     final response = await http.get(Uri.parse(url));
     Map<String, dynamic> parsedJson = jsonDecode(response.body);
     updateH = parsedJson['success'] == 'true';

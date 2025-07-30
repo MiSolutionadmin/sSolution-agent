@@ -172,12 +172,12 @@ class _AdminAddScreenState extends State<AdminAddScreen> {
     final us= Get.put(UserState());
 
     /// camera
-    final cameraUri = '${config.apiUrl}/getAdminCamera?email=${us.userList[0]['headDocId']}';
+    final cameraUri = '${config.baseUrl}/getAdminCamera?email=${us.userList[0]['headDocId']}';
     final responses = await http.get(Uri.parse(cameraUri));
     List newList = List.from(json.decode(responses.body));
     final cameraUids = newList.map((cameraItem) => cameraItem['cameraUid']).toList();
 
-    final url = '${config.apiUrl}/userInsert2';
+    final url = '${config.baseUrl}/userInsert2';
     final body = ({
       'headDocId' : '${us.userList[0]['docId']}',
       'headEmail':'${us.userList[0]['email']}',
@@ -221,7 +221,7 @@ class _AdminAddScreenState extends State<AdminAddScreen> {
   }
   /// 아이디 중복 체크
   Future<void> checkEmail() async {
-    final url = '${config.apiUrl}/checkEmailSetting?email=${_textConL[1].text}';
+    final url = '${config.baseUrl}/checkEmailSetting?email=${_textConL[1].text}';
     final response = await http.get(Uri.parse(url));
     List<dynamic> dataList = json.decode(response.body);
 

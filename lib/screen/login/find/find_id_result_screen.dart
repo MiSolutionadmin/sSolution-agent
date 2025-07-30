@@ -5,7 +5,7 @@ import 'package:get/get.dart';
 import 'package:get/get_core/src/get_main.dart';
 
 import '../../../utils/font/font.dart';
-import '../login_name_screen.dart';
+import '../login_view.dart';
 
 
 class FindIdResult extends StatefulWidget {
@@ -82,7 +82,7 @@ class _FindIdResultState extends State<FindIdResult> {
         ),
         bottomNavigationBar: GestureDetector(
           onTap: () async {
-            Get.offAll(()=> LoginName());
+            Get.offAll(()=> LoginView());
           },
           child: Container(
             width: Get.width,
