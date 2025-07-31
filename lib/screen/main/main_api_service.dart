@@ -138,8 +138,7 @@ class MainApiService {
       }
 
       final response = await http.get(
-        Uri.parse(
-            '${_config.baseUrl}/agents/$agentId/events?year=$year&month=$month'),
+        Uri.parse('${_config.baseUrl}/agents/$agentId/works?targetMonth=$year-$month'),
         headers: {
           'Authorization': 'Bearer $token',
         },

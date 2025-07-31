@@ -28,7 +28,6 @@ import 'alert/alert_septic_tank.dart';
 import 'alert/alert_transformer.dart';
 import 'alert/alert_water_tank.dart';
 
-
 Future<void> onBackgroundMessage(RemoteMessage message) async {
   await Firebase.initializeApp();
 
@@ -70,13 +69,11 @@ class FCM {
 
   ///버튼 눌렀을 때 포그라운드
   foregroundNotification() {
-
     final Int64List vibrationPattern = Int64List(5);
 
-    vibrationPattern[0] = 0;      // 진동 시작 전 대기 시간 (0초)
+    vibrationPattern[0] = 0; // 진동 시작 전 대기 시간 (0초)
     vibrationPattern[1] = 5000;
-    vibrationPattern[2] = 0;      // 진동 시작 전 대기 시간 (0초)
-
+    vibrationPattern[2] = 0; // 진동 시작 전 대기 시간 (0초)
 
     const String darwinNotificationCategoryPlain = 'sSolutions3';
 
@@ -112,7 +109,8 @@ class FCM {
     );
 
     ///IOS 알림
-    const DarwinNotificationDetails iosNotificationDetails = DarwinNotificationDetails(
+    const DarwinNotificationDetails iosNotificationDetails =
+        DarwinNotificationDetails(
       categoryIdentifier: darwinNotificationCategoryPlain,
       presentBadge: true,
       presentAlert: true,
@@ -122,8 +120,7 @@ class FCM {
 
     /// 알림 리스너 (포그라운드)
     FirebaseMessaging.onMessage.listen((RemoteMessage message) async {
-
-      if(ns.alimNotiId.contains(message.messageId)){
+      if (ns.alimNotiId.contains(message.messageId)) {
         return;
       }
       ns.alimNotiId.add(message.messageId);
@@ -131,11 +128,12 @@ class FCM {
       String destination = message.data['destination'];
       String docId = message.data['docId'];
       String type = message.data['type'];
-      String deviceId = message.data['deviceId']??'';
+      String deviceId = message.data['deviceId'] ?? '';
       List notificationList = await getAlimNotification(docId);
       ns.notificationData.value = notificationList[0];
       Map<String, dynamic> data = await getAllNotificationData();
-      ns.notificationList.value = List<Map<String, dynamic>>.from(data["notifications"]);
+      ns.notificationList.value =
+          List<Map<String, dynamic>>.from(data["notifications"]);
       print(" foreground 3 : ${notificationList}");
       switch (destination) {
         case 'AlertFireReceiver':
@@ -143,79 +141,166 @@ class FCM {
           print("✅ foreground 4.1 : ${notificationList[0]['body']}");
           print("✅ foreground 4.2 : ${notificationList[0]['mms']}");
           print("✅ foreground 4.3 : ${notificationList[0]['mmsName']}");
-          Get.dialog(CustomAlertDialog(title: '${notificationList[0]['title']}',body:'${notificationList[0]['body']}',onTap: (){
-            Get.back();
-            ns.notiDocId.value = docId; /// 알림 닥아이디
-            ns.alertTurnOffList.value = ['소방수신기 오작동','소방서 신고','불꽃 원인 해결','테스트 및 시험','기타 (직접입력)'];
-            Get.back();
-            Get.to(()=>AlertFireReceiver(alarm: true,mms: deviceId,mmsNotiList: notificationList));
-          },mms: notificationList[0]['mms'],mmsName: notificationList[0]['mmsName'],));
+          Get.dialog(CustomAlertDialog(
+            title: '${notificationList[0]['title']}',
+            body: '${notificationList[0]['body']}',
+            onTap: () {
+              Get.back();
+              ns.notiDocId.value = docId;
+
+              /// 알림 닥아이디
+              ns.alertTurnOffList.value = [
+                '소방수신기 오작동',
+                '소방서 신고',
+                '불꽃 원인 해결',
+                '테스트 및 시험',
+                '기타 (직접입력)'
+              ];
+              Get.back();
+              Get.to(() => AlertFireReceiver(
+                  alarm: true, mms: deviceId, mmsNotiList: notificationList));
+            },
+            mms: notificationList[0]['mms'],
+            mmsName: notificationList[0]['mmsName'],
+          ));
           break;
         case 'AlertCollectingWell':
-          Get.dialog(CustomAlertDialog(title: '${notificationList[0]['title']}',body:'${notificationList[0]['body']}',onTap: (){
-            ns.notiDocId.value = docId; /// 알림 닥아이디
-            ns.alertTurnOffList.value = ['소방수신기 오작동','소방서 신고','불꽃 원인 해결','테스트 및 시험','기타 (직접입력)'];
-            Get.back();
-            Get.to(()=>AlertCollectingWell(alarm: true,mms: deviceId,mmsNotiList: notificationList));
-          },mms: us.hexToChar(notificationList[0]['mms']),mmsName: notificationList[0]['mmsName']));
+          Get.dialog(CustomAlertDialog(
+              title: '${notificationList[0]['title']}',
+              body: '${notificationList[0]['body']}',
+              onTap: () {
+                ns.notiDocId.value = docId;
+
+                /// 알림 닥아이디
+                ns.alertTurnOffList.value = [
+                  '소방수신기 오작동',
+                  '소방서 신고',
+                  '불꽃 원인 해결',
+                  '테스트 및 시험',
+                  '기타 (직접입력)'
+                ];
+                Get.back();
+                Get.to(() => AlertCollectingWell(
+                    alarm: true, mms: deviceId, mmsNotiList: notificationList));
+              },
+              mms: us.hexToChar(notificationList[0]['mms']),
+              mmsName: notificationList[0]['mmsName']));
           break;
         case 'AlertWaterTank':
-          Get.dialog(CustomAlertDialog(title: '${notificationList[0]['title']}',body:'${notificationList[0]['body']}',onTap: (){
-            ns.notiDocId.value = docId; /// 알림 닥아이디
-            ns.alertTurnOffList.value = ['소방수신기 오작동','소방서 신고','불꽃 원인 해결','테스트 및 시험','기타 (직접입력)'];
-            ns.lowHighType.value = int.parse(type); /// 0이면 고수위 1이면 저수위
-            Get.back();
-            Get.to(()=>AlertWaterTank(alarm: true, mms: deviceId,mmsNotiList: notificationList,));
-          },mms: us.hexToChar(notificationList[0]['mms']),mmsName: notificationList[0]['mmsName']));
+          Get.dialog(CustomAlertDialog(
+              title: '${notificationList[0]['title']}',
+              body: '${notificationList[0]['body']}',
+              onTap: () {
+                ns.notiDocId.value = docId;
+
+                /// 알림 닥아이디
+                ns.alertTurnOffList.value = [
+                  '소방수신기 오작동',
+                  '소방서 신고',
+                  '불꽃 원인 해결',
+                  '테스트 및 시험',
+                  '기타 (직접입력)'
+                ];
+                ns.lowHighType.value = int.parse(type);
+
+                /// 0이면 고수위 1이면 저수위
+                Get.back();
+                Get.to(() => AlertWaterTank(
+                      alarm: true,
+                      mms: deviceId,
+                      mmsNotiList: notificationList,
+                    ));
+              },
+              mms: us.hexToChar(notificationList[0]['mms']),
+              mmsName: notificationList[0]['mmsName']));
           break;
         case 'AlertTransFormer':
-          Get.dialog(CustomAlertDialog(title: '${notificationList[0]['title']}',body:'${notificationList[0]['body']}',onTap: (){
-            ns.notiDocId.value = docId; /// 알림 닥아이디
-            ns.alertTurnOffList.value = ['소방수신기 오작동','소방서 신고','불꽃 원인 해결','테스트 및 시험','기타 (직접입력)'];
-            Get.back();
-            Get.to(()=>AlertTransFormer(alarm: true,mms: deviceId,mmsNotiList: notificationList));
-          },mms: us.hexToChar(notificationList[0]['mms']),mmsName: notificationList[0]['mmsName']));
+          Get.dialog(CustomAlertDialog(
+              title: '${notificationList[0]['title']}',
+              body: '${notificationList[0]['body']}',
+              onTap: () {
+                ns.notiDocId.value = docId;
+
+                /// 알림 닥아이디
+                ns.alertTurnOffList.value = [
+                  '소방수신기 오작동',
+                  '소방서 신고',
+                  '불꽃 원인 해결',
+                  '테스트 및 시험',
+                  '기타 (직접입력)'
+                ];
+                Get.back();
+                Get.to(() => AlertTransFormer(
+                    alarm: true, mms: deviceId, mmsNotiList: notificationList));
+              },
+              mms: us.hexToChar(notificationList[0]['mms']),
+              mmsName: notificationList[0]['mmsName']));
           break;
         case 'AlertSepticTank':
-          Get.dialog(CustomAlertDialog(title: '${notificationList[0]['title']}',body:'${notificationList[0]['body']}',onTap: (){
-            ns.notiDocId.value = docId; /// 알림 닥아이디
-            ns.alertTurnOffList.value = ['소방수신기 오작동','소방서 신고','불꽃 원인 해결','테스트 및 시험','기타 (직접입력)'];
-            Get.back();
-            Get.to(()=>AlertSepticTank(alarm: true,mms: deviceId,mmsNotiList: notificationList));
-          },mms: us.hexToChar(notificationList[0]['mms']),mmsName: notificationList[0]['mmsName']));
+          Get.dialog(CustomAlertDialog(
+              title: '${notificationList[0]['title']}',
+              body: '${notificationList[0]['body']}',
+              onTap: () {
+                ns.notiDocId.value = docId;
+
+                /// 알림 닥아이디
+                ns.alertTurnOffList.value = [
+                  '소방수신기 오작동',
+                  '소방서 신고',
+                  '불꽃 원인 해결',
+                  '테스트 및 시험',
+                  '기타 (직접입력)'
+                ];
+                Get.back();
+                Get.to(() => AlertSepticTank(
+                    alarm: true, mms: deviceId, mmsNotiList: notificationList));
+              },
+              mms: us.hexToChar(notificationList[0]['mms']),
+              mmsName: notificationList[0]['mmsName']));
           break;
         case 'AlertFireFighting': // 25-05-09 소방장치
           Get.dialog(CustomAlertDialog(
               title: '${notificationList[0]['title']}',
-              body:'${notificationList[0]['body']}',
+              body: '${notificationList[0]['body']}',
               onTap: () {
-                ns.notiDocId.value = docId; /// 알림 닥아이디
-                ns.alertTurnOffList.value = ['소방수신기 오작동','소방서 신고','불꽃 원인 해결','테스트 및 시험','기타 (직접입력)'];
+                ns.notiDocId.value = docId;
+
+                /// 알림 닥아이디
+                ns.alertTurnOffList.value = [
+                  '소방수신기 오작동',
+                  '소방서 신고',
+                  '불꽃 원인 해결',
+                  '테스트 및 시험',
+                  '기타 (직접입력)'
+                ];
                 Get.back();
-                Get.to(()=>AlertSepticTank(alarm: true,mms: deviceId,mmsNotiList: notificationList));
+                Get.to(() => AlertSepticTank(
+                    alarm: true, mms: deviceId, mmsNotiList: notificationList));
               },
               mms: us.hexToChar(notificationList[0]['mms']),
               mmsName: notificationList[0]['mmsName']));
           break;
         case 'cameraMain':
-          String cameraUid = '${message.data['cameraUid']}'; /// cameraUId
-          String ipcamId = '${message.data['ipcamId']}'; /// 캠 이름
+          String cameraUid = '${message.data['cameraUid']}';
+
+          /// cameraUId
+          String ipcamId = '${message.data['ipcamId']}';
+
+          /// 캠 이름
           String cameraType = '${message.data['type'] ?? 0}';
 
           // 2. 알림 다이얼로그
-          if(Get.isDialogOpen == true)
-            {
-              print("다이얼로그 상태 ${Get.isDialogOpen}");
-              Get.back();
-            }
+          if (Get.isDialogOpen == true) {
+            print("다이얼로그 상태 ${Get.isDialogOpen}");
+            Get.back();
+          }
 
           ns.notiDocId.value = docId;
 
           Get.dialog(CameraAlertDialog(
             title: cameraType == "소화장치 안내" ? cameraType : '카메라 알림 경보',
             body: '${notificationList[0]['body']}',
-            onTap: () async
-            {
+            onTap: () async {
               final isFireFightingGuide = cameraType == '소화장치 안내';
               final isFlameDetection = cameraType == '불꽃 감지';
               final isSmokeDetection = cameraType == '연기 감지';
@@ -241,7 +326,7 @@ class FCM {
               print("type ? ${cameraType}");
               print("ns.alertTurnOffList.value ? ${ns.alertTurnOffList.value}");
 
-              openAgentVideoPage(docId,message.data['type']);
+              openAgentVideoPage(docId, message.data['type']);
             },
             cameraName: '${notificationList[0]['ipcamId']}',
           ));
@@ -267,7 +352,6 @@ class FCM {
           // payload: '${message.data}'
           payload: 'ㅇㄴㅁ');
     });
-
   }
 
   backgroundNotification() async {
@@ -280,7 +364,8 @@ class FCM {
         List notificationList = await getAlimNotification(docId);
         ns.notificationData.value = notificationList[0];
         Map<String, dynamic> data = await getAllNotificationData();
-        ns.notificationList.value = List<Map<String, dynamic>>.from(data["notifications"]);
+        ns.notificationList.value =
+            List<Map<String, dynamic>>.from(data["notifications"]);
 
         print('noti 정보? back ${message.data}');
 
@@ -372,7 +457,7 @@ class FCM {
               ns.alertTurnOffList.value = ['센서 감지 오류', '기타 (직접입력)'];
             }
 
-            openAgentVideoPage(docId,message.data['type']);
+            openAgentVideoPage(docId, message.data['type']);
         }
       },
     );
@@ -380,46 +465,100 @@ class FCM {
 
   /// 종료되었을 떄
   terminateNotification() async {
-    RemoteMessage? initialMessage = await FirebaseMessaging.instance.getInitialMessage();
+    RemoteMessage? initialMessage =
+        await FirebaseMessaging.instance.getInitialMessage();
     if (initialMessage != null) {
       String destination = initialMessage.data['destination'];
       String docId = initialMessage.data['docId'];
       String type = initialMessage.data['type'];
-      String deviceId = initialMessage.data['deviceId']??'';
+      String deviceId = initialMessage.data['deviceId'] ?? '';
       List notificationList = await getAlimNotification(docId);
       ns.notificationData.value = notificationList[0];
       Map<String, dynamic> data = await getAllNotificationData();
-      ns.notificationList.value = List<Map<String, dynamic>>.from(data["notifications"]);
+      ns.notificationList.value =
+          List<Map<String, dynamic>>.from(data["notifications"]);
 
       print('noti 정보? terminate ${initialMessage.data}');
 
       switch (destination) {
         case 'AlertFireReceiver':
-          ns.notiDocId.value = docId; /// 알림 닥아이디
-          ns.alertTurnOffList.value = ['소방수신기 오작동','소방서 신고','불꽃 원인 해결','테스트 및 시험','기타 (직접입력)'];
-          Get.to(()=>AlertFireReceiver(alarm: true,mms: deviceId,mmsNotiList: notificationList));
+          ns.notiDocId.value = docId;
+
+          /// 알림 닥아이디
+          ns.alertTurnOffList.value = [
+            '소방수신기 오작동',
+            '소방서 신고',
+            '불꽃 원인 해결',
+            '테스트 및 시험',
+            '기타 (직접입력)'
+          ];
+          Get.to(() => AlertFireReceiver(
+              alarm: true, mms: deviceId, mmsNotiList: notificationList));
           break;
         case 'AlertCollectingWell':
-          ns.notiDocId.value = docId; /// 알림 닥아이디
-          ns.alertTurnOffList.value = ['소방수신기 오작동','소방서 신고','불꽃 원인 해결','테스트 및 시험','기타 (직접입력)'];
-          Get.to(()=>AlertCollectingWell(alarm: true,mms: deviceId,mmsNotiList: notificationList));
+          ns.notiDocId.value = docId;
+
+          /// 알림 닥아이디
+          ns.alertTurnOffList.value = [
+            '소방수신기 오작동',
+            '소방서 신고',
+            '불꽃 원인 해결',
+            '테스트 및 시험',
+            '기타 (직접입력)'
+          ];
+          Get.to(() => AlertCollectingWell(
+              alarm: true, mms: deviceId, mmsNotiList: notificationList));
           break;
         case 'AlertWaterTank':
-          ns.notiDocId.value = docId; /// 알림 닥아이디
-          ns.alertTurnOffList.value = ['소방수신기 오작동','소방서 신고','불꽃 원인 해결','테스트 및 시험','기타 (직접입력)'];
-          ns.lowHighType.value = int.parse(type); /// 0이면 고수위 1이면 저수위
-          Get.to(()=>AlertWaterTank(alarm: true,mms: deviceId,mmsNotiList: notificationList,));
+          ns.notiDocId.value = docId;
+
+          /// 알림 닥아이디
+          ns.alertTurnOffList.value = [
+            '소방수신기 오작동',
+            '소방서 신고',
+            '불꽃 원인 해결',
+            '테스트 및 시험',
+            '기타 (직접입력)'
+          ];
+          ns.lowHighType.value = int.parse(type);
+
+          /// 0이면 고수위 1이면 저수위
+          Get.to(() => AlertWaterTank(
+                alarm: true,
+                mms: deviceId,
+                mmsNotiList: notificationList,
+              ));
           break;
         case 'AlertTransFormer':
-          ns.notiDocId.value = docId; /// 알림 닥아이디
-          ns.alertTurnOffList.value = ['소방수신기 오작동','소방서 신고','불꽃 원인 해결','테스트 및 시험','기타 (직접입력)'];
-          ns.lowHighType.value = int.parse(type); /// 0이면 고수위 1이면 저수위
-          Get.to(()=>AlertTransFormer(alarm: true,mms: deviceId,mmsNotiList: notificationList));
+          ns.notiDocId.value = docId;
+
+          /// 알림 닥아이디
+          ns.alertTurnOffList.value = [
+            '소방수신기 오작동',
+            '소방서 신고',
+            '불꽃 원인 해결',
+            '테스트 및 시험',
+            '기타 (직접입력)'
+          ];
+          ns.lowHighType.value = int.parse(type);
+
+          /// 0이면 고수위 1이면 저수위
+          Get.to(() => AlertTransFormer(
+              alarm: true, mms: deviceId, mmsNotiList: notificationList));
           break;
         case 'AlertSepticTank':
-          ns.notiDocId.value = docId; /// 알림 닥아이디
-          ns.alertTurnOffList.value = ['소방수신기 오작동','소방서 신고','불꽃 원인 해결','테스트 및 시험','기타 (직접입력)'];
-          Get.to(()=>AlertSepticTank(alarm: true,mms: deviceId,mmsNotiList: notificationList));
+          ns.notiDocId.value = docId;
+
+          /// 알림 닥아이디
+          ns.alertTurnOffList.value = [
+            '소방수신기 오작동',
+            '소방서 신고',
+            '불꽃 원인 해결',
+            '테스트 및 시험',
+            '기타 (직접입력)'
+          ];
+          Get.to(() => AlertSepticTank(
+              alarm: true, mms: deviceId, mmsNotiList: notificationList));
           break;
         case 'cameraMain':
           String cameraType = '${initialMessage.data['type'] ?? 0}';
@@ -432,7 +571,7 @@ class FCM {
             ns.alertTurnOffList.value = ['센서 감지 오류', '기타 (직접입력)'];
           }
 
-          openAgentVideoPage(docId,initialMessage.data['type']);
+          openAgentVideoPage(docId, initialMessage.data['type']);
       }
       titleCtlr.sink.add(initialMessage.notification!.title!);
       bodyCtlr.sink.add(initialMessage.notification!.body!);
@@ -446,7 +585,7 @@ class FCM {
   }
 
   /// agent 비디오 다시보기로 이동
-  Future<void> openAgentVideoPage(String docId, String type) async{
+  Future<void> openAgentVideoPage(String docId, String type) async {
     // 확인 버튼을 누를시 다이얼로그를 닫음
     Get.back();
 
@@ -456,15 +595,12 @@ class FCM {
   }
 
   Future<void> _cameraLogicInit(String cameraUid) async {
-
-    if(Get.currentRoute == AppRoutes.play)
-      {
-        if(cameraUid == cs.cameraUID.value)
-        {
-          return;
-        }
-        Get.back();
+    if (Get.currentRoute == AppRoutes.play) {
+      if (cameraUid == cs.cameraUID.value) {
+        return;
       }
+      Get.back();
+    }
 
     //로딩 시작
     Get.dialog(CustomAlertDialog2());
@@ -474,26 +610,25 @@ class FCM {
     print("??? 111");
     await Future.delayed(Duration(milliseconds: 500));
 
-
     print("???");
-      // 기존 카메라 장치 제거
-      if (cs.cameraDevice != null) {
-        await cs.cameraDevice!.deviceDestroy();
-      }
+    // 기존 카메라 장치 제거
+    if (cs.cameraDevice != null) {
+      await cs.cameraDevice!.deviceDestroy();
+    }
 
-      // MainLogic 주입
-      if (!Get.isRegistered<MainLogic>()) {
-        Get.put(MainLogic());
-      }
+    // MainLogic 주입
+    if (!Get.isRegistered<MainLogic>()) {
+      Get.put(MainLogic());
+    }
 
-      final mainLogic = Get.find<MainLogic>();
-      await mainLogic.init('$cameraUid', 'admin', '${cs.cameraPassword}');
+    final mainLogic = Get.find<MainLogic>();
+    await mainLogic.init('$cameraUid', 'admin', '${cs.cameraPassword}');
 
-      print("MainLogic init 완료");
-      // 로딩 닫기 (조건부)
-      if (Get.isDialogOpen ?? false) {
-        Get.back();
-      }
+    print("MainLogic init 완료");
+    // 로딩 닫기 (조건부)
+    if (Get.isDialogOpen ?? false) {
+      Get.back();
+    }
   }
 }
 
