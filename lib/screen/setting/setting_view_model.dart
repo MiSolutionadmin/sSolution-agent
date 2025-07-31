@@ -9,6 +9,9 @@ class SettingViewModel extends GetxController {
   final RxString title = '설정'.obs;
   final RxList<SettingItem> settingItems = <SettingItem>[].obs;
   
+  // 알림 설정 상태
+  final RxBool notificationEnabled = true.obs;
+  
   @override
   void onInit() {
     super.onInit();
@@ -143,6 +146,12 @@ class SettingViewModel extends GetxController {
   /// 설정 아이템 탭 처리
   void onSettingItemTap(SettingItem item) {
     item.onTap?.call();
+  }
+  
+  /// 알림 설정 토글
+  void toggleNotification() {
+    notificationEnabled.value = !notificationEnabled.value;
+    // 여기에 실제 알림 설정 업데이트 로직 추가 가능
   }
 }
 

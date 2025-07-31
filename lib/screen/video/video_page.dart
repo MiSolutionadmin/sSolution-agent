@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:mms/components/dialog.dart';
 import 'package:mms/components/dialogManager.dart';
 import 'package:mms/db/camera_table.dart';
 import 'package:video_player/video_player.dart';
 import 'package:http/http.dart' as http;
 import 'package:get/get.dart';
+import 'package:url_launcher/url_launcher.dart';
+import 'video_fullscreen_page.dart';
 
 class VideoPage extends StatefulWidget {
   final String videoUrl;
@@ -22,12 +25,18 @@ class VideoPage extends StatefulWidget {
 class _VideoPageState extends State<VideoPage> {
   VideoPlayerController? _controller;
   bool _isReady = false;
+  bool _hasError = false;
+  String _errorMessage = '';
   Duration _lastPosition = Duration.zero;
+  bool _isVolumeMuted = false;
+  bool _showControls = true;
 
   @override
   void initState() {
     super.initState();
     _initializeVideo();
+
+
   }
 
   Future<bool> _checkVideoUrlWithRetry(String url, {int retries = 10}) async {
@@ -35,9 +44,27 @@ class _VideoPageState extends State<VideoPage> {
       try {
         final response = await http.head(Uri.parse(url));
         print("영상 검사 [시도 ${i + 1}] - 상태코드: ${response.statusCode}");
+        print("영상 검사 [시도 ${i + 1}] - Content-Type: ${response.headers['content-type']}");
+        print("영상 검사 [시도 ${i + 1}] - Content-Length: ${response.headers['content-length']}");
 
         if (response.statusCode == 200) {
-          return true;
+          // Content-Type 확인
+          final contentType = response.headers['content-type']?.toLowerCase();
+          if (contentType != null && !contentType.contains('video/')) {
+            print("⚠️ 영상 파일이 아닌 것 같습니다: $contentType");
+            
+            // GET 요청으로 실제 데이터 확인
+            final getResponse = await http.get(Uri.parse(url), headers: {
+              'Range': 'bytes=0-1023', // 첫 1KB만 가져와서 확인
+            });
+            
+            if (getResponse.statusCode == 206 || getResponse.statusCode == 200) {
+              print("✅ 부분 요청 성공, 영상 파일로 판단");
+              return true;
+            }
+          } else {
+            return true;
+          }
         }
       } catch (e) {
         print("영상 검사 실패 [시도 ${i + 1}] - 에러: $e");
@@ -46,16 +73,26 @@ class _VideoPageState extends State<VideoPage> {
       await Future.delayed(Duration(seconds: 3));
     }
 
-    print("❌ 5회 시도 후에도 영상 접근 실패");
+    print("❌ ${retries}회 시도 후에도 영상 접근 실패");
     return false;
   }
 
   void _initializeVideo() async {
     print("get url ? : ${widget.videoUrl}");
+    
+    // 에러 상태 초기화
+    setState(() {
+      _hasError = false;
+      _errorMessage = '';
+    });
 
     final exists = await _checkVideoUrlWithRetry(widget.videoUrl);
     if (!exists) {
       print("❌ 영상이 존재하지 않습니다");
+      setState(() {
+        _hasError = true;
+        _errorMessage = '영상을 불러올 수 없습니다. URL을 확인해주세요.';
+      });
       return;
     }
 
@@ -67,9 +104,25 @@ class _VideoPageState extends State<VideoPage> {
       await Future.delayed(Duration(milliseconds: 200)); // 안정화
     }
 
-    final controller = VideoPlayerController.network(widget.videoUrl);
-
     try {
+      print("📹 비디오 URL 확인: ${widget.videoUrl}");
+      print("📹 HTTP/HTTPS 확인: ${widget.videoUrl.startsWith('https') ? 'HTTPS' : 'HTTP'}");
+      
+      final controller = VideoPlayerController.network(
+        widget.videoUrl,
+        videoPlayerOptions: VideoPlayerOptions(
+          mixWithOthers: true,
+          allowBackgroundPlayback: false,
+        ),
+        httpHeaders: {
+          'User-Agent': 'Flutter VideoPlayer',
+          'Accept': 'video/mp4,video/*,*/*',
+          'Cache-Control': 'no-cache',
+          'Connection': 'keep-alive',
+        },
+        formatHint: VideoFormat.other, // ExoPlayer 포맷 힌트
+      );
+
       await controller.initialize();
       print("✅ 영상 초기화 성공, duration: ${controller.value.duration}");
 
@@ -81,48 +134,76 @@ class _VideoPageState extends State<VideoPage> {
       setState(() {
         _controller = controller;
         _isReady = true;
+        _hasError = false;
+        _errorMessage = '';
       });
 
+      // 상태 감시 추가
+      _controller!.addListener(_videoListener);
+      
+      // 자동 재생
       _controller!.play();
     } catch (e) {
       print("영상 초기화 실패: $e");
-      // 🔹 실패 시 재연결 시도
-      Future.delayed(Duration(seconds: 1), _refreshVideo);
+      setState(() {
+        _hasError = true;
+        _errorMessage = '영상 재생 중 오류가 발생했습니다: ${e.toString()}';
+      });
+      
+      // 3초 후 재시도
+      Future.delayed(Duration(seconds: 3), () {
+        if (mounted) {
+          _refreshVideo();
+        }
+      });
+    }
+  }
+  
+  void _videoListener() {
+    if (_controller == null) return;
+    
+    final value = _controller!.value;
+
+    if (value.hasError) {
+      print("❌ 영상 오류 감지: ${value.errorDescription}");
+      setState(() {
+        _hasError = true;
+        _errorMessage = '재생 중 오류가 발생했습니다: ${value.errorDescription}';
+      });
+      
+      // 5초 후 재연결 시도
+      Future.delayed(Duration(seconds: 5), () {
+        if (mounted) {
+          _refreshVideo();
+        }
+      });
       return;
     }
 
-    // 상태 감시
-    _controller!.addListener(() {
-      final value = _controller!.value;
+    if (!value.isInitialized) return;
 
-      if (value.hasError) {
-        print("❌ 영상 오류 감지: ${value.errorDescription}");
-        _refreshVideo(); // 🔹 재연결
-        return;
-      }
+    final pos = value.position;
+    final dur = value.duration;
 
-      if (!value.isInitialized) return;
+    // 🎬 영상 종료 시 마지막 프레임 유지
+    if (pos >= dur && value.isPlaying) {
+      _controller!.pause();
+      _controller!.seekTo(
+          dur - Duration(milliseconds: 100) > Duration.zero
+              ? dur - Duration(milliseconds: 100)
+              : Duration.zero
+      );
+    }
 
-      final pos = value.position;
-      final dur = value.duration;
-
-      // 🎬 영상 종료 시 마지막 프레임 유지
-      if (pos >= dur && value.isPlaying) {
-        _controller!.pause();
-        _controller!.seekTo(
-            dur - Duration(milliseconds: 100) > Duration.zero
-                ? dur - Duration(milliseconds: 100)
-                : Duration.zero
-        );
-      }
-
-      _lastPosition = pos;
+    _lastPosition = pos;
+    if (mounted) {
       setState(() {}); // 슬라이더 갱신
-    });
+    }
   }
 
   void _refreshVideo() async {
     if (_controller != null) {
+      _controller!.removeListener(_videoListener);
       await _controller!.pause();
       await _controller!.dispose();
       _controller = null;
@@ -130,6 +211,8 @@ class _VideoPageState extends State<VideoPage> {
 
     setState(() {
       _isReady = false;
+      _hasError = false;
+      _errorMessage = '';
     });
 
     _initializeVideo();
@@ -137,12 +220,20 @@ class _VideoPageState extends State<VideoPage> {
 
   @override
   void dispose() {
-    if (_controller != null && _controller!.value.isInitialized) {
-      _lastPosition = _controller!.value.position;
-    }
+    // 화면 방향과 시스템 UI 복원
+    SystemChrome.setPreferredOrientations([
+      DeviceOrientation.portraitUp,
+    ]);
+    SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
 
-    _controller?.dispose();
-    _controller = null;
+    if (_controller != null) {
+      if (_controller!.value.isInitialized) {
+        _lastPosition = _controller!.value.position;
+      }
+      _controller!.removeListener(_videoListener);
+      _controller!.dispose();
+      _controller = null;
+    }
 
     super.dispose();
   }
@@ -152,6 +243,105 @@ class _VideoPageState extends State<VideoPage> {
     final m = d.inMinutes.remainder(60).toString().padLeft(2, '0');
     final s = d.inSeconds.remainder(60).toString().padLeft(2, '0');
     return "$m:$s";
+  }
+
+  Future<void> _openInBrowser() async {
+    try {
+      final Uri url = Uri.parse(widget.videoUrl);
+      if (await canLaunchUrl(url)) {
+        await launchUrl(url, mode: LaunchMode.externalApplication);
+      } else {
+        Get.snackbar(
+          '오류',
+          '브라우저에서 열 수 없습니다',
+          backgroundColor: Colors.red,
+          colorText: Colors.white,
+        );
+      }
+    } catch (e) {
+      Get.snackbar(
+        '오류',
+        '브라우저 실행 중 오류가 발생했습니다: $e',
+        backgroundColor: Colors.red,
+        colorText: Colors.white,
+      );
+    }
+  }
+
+  String _convertToHttps(String url) {
+    if (url.startsWith('http://')) {
+      return url.replaceFirst('http://', 'https://');
+    }
+    return url;
+  }
+
+  Future<void> _tryHttpsVersion() async {
+    final httpsUrl = _convertToHttps(widget.videoUrl);
+    if (httpsUrl != widget.videoUrl) {
+      print("🔒 HTTPS 버전으로 재시도: $httpsUrl");
+      
+      // 임시로 HTTPS URL로 새 VideoPage 열기
+      Get.to(() => VideoPage(
+        videoUrl: httpsUrl,
+        type: widget.type,
+      ));
+    } else {
+      Get.snackbar(
+        '알림',
+        '이미 HTTPS URL입니다',
+        backgroundColor: Colors.orange,
+        colorText: Colors.white,
+      );
+    }
+  }
+
+  // 전체화면 페이지로 이동
+  void _goToFullscreen() {
+    if (_controller != null && _controller!.value.isInitialized) {
+      Get.to(
+        () => VideoFullscreenPage(
+          controller: _controller!,
+          videoUrl: widget.videoUrl,
+          type: widget.type,
+          initialVolumeMuted: _isVolumeMuted,
+          onVolumeChanged: (isMuted) {
+            setState(() {
+              _isVolumeMuted = isMuted;
+            });
+          },
+        ),
+        transition: Transition.fade,
+        duration: Duration.zero, // 애니메이션 없음
+      );
+    }
+  }
+
+  // 볼륨 토글
+  void _toggleVolume() {
+    if (_controller != null) {
+      setState(() {
+        _isVolumeMuted = !_isVolumeMuted;
+        _controller!.setVolume(_isVolumeMuted ? 0.0 : 1.0);
+      });
+    }
+  }
+
+  // 컨트롤 표시/숨김 토글
+  void _toggleControls() {
+    setState(() {
+      _showControls = !_showControls;
+    });
+    
+    // 3초 후 자동으로 컨트롤 숨김
+    if (_showControls) {
+      Future.delayed(Duration(seconds: 3), () {
+        if (mounted && _showControls) {
+          setState(() {
+            _showControls = false;
+          });
+        }
+      });
+    }
   }
 
   @override
@@ -168,48 +358,141 @@ class _VideoPageState extends State<VideoPage> {
     final durationSeconds = duration.inSeconds;
     final positionSeconds = position.inSeconds.clamp(0, durationSeconds).toDouble();
 
+
     return Scaffold(
       appBar: AppBar(
         title: Text("영상 보기"),
+        backgroundColor: Colors.white,
         actions: [
           IconButton(
             icon: Icon(Icons.refresh),
-            onPressed:  _refreshVideo
+            onPressed: _refreshVideo
           )
         ],
       ),
-      body: Center(
-        child: _isReady && isControllerReady
-            ? Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            AspectRatio(
-              aspectRatio: _controller!.value.aspectRatio,
-              child: VideoPlayer(_controller!),
-            ),
-            SizedBox(height: 16),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16.0),
-              child: Slider(
-                min: 0,
-                max: durationSeconds.toDouble(),
-                value: positionSeconds,
-                onChanged: (value) {
-                  _controller!.seekTo(Duration(seconds: value.toInt()));
-                },
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16.0),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(_formatDuration(position, duration)),
-                  Text(_formatDuration(duration, duration)),
-                ],
-              ),
-            ),
-            SizedBox(height: 24),
+      backgroundColor: Colors.white,
+      body: Column(
+        children: [
+          // 비디오 플레이어 영역 (상단)
+          Container(
+            child: _isReady && isControllerReady
+                ? Stack(
+                    children: [
+                      // 비디오 화면 (탭 가능)
+                      GestureDetector(
+                        onTap: _toggleControls,
+                        child: AspectRatio(
+                          aspectRatio: _controller!.value.aspectRatio,
+                          child: VideoPlayer(_controller!),
+                        ),
+                      ),
+                      
+                      // 하단 컨트롤 바와 seekbar (조건부 표시)
+                      if (_showControls)
+                        Positioned(
+                          bottom: 0,
+                          left: 0,
+                          right: 0,
+                          child: _buildControlBar(durationSeconds.toDouble(), positionSeconds, duration, position),
+                        ),
+                    ],
+                  )
+                : _hasError
+                    ? Container(
+                        height: 250,
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              Icons.error_outline,
+                              color: Colors.red,
+                              size: 48,
+                            ),
+                            SizedBox(height: 16),
+                            Text(
+                              '영상 재생 오류',
+                              style: TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            SizedBox(height: 8),
+                            Padding(
+                              padding: const EdgeInsets.symmetric(horizontal: 20),
+                              child: Text(
+                                _errorMessage,
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  color: Colors.grey,
+                                ),
+                                textAlign: TextAlign.center,
+                              ),
+                            ),
+                            SizedBox(height: 16),
+                            Column(
+                              children: [
+                                Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    ElevatedButton.icon(
+                                      onPressed: _refreshVideo,
+                                      icon: Icon(Icons.refresh),
+                                      label: Text('다시 시도'),
+                                      style: ElevatedButton.styleFrom(
+                                        backgroundColor: Colors.blue,
+                                        foregroundColor: Colors.white,
+                                      ),
+                                    ),
+                                    SizedBox(width: 12),
+                                    ElevatedButton.icon(
+                                      onPressed: _openInBrowser,
+                                      icon: Icon(Icons.open_in_browser),
+                                      label: Text('브라우저'),
+                                      style: ElevatedButton.styleFrom(
+                                        backgroundColor: Colors.green,
+                                        foregroundColor: Colors.white,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                if (widget.videoUrl.startsWith('http://')) ...[
+                                  SizedBox(height: 12),
+                                  ElevatedButton.icon(
+                                    onPressed: _tryHttpsVersion,
+                                    icon: Icon(Icons.security),
+                                    label: Text('HTTPS로 시도'),
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: Colors.orange,
+                                      foregroundColor: Colors.white,
+                                    ),
+                                  ),
+                                  SizedBox(height: 8),
+                                  Text(
+                                    'HTTP 트래픽이 차단되었을 수 있습니다',
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      color: Colors.grey,
+                                    ),
+                                  ),
+                                ],
+                              ],
+                            ),
+                          ],
+                        ),
+                      )
+                    : Container(
+                        height: 250,
+                        child: Center(
+                          child: CircularProgressIndicator(),
+                        ),
+                      ),
+          ),
+          
+          // 영상과 버튼 사이 간격 (50px)
+          SizedBox(height: 50),
+          
+          // 액션 버튼들 (영상 아래)
+          if (_isReady && isControllerReady)
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
@@ -259,27 +542,94 @@ class _VideoPageState extends State<VideoPage> {
                 ),
               ],
             ),
-            Spacer(),
-          ],
-        )
-            : CircularProgressIndicator(),
+            
+          // 나머지 공간
+          Spacer(),
+        ],
       ),
-      floatingActionButton: _isReady && isControllerReady
-          ? FloatingActionButton(
-        onPressed: () {
-          print("_controller ??? :  ${_controller}");
-          setState(() {
-            _controller!.value.isPlaying
-                ? _controller!.pause()
-                : _controller!.play();
-
-          });
-        },
-        child: Icon(
-          _controller!.value.isPlaying ? Icons.pause : Icons.play_arrow,
-        ),
-      )
-          : null,
     );
   }
+
+  // 컨트롤 바 위젯
+  Widget _buildControlBar(double durationSeconds, double positionSeconds, Duration duration, Duration position) {
+    return Container(
+      color: Colors.black54,
+      child: Row(
+        children: [
+          // 시작/중지 버튼
+          IconButton(
+            icon: Icon(
+              _controller!.value.isPlaying
+                  ? Icons.stop
+                  : Icons.play_arrow
+            ),
+            color: Colors.white,
+            onPressed: () {
+              setState(() {
+                _controller!.value.isPlaying
+                    ? _controller!.pause()
+                    : _controller!.play();
+              });
+            },
+          ),
+
+          // 소리 버튼 (실제 작동)
+          IconButton(
+            icon: Icon(_isVolumeMuted ? Icons.volume_off : Icons.volume_up),
+            color: Colors.white,
+            onPressed: _toggleVolume,
+          ),
+
+          Flexible(
+            flex: 1,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // 슬라이더 (높이 줄임)
+                Container(
+                  height: 30, // 슬라이더 높이 제한
+                  child: Slider(
+                    min: 0,
+                    max: durationSeconds.toDouble(),
+                    value: positionSeconds,
+                    activeColor: Colors.red,
+                    inactiveColor: Colors.white30,
+                    thumbColor: Colors.white,
+                    onChanged: (value) {
+                      _controller!.seekTo(Duration(seconds: value.toInt()));
+                    },
+                  ),
+                ),
+                // 시간 표시 (패딩 줄임)
+                Padding(
+                  padding: const EdgeInsets.only(left: 16.0, right: 16.0, bottom: 4.0),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        _formatDuration(position, duration),
+                        style: TextStyle(color: Colors.white, fontSize: 11),
+                      ),
+                      Text(
+                        _formatDuration(duration, duration),
+                        style: TextStyle(color: Colors.white, fontSize: 11),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+          // 전체화면 버튼
+          IconButton(
+            icon: Icon(Icons.fullscreen),
+            color: Colors.white,
+            onPressed: _goToFullscreen,
+          )
+        ],
+      ),
+    );
+  }
+
 }

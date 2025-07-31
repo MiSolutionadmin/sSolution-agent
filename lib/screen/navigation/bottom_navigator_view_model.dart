@@ -68,7 +68,7 @@ class BottomNavigatorViewModel extends GetxController with GetTickerProviderStat
   void _initializeWidgetOptions() {
     widgetOptions.value = [
       const MainView(),
-      const VideoPage(videoUrl: '', type: '경보'), // 경보용 비디오 페이지 재활용
+      const VideoPage(videoUrl: "http://misnetwork.iptime.org:9099/videos/record_2025-07-29-16-05-38.mp4", type: '경보'), // 경보용 비디오 페이지 재활용
       const RecordView(),
       const SettingView(),
     ];

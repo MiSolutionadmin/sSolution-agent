@@ -56,27 +56,29 @@ class BottomNavigatorView extends StatelessWidget {
 
   /// 하단 네비게이션 바
   Widget _buildBottomNavigationBar(BottomNavigatorViewModel viewModel) {
-    return Container(
-      decoration: const BoxDecoration(
-        border: Border(
-          top: BorderSide(width: 2.0, color: Color(0xffF1F4F7)),
+    return SafeArea(
+      child: Container(
+        decoration: const BoxDecoration(
+          border: Border(
+            top: BorderSide(width: 2.0, color: Color(0xffF1F4F7)),
+          ),
         ),
-      ),
-      padding: Platform.isAndroid 
-        ? const EdgeInsets.all(0) 
-        : const EdgeInsets.only(bottom: 10),
-      child: TabBar(
-        onTap: viewModel.onTabChanged,
-        dividerColor: Colors.transparent,
-        indicatorColor: Colors.transparent,
-        indicatorSize: TabBarIndicatorSize.label,
-        controller: viewModel.bottomTabController,
-        unselectedLabelStyle: hintf14w700,
-        labelStyle: f14w700,
-        labelColor: Colors.black,
-        padding: const EdgeInsets.only(left: 10, right: 10, bottom: 8),
-        labelPadding: EdgeInsets.zero,
-        tabs: _buildTabs(viewModel),
+        padding: Platform.isAndroid 
+          ? const EdgeInsets.only(bottom: 8) 
+          : const EdgeInsets.only(bottom: 10),
+        child: TabBar(
+          onTap: viewModel.onTabChanged,
+          dividerColor: Colors.transparent,
+          indicatorColor: Colors.transparent,
+          indicatorSize: TabBarIndicatorSize.label,
+          controller: viewModel.bottomTabController,
+          unselectedLabelStyle: hintf14w700,
+          labelStyle: f14w700,
+          labelColor: Colors.black,
+          padding: const EdgeInsets.only(left: 10, right: 10, bottom: 8),
+          labelPadding: EdgeInsets.zero,
+          tabs: _buildTabs(viewModel),
+        ),
       ),
     );
   }

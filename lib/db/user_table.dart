@@ -136,7 +136,7 @@ Future<void> checkDuplicateLogin(BuildContext context) async {
   final us = Get.put(UserState());
   final url = '${config.baseUrl}/checkDuplicateLogin';
   final body = ({
-    'token':'${us.userList[0]['token']}'
+    'token':'${us.userList[0]['token'] ?? "1234"}'
   });
   final response = await http.post(Uri.parse(url),body: body);
   if(json.decode(response.body)==false){
