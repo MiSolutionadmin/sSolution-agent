@@ -13,7 +13,11 @@ class LoginService {
   LoginService._internal();
 
   final AppConfig _config = AppConfig();
-  final FlutterSecureStorage _secureStorage = const FlutterSecureStorage();
+  final FlutterSecureStorage _secureStorage = const FlutterSecureStorage(
+    aOptions: AndroidOptions(
+      encryptedSharedPreferences: true,
+    ),
+  );
 
   /// 로그인 API 호출
   Future<LoginResponse> login(LoginModel loginData) async {

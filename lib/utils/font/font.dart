@@ -103,6 +103,11 @@ const TextStyle f16w700 = TextStyle(
     color: blackColor,
     fontWeight: FontWeight.w700,
     fontFamily: 'Pretendard');
+const TextStyle f20w700White = TextStyle(
+    fontSize: 20,
+    color: whiteColor,
+    fontWeight: FontWeight.w700,
+    fontFamily: 'Pretendard');
 var f14w700Size = () => TextStyle(
   fontSize: 14 - (0.8 * double.parse('${us.userFont.value}')),
   color: blackColor,

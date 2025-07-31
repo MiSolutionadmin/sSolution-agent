@@ -10,7 +10,11 @@ class NavigationService {
   factory NavigationService() => _instance;
   NavigationService._internal();
 
-  final FlutterSecureStorage _storage = const FlutterSecureStorage();
+  final FlutterSecureStorage _storage = const FlutterSecureStorage(
+    aOptions: AndroidOptions(
+      encryptedSharedPreferences: true,
+    ),
+  );
   final UserState _userState = Get.put(UserState());
 
   /// 네비게이션 초기화

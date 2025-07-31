@@ -48,6 +48,9 @@ class BottomNavigatorView extends StatelessWidget {
       },
       child: Scaffold(
         backgroundColor: Colors.white,
+        extendBody: false,
+        extendBodyBehindAppBar: false,
+        resizeToAvoidBottomInset: false,
         bottomNavigationBar: _buildBottomNavigationBar(viewModel),
         body: _buildTabBarView(viewModel),
       ),
@@ -56,30 +59,49 @@ class BottomNavigatorView extends StatelessWidget {
 
   /// 하단 네비게이션 바
   Widget _buildBottomNavigationBar(BottomNavigatorViewModel viewModel) {
-    return SafeArea(
-      child: Container(
-        decoration: const BoxDecoration(
-          border: Border(
-            top: BorderSide(width: 2.0, color: Color(0xffF1F4F7)),
+    return Builder(
+      builder: (context) {
+        final mediaQuery = MediaQuery.of(context);
+        final bottomPadding = mediaQuery.padding.bottom;
+        
+        return Container(
+          decoration: const BoxDecoration(
+            border: Border(
+              top: BorderSide(width: 2.0, color: Color(0xffF1F4F7)),
+            ),
+            color: Colors.white,
           ),
-        ),
-        padding: Platform.isAndroid 
-          ? const EdgeInsets.only(bottom: 8) 
-          : const EdgeInsets.only(bottom: 10),
-        child: TabBar(
-          onTap: viewModel.onTabChanged,
-          dividerColor: Colors.transparent,
-          indicatorColor: Colors.transparent,
-          indicatorSize: TabBarIndicatorSize.label,
-          controller: viewModel.bottomTabController,
-          unselectedLabelStyle: hintf14w700,
-          labelStyle: f14w700,
-          labelColor: Colors.black,
-          padding: const EdgeInsets.only(left: 10, right: 10, bottom: 8),
-          labelPadding: EdgeInsets.zero,
-          tabs: _buildTabs(viewModel),
-        ),
-      ),
+          padding: EdgeInsets.only(
+            bottom: Platform.isAndroid
+              ? (bottomPadding > 0 ? bottomPadding + 0 : 0)
+              : (bottomPadding > 0 ? bottomPadding + 0 : 0),
+          ),
+          child: viewModel.isTabControllerReady
+            ? Builder(
+                builder: (context) {
+                  try {
+                    return TabBar(
+                      onTap: viewModel.onTabChanged,
+                      dividerColor: Colors.transparent,
+                      indicatorColor: Colors.transparent,
+                      indicatorSize: TabBarIndicatorSize.label,
+                      controller: viewModel.bottomTabController,
+                      unselectedLabelStyle: hintf14w700,
+                      labelStyle: f14w700,
+                      labelColor: Colors.black,
+                      padding: const EdgeInsets.only(left: 10, right: 10, bottom: 0),
+                      labelPadding: EdgeInsets.zero,
+                      tabs: _buildTabs(viewModel),
+                    );
+                  } catch (e) {
+                    print('TabBar 렌더링 오류: $e');
+                    return _buildFallbackNavigationBar(viewModel);
+                  }
+                },
+              )
+            : _buildFallbackNavigationBar(viewModel), // TabController가 초기화되지 않은 경우 대체 UI
+        );
+      },
     );
   }
 
@@ -137,12 +159,47 @@ class BottomNavigatorView extends StatelessWidget {
     }
   }
 
+  /// TabBar 대체 네비게이션 바 (오류 시 사용)
+  Widget _buildFallbackNavigationBar(BottomNavigatorViewModel viewModel) {
+    final navigationConfig = NavigationConfig.getDefault();
+    
+    return Row(
+      children: navigationConfig.tabs.map((tabItem) => 
+        Expanded(
+          child: GestureDetector(
+            onTap: () => viewModel.onTabChanged(tabItem.index),
+            child: Container(
+              padding: const EdgeInsets.symmetric(vertical: 12),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  _buildTabIcon(tabItem, viewModel.currentIndex.value == tabItem.index),
+                  const SizedBox(height: 4),
+                  Text(
+                    tabItem.label,
+                    style: viewModel.currentIndex.value == tabItem.index 
+                      ? f14w700 
+                      : hintf14w700,
+                  ),
+                ],
+              ),
+            ),
+          ),
+        )
+      ).toList(),
+    );
+  }
+
   /// 탭 바 뷰
   Widget _buildTabBarView(BottomNavigatorViewModel viewModel) {
-    return TabBarView(
-      physics: const NeverScrollableScrollPhysics(),
-      controller: viewModel.bottomTabController,
-      children: viewModel.widgetOptions,
-    );
+    return viewModel.isTabControllerReady
+      ? TabBarView(
+          physics: const NeverScrollableScrollPhysics(),
+          controller: viewModel.bottomTabController,
+          children: viewModel.widgetOptions,
+        )
+      : viewModel.widgetOptions.isNotEmpty 
+          ? viewModel.widgetOptions[viewModel.currentIndex.value.clamp(0, viewModel.widgetOptions.length - 1)]
+          : const SizedBox.shrink();
   }
 }

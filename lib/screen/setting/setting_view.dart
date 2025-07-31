@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
+import 'package:mms/screen/login/login_service.dart';
 import 'package:mms/screen/setting/term/term_page.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import '../../components/dialog.dart';
@@ -64,7 +65,23 @@ class _SettingViewState extends State<SettingView> {
           Padding(
             padding: const EdgeInsets.only(right: 20),
             child: GestureDetector(
-              onTap: (){
+              onTap: () async {
+                final loginService = LoginService();
+
+                final savedToken = await loginService.getToken();
+                print("LoginService에서 가져온 토큰: ${savedToken}");
+
+                // 다른 storage 인스턴스로도 확인
+                final directToken = await storage.read(key: "jwt_token");
+                print("직접 storage에서 가져온 토큰: ${directToken}");
+
+                // LoginService의 storage와 동일한 방식으로 확인
+                final serviceStorage = const FlutterSecureStorage();
+                final serviceToken = await serviceStorage.read(key: "jwt_token");
+                print("LoginService와 동일한 storage로 가져온 토큰: ${serviceToken}");
+
+
+                Get.offAll(()=> LoginView());
                 //pressedLogOut();
               },
               child: Text(

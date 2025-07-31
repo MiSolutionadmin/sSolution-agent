@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
+import 'package:mms/screen/login/login_service.dart';
 import 'package:mms/screen/setting/term/term_page.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import '../../components/dialog.dart';
@@ -87,8 +88,18 @@ class _SettingMainState extends State<SettingMain> {
           Padding(
             padding: const EdgeInsets.only(right: 20),
             child: GestureDetector(
-              onTap: (){
-                //pressedLogOut(); /// ✅ 로그아웃버튼 눌렀을때
+              onTap: () async {
+                final loginService = LoginService();
+                final savedToken = await loginService.getToken();
+                print("저장된 토큰: ${savedToken}");
+                
+                // 실제 로그아웃 처리
+                showConfirmTapDialog(context, '로그아웃 하시겠습니까?', () async {
+                  await loginService.logout();
+                  await loginService.clearSavedLoginInfo();
+                  us.userList.clear();
+                  Get.offAll(() => const LoginView());
+                });
               },
               child: Text(
                 '로그아웃',

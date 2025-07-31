@@ -36,7 +36,11 @@ class AlimScreen extends StatefulWidget {
 
 class _AlimScreenState extends State<AlimScreen> {
   /// Secret Storage (JWT)
-  final secureStorage = FlutterSecureStorage();
+  final secureStorage = const FlutterSecureStorage(
+    aOptions: AndroidOptions(
+      encryptedSharedPreferences: true,
+    ),
+  );
 
   /// ✅ GetX
   final ns = Get.put(NotificationState());

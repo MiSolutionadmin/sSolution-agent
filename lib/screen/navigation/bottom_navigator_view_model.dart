@@ -23,6 +23,8 @@ class BottomNavigatorViewModel extends GetxController with GetTickerProviderStat
   final RxInt currentIndex = 0.obs;
   final RxBool isLoading = true.obs;
   final RxList<Widget> widgetOptions = <Widget>[].obs;
+  final RxString alertVideoUrl = ''.obs;
+  final RxString alertVideoType = ''.obs;
   
   // Dependencies
   final UserState userState = Get.put(UserState());
@@ -53,22 +55,44 @@ class BottomNavigatorViewModel extends GetxController with GetTickerProviderStat
 
   @override
   void onClose() {
-    bottomTabController.dispose();
+    try {
+      // TabController가 사용 중이 아닐 때만 dispose
+      if (!bottomTabController.indexIsChanging) {
+        bottomTabController.dispose();
+      }
+    } catch (e) {
+      print('TabController dispose 오류: $e');
+      try {
+        bottomTabController.dispose();
+      } catch (e2) {
+        print('TabController 강제 dispose 오류: $e2');
+      }
+    }
     super.onClose();
   }
 
   /// 탭 컨트롤러 초기화
   void _initializeTabController() {
-    bottomTabController = TabController(length: 4, vsync: this);
-    bottomTabController.animateTo(userState.bottomIndex.value);
-    currentIndex.value = userState.bottomIndex.value;
+    try {
+      bottomTabController = TabController(length: 4, vsync: this);
+      final targetIndex = userState.bottomIndex.value.clamp(0, 3);
+      bottomTabController.animateTo(targetIndex);
+      currentIndex.value = targetIndex;
+    } catch (e) {
+      print('TabController 초기화 오류: $e');
+      // 기본값으로 초기화
+      bottomTabController = TabController(length: 4, vsync: this);
+      currentIndex.value = 0;
+    }
   }
 
   /// 위젯 옵션 초기화
   void _initializeWidgetOptions() {
     widgetOptions.value = [
       const MainView(),
-      const VideoPage(videoUrl: "http://misnetwork.iptime.org:9099/videos/record_2025-07-29-16-05-38.mp4", type: '경보'), // 경보용 비디오 페이지 재활용
+      Obx(() => alertVideoUrl.value.isNotEmpty 
+        ? VideoPage(videoUrl: alertVideoUrl.value, type: alertVideoType.value)
+        : const VideoPage(videoUrl: "http://misnetwork.iptime.org:9099/videos/record_2025-07-29-16-05-38.mp4", type: '경보')), // 기본 경보용 비디오 페이지
       const RecordView(),
       const SettingView(),
     ];
@@ -221,4 +245,48 @@ class BottomNavigatorViewModel extends GetxController with GetTickerProviderStat
 
   /// 현재 페이지 위젯
   Widget get currentPageWidget => widgetOptions[currentIndex.value];
+
+  /// TabController가 사용 가능한지 확인
+  bool get isTabControllerReady {
+    try {
+      return bottomTabController.length == 4 && widgetOptions.length == 4;
+    } catch (e) {
+      print('TabController 상태 확인 오류: $e');
+      return false;
+    }
+  }
+
+  /// FCM에서 경보 탭으로 이동하면서 videoUrl 설정
+  void navigateToAlertWithVideo(String videoUrl, String type) {
+    try {
+      alertVideoUrl.value = videoUrl;
+      alertVideoType.value = type;
+      
+      // 안전하게 위젯 옵션 업데이트 (재초기화 대신 직접 업데이트)
+      if (widgetOptions.length >= 2) {
+        widgetOptions[1] = VideoPage(videoUrl: videoUrl, type: type);
+      } else {
+        _initializeWidgetOptions();
+      }
+      
+      // 경보 탭(index 1)로 이동
+      onTabChanged(1);
+      
+      // TabController 상태를 체크하고 안전하게 이동
+      Future.delayed(Duration(milliseconds: 100), () {
+        if (isTabControllerReady && !isClosed) {
+          try {
+            bottomTabController.animateTo(1);
+          } catch (e) {
+            print('TabController animateTo 오류: $e');
+          }
+        }
+      });
+    } catch (e) {
+      print('navigateToAlertWithVideo 오류: $e');
+      // 오류 발생 시 안전하게 기본 초기화
+      _initializeWidgetOptions();
+      onTabChanged(1);
+    }
+  }
 }

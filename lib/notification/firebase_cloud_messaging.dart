@@ -18,6 +18,7 @@ import '../db/camera_table.dart';
 import '../provider/camera_state.dart';
 import '../provider/notification_state.dart';
 import '../screen/navigation/bottom_navigator_view.dart';
+import '../screen/navigation/bottom_navigator_view_model.dart';
 import '../screen/monitoring/monitoring_main_screen.dart';
 import '../vstarcam/main/main_logic.dart';
 import '../vstarcam/play/play_logic.dart';
@@ -211,40 +212,42 @@ class FCM {
 
           ns.notiDocId.value = docId;
 
-          Get.dialog(CameraAlertDialog(
-            title: cameraType == "소화장치 안내" ? cameraType : '카메라 알림 경보',
-            body: '${notificationList[0]['body']}',
-            onTap: () async
-            {
-              final isFireFightingGuide = cameraType == '소화장치 안내';
-              final isFlameDetection = cameraType == '불꽃 감지';
-              final isSmokeDetection = cameraType == '연기 감지';
-              final notificationBody = notificationList[0];
+          final isFireFightingGuide = cameraType == '소화장치 안내';
+          final isFlameDetection = cameraType == '불꽃 감지';
+          final isSmokeDetection = cameraType == '연기 감지';
+          final notificationBody = notificationList[0];
 
-              // 확인 버튼을 누를시 다이얼로그를 닫음
-              Get.back();
+          // 확인 버튼을 누를시 다이얼로그를 닫음
+          Get.back();
 
-              // 알림 해제 내역 세팅
-              if (isFlameDetection) {
-                ns.alertTurnOffList.value = ['불꽃 감지 오류', '기타 (직접입력)'];
-              } else if (isSmokeDetection) {
-                ns.alertTurnOffList.value = ['연기 감지 오류', '기타 (직접입력)'];
-              } else {
-                ns.alertTurnOffList.value = ['센서 감지 오류', '기타 (직접입력)'];
-              }
+          // 알림 해제 내역 세팅
+          if (isFlameDetection) {
+            ns.alertTurnOffList.value = ['불꽃 감지 오류', '기타 (직접입력)'];
+          } else if (isSmokeDetection) {
+            ns.alertTurnOffList.value = ['연기 감지 오류', '기타 (직접입력)'];
+          } else {
+            ns.alertTurnOffList.value = ['센서 감지 오류', '기타 (직접입력)'];
+          }
 
-              // 소화장치일 시 페이지 이동 하지않음.
-              if (isFireFightingGuide) {
-                return;
-              }
+          // 소화장치일 시 페이지 이동 하지않음.
+          if (isFireFightingGuide) {
+            return;
+          }
 
-              print("type ? ${cameraType}");
-              print("ns.alertTurnOffList.value ? ${ns.alertTurnOffList.value}");
+          print("type ? ${cameraType}");
+          print("ns.alertTurnOffList.value ? ${ns.alertTurnOffList.value}");
 
-              openAgentVideoPage(docId,message.data['type']);
-            },
-            cameraName: '${notificationList[0]['ipcamId']}',
-          ));
+          openAgentVideoPage(docId,message.data['type']);
+
+          // Get.dialog(CameraAlertDialog(
+          //   title: cameraType == "소화장치 안내" ? cameraType : '카메라 알림 경보',
+          //   body: '${notificationList[0]['body']}',
+          //   onTap: () async
+          //   {
+          //
+          //   },
+          //   cameraName: '${notificationList[0]['ipcamId']}',
+          // ));
           break;
       }
       flutterLocalNotificationsPlugin.show(
@@ -445,14 +448,30 @@ class FCM {
     titleCtlr.close();
   }
 
-  /// agent 비디오 다시보기로 이동
+  /// agent 비디오 다시보기로 BottomNavigator 경보 탭으로 이동
   Future<void> openAgentVideoPage(String docId, String type) async{
-    // 확인 버튼을 누를시 다이얼로그를 닫음
-    Get.back();
-
     final videoUrl = await getVideoUrl(docId);
 
-    Get.to(() => VideoPage(videoUrl: videoUrl, type: type));
+    // BottomNavigator가 이미 열려있는지 확인
+    if (Get.currentRoute == BottomNavigatorView.routeName) {
+      // 이미 메인 페이지에 있으면 BottomNavigatorViewModel을 찾아서 경보 탭으로 이동
+      try {
+        final bottomNavViewModel = Get.find<BottomNavigatorViewModel>();
+        bottomNavViewModel.navigateToAlertWithVideo(videoUrl, type);
+      } catch (e) {
+        // BottomNavigatorViewModel을 찾을 수 없으면 새로 이동
+        Get.offAll(() => const BottomNavigatorView());
+        await Future.delayed(Duration(milliseconds: 100)); // 페이지 로딩 대기
+        final bottomNavViewModel = Get.find<BottomNavigatorViewModel>();
+        bottomNavViewModel.navigateToAlertWithVideo(videoUrl, type);
+      }
+    } else {
+      // 다른 페이지에 있으면 BottomNavigator로 이동 후 경보 탭 설정
+      Get.offAll(() => const BottomNavigatorView());
+      await Future.delayed(Duration(milliseconds: 100)); // 페이지 로딩 대기
+      final bottomNavViewModel = Get.find<BottomNavigatorViewModel>();
+      bottomNavViewModel.navigateToAlertWithVideo(videoUrl, type);
+    }
   }
 
   Future<void> _cameraLogicInit(String cameraUid) async {

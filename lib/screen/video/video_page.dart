@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:mms/components/dialog.dart';
 import 'package:mms/components/dialogManager.dart';
 import 'package:mms/db/camera_table.dart';
+import 'package:mms/utils/font/font.dart';
 import 'package:video_player/video_player.dart';
 import 'package:http/http.dart' as http;
 import 'package:get/get.dart';
@@ -361,7 +362,8 @@ class _VideoPageState extends State<VideoPage> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text("영상 보기"),
+        title: Text("실시간 경보 영상"),
+        centerTitle: true,
         backgroundColor: Colors.white,
         actions: [
           IconButton(
@@ -488,59 +490,91 @@ class _VideoPageState extends State<VideoPage> {
                       ),
           ),
           
-          // 영상과 버튼 사이 간격 (50px)
+          // 영상과 버튼 사이 간격 (30px)
+          SizedBox(height: 30),
+          
+          // 안내 텍스트
+          if (_isReady && isControllerReady)
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              child: Text(
+                '이벤트가 발생한 화면을 보고\n\n화재 또는 비화재로 판단하여 주시기 바랍니다.\n\n판단의 결과가 포인트 지급에 영향을 미칩니다.',
+                style: f14w700,
+                textAlign: TextAlign.center,
+              ),
+            ),
+          
+          // 텍스트와 버튼 사이 간격 (20px)
           SizedBox(height: 50),
           
           // 액션 버튼들 (영상 아래)
           if (_isReady && isControllerReady)
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                TextButton(
-                  onPressed: () {
-                    // 화재감지 버튼 클릭 시 처리
-                    showConfirmTapDialog(
-                      context,
-                      "서버로 전송 하시겠습니까?",
-                          () async {
-                        DialogManager.showLoading(context);
-                        await completeAgentWork(null, 0);
-                        DialogManager.hideLoading();
-                        Get.back();
-                        Get.back();
-                        //Get.offAll(() => AlimScreen());
+            Container(
+              width: Get.width * 0.8,
+              child: Row(
+                spacing: 62,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Expanded(
+                    child: TextButton(
+                      onPressed: () {
+                        // 화재감지 버튼 클릭 시 처리
+                        final buttonText = _getButtonText();
+                        _showStyledConfirmDialog(
+                          context,
+                          buttonText,
+                          Colors.red,
+                              () async {
+                            DialogManager.showLoading(context);
+                            await completeAgentWork(null, 0);
+                            DialogManager.hideLoading();
+                            Get.back();
+                            Get.back();
+                            //Get.offAll(() => AlimScreen());
+                          },
+                        ); // ✅ 화재감지 버튼 함수
                       },
-                    ); // ✅ 화재감지 버튼 함수
-                  },
-                  style: TextButton.styleFrom(
-                    backgroundColor: Colors.red,
-                    foregroundColor: Colors.white,
-                    padding: EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
+                      style: TextButton.styleFrom(
+                        backgroundColor: Colors.red,
+                        foregroundColor: Colors.white,
+                        padding: EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                      ),
+                      child: Text(
+                        _getButtonText(),
+                        style: f20w700White,
+                      ),
                     ),
                   ),
-                  child: Text(
-                    (widget.type ?? '') == '불꽃 감지' ? '화재감지' : '연기감지',
-                  ),
-                ),
-                SizedBox(width: 16),
-                TextButton(
-                  onPressed: () {
-                    // 오탐 버튼 클릭 시 처리
-                    showAlimCheckTapDialog(context, "");
-                  },
-                  style: TextButton.styleFrom(
-                    backgroundColor: Colors.grey,        // 배경색
-                    foregroundColor: Colors.white,       // 텍스트 색
-                    padding: EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
+                  Expanded(
+                    child: TextButton(
+                      onPressed: () {
+                        // 오탐 버튼 클릭 시 처리
+                        _showStyledConfirmDialog(
+                          context,
+                          "비화재",
+                          Colors.grey,
+                              () async {
+                            // 오탐 처리 로직
+                            showAlimCheckTapDialog(context, "");
+                          },
+                        );
+                      },
+                      style: TextButton.styleFrom(
+                        backgroundColor: Colors.black,        // 배경색
+                        foregroundColor: Colors.white,       // 텍스트 색
+                        padding: EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                      ),
+                      child: Text('비화재',  style: f20w700White),
                     ),
                   ),
-                  child: Text('오탐'),
-                ),
-              ],
+                ],
+              ),
             ),
             
           // 나머지 공간
@@ -629,6 +663,127 @@ class _VideoPageState extends State<VideoPage> {
           )
         ],
       ),
+    );
+  }
+
+  // 버튼 텍스트 결정 함수
+  String _getButtonText() {
+    return (widget.type ?? '') == '불꽃 감지' ? '화재' : '연기';
+  }
+
+  // 버튼 스타일이 적용된 확인 다이얼로그
+  void _showStyledConfirmDialog(BuildContext context, String buttonText, Color buttonColor, VoidCallback onConfirm) {
+    showDialog(
+      context: context,
+      barrierDismissible: true,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          backgroundColor: Colors.white,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(14),
+          ),
+          contentPadding: const EdgeInsets.only(top: 35, bottom: 35),
+          content: Container(
+            width: Get.width,
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            child: Row(
+              spacing: 8,
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Container(
+                  padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: buttonColor,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Text(
+                    buttonText,
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 14,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ),
+                Text(
+                  '로 판단하시겠습니까?',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            Padding(
+              padding: EdgeInsets.symmetric(horizontal: 12),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: GestureDetector(
+                      onTap: () {
+                        Get.back();
+                        onConfirm();
+                      },
+                      behavior: HitTestBehavior.opaque,
+                      child: Center(
+                        child: Container(
+                          width: Get.width,
+                          height: 50,
+                          decoration: BoxDecoration(
+                            color:  Color(0xff1955EE),
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          child: Center(
+                            child: Text(
+                              '확인',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 16,
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: GestureDetector(
+                      onTap: () {
+                        Get.back();
+                      },
+                      behavior: HitTestBehavior.opaque,
+                      child: Center(
+                        child: Container(
+                          width: Get.width,
+                          height: 50,
+                          decoration: BoxDecoration(
+                            color: Color(0xffF1F4F7),
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          child: Center(
+                            child: Text(
+                              '취소',
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+
+                ],
+              ),
+            ),
+          ],
+        );
+      },
     );
   }
 

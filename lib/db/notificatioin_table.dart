@@ -18,10 +18,16 @@ Future<List> getAlimNotification(String docId) async {
 
 Future<Map<String, dynamic>> getAllNotificationData() async {
   /// Secret Storage (JWT)
-  final secureStorage = FlutterSecureStorage();
+  final secureStorage = const FlutterSecureStorage(
+    aOptions: AndroidOptions(
+      encryptedSharedPreferences: true,
+    ),
+  );
 
   try {
     final token = await secureStorage.read(key: "jwt_token");
+
+    print("token jwt ?? ${token}");
 
     final response = await http.get(
       Uri.parse('${config.baseUrl}/notis'),
