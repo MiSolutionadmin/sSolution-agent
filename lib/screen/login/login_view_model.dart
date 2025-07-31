@@ -10,7 +10,6 @@ import '../navigation/bottom_navigator_view.dart';
 import 'login_model.dart';
 import 'login_service.dart';
 import 'phone_verification_view.dart';
-import 'pw_change_screen.dart';
 
 class LoginViewModel extends GetxController {
   // Controllers

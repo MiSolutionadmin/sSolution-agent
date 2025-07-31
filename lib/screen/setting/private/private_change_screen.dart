@@ -10,7 +10,7 @@ import '../../../components/dialog.dart';
 import '../../../db/user_table.dart';
 import '../../../provider/user_state.dart';
 import '../../login/login_view.dart';
-import '../../login/pw_change_screen.dart';
+import '../../login/password_reset_view.dart';
 import '../../../utils/bootpay.dart';
 import '../../../utils/font/font.dart';
 
@@ -91,7 +91,7 @@ class _PrivateChangeState extends State<PrivateChange> {
                                     });
                                   }
                                   else {
-                                    Get.to(() => PwChange(setting: 'true'));
+                                    Get.to(() => const PasswordResetView(setting: 'true'));
                                   }
                                 },
                                 child: Container(

@@ -96,7 +96,7 @@ class BottomNavigatorView extends StatelessWidget {
   /// 탭 아이콘 생성
   Widget _buildTabIcon(NavigationTabItem tabItem, bool isSelected) {
     switch (tabItem.index) {
-      case 0: // 모니터링
+      case 0: // 메인
         return ColorFiltered(
           colorFilter: ColorFilter.mode(
             isSelected ? Colors.black : Colors.grey,
@@ -104,7 +104,7 @@ class BottomNavigatorView extends StatelessWidget {
           ),
           child: const Icon(FontAwesomeIcons.home, size: 24),
         );
-      case 1: // 카메라
+      case 1: // 경보
         return ColorFiltered(
           colorFilter: ColorFilter.mode(
             isSelected ? Colors.black : Colors.grey,
@@ -112,7 +112,7 @@ class BottomNavigatorView extends StatelessWidget {
           ),
           child: const Icon(FontAwesomeIcons.exclamationTriangle, size: 24),
         );
-      case 2: // 알림
+      case 2: // 기록
         return ColorFiltered(
           colorFilter: ColorFilter.mode(
             isSelected ? Colors.black : Colors.grey,

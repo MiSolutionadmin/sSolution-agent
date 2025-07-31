@@ -6,9 +6,9 @@ import '../../components/dialog.dart';
 import '../../provider/user_state.dart';
 import '../navigation/bottom_navigator_view.dart';
 import 'login_view.dart';
+import 'password_reset_view.dart';
 import 'phone_verification_model.dart';
 import 'phone_verification_service.dart';
-import 'terms_screen.dart';
 
 class PhoneVerificationViewModel extends GetxController {
   // Dependencies
@@ -116,8 +116,8 @@ class PhoneVerificationViewModel extends GetxController {
       );
 
       if (verificationResult.success) {
-        // 인증 성공 시 약관 동의 화면으로 이동
-        _navigateToTerms();
+        // 인증 성공 시 비밀번호 초기화 화면으로 이동
+        _navigateToPasswordReset();
       } else {
         _showErrorDialog(context, verificationResult.message);
       }
@@ -127,9 +127,9 @@ class PhoneVerificationViewModel extends GetxController {
     }
   }
 
-  /// 약관 동의 화면으로 이동
-  void _navigateToTerms() {
-    Get.to(() => Terms());
+  /// 비밀번호 초기화 화면으로 이동
+  void _navigateToPasswordReset() {
+    Get.to(() => const PasswordResetView());
   }
 
   /// 메인 화면으로 이동 (인증 완료 후)

@@ -5,7 +5,7 @@ import 'package:get/get.dart';
 
 import '../../components/dialog.dart';
 import '../../utils/font/font.dart';
-import 'pw_change_screen.dart';
+import 'password_reset_view.dart';
 
 class Terms extends StatefulWidget {
   const Terms({super.key});
@@ -391,7 +391,7 @@ class _TermsState extends State<Terms> {
           if(isChecked==false || isChecked2==false){
             showOnlyConfirmDialog(context, '약관을 모두 동의해주세요');
           }else{
-            Get.to(() => PwChange());
+            Get.to(() => const PasswordResetView());
           }
         },
         child: Container(

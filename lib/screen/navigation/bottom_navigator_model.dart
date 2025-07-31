@@ -55,24 +55,24 @@ class NavigationConfig {
       tabs: [
         NavigationTabItem(
           index: 0,
-          label: '모니터링',
+          label: '메인',
           icon: const Icon(FontAwesomeIcons.home, size: 24, color: Colors.grey),
           selectedIcon: const Icon(FontAwesomeIcons.home, size: 24, color: Colors.black),
-          routeName: '/monitoring',
+          routeName: '/main',
         ),
         NavigationTabItem(
           index: 1,
-          label: '카메라',
+          label: '경보',
           icon: const Icon(FontAwesomeIcons.exclamationTriangle, size: 24, color: Colors.grey),
           selectedIcon: const Icon(FontAwesomeIcons.exclamationTriangle, size: 24, color: Colors.black),
-          routeName: '/camera',
+          routeName: '/alert',
         ),
         NavigationTabItem(
           index: 2,
-          label: '알림',
+          label: '기록',
           icon: const Icon(FontAwesomeIcons.file, size: 24, color: Colors.grey),
           selectedIcon: const Icon(FontAwesomeIcons.file, size: 24, color: Colors.black),
-          routeName: '/notification',
+          routeName: '/record',
         ),
         NavigationTabItem(
           index: 3,
