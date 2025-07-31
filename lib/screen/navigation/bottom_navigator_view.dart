@@ -64,8 +64,8 @@ class BottomNavigatorView extends StatelessWidget {
           ),
         ),
         padding: Platform.isAndroid 
-          ? const EdgeInsets.only(bottom: 8) 
-          : const EdgeInsets.only(bottom: 10),
+          ? const EdgeInsets.only(bottom: 0) 
+          : const EdgeInsets.only(bottom: 0),
         child: TabBar(
           onTap: viewModel.onTabChanged,
           dividerColor: Colors.transparent,
@@ -75,7 +75,7 @@ class BottomNavigatorView extends StatelessWidget {
           unselectedLabelStyle: hintf14w700,
           labelStyle: f14w700,
           labelColor: Colors.black,
-          padding: const EdgeInsets.only(left: 10, right: 10, bottom: 8),
+          padding: const EdgeInsets.only(left: 10, right: 10, bottom: 0),
           labelPadding: EdgeInsets.zero,
           tabs: _buildTabs(viewModel),
         ),
