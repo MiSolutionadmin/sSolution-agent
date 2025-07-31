@@ -79,37 +79,10 @@ class MainView extends StatelessWidget {
                   color: Colors.orange,
                 ),
               ),
-              Text(
-                '(레드 닷 미리)',
-                style: TextStyle(
-                  fontSize: 12,
-                  color: Colors.grey,
-                ),
-              ),
             ],
           ),
           const Spacer(),
-          // 알림 아이콘 (레드 닷)
-          Stack(
-            children: [
-              IconButton(
-                icon: const Icon(Icons.notifications_none),
-                onPressed: viewModel.onNotificationTap,
-              ),
-              Positioned(
-                right: 12,
-                top: 12,
-                child: Container(
-                  width: 8,
-                  height: 8,
-                  decoration: const BoxDecoration(
-                    color: Colors.red,
-                    shape: BoxShape.circle,
-                  ),
-                ),
-              ),
-            ],
-          ),
+
           // 캘린더 아이콘
           IconButton(
             icon: const Icon(Icons.calendar_today),
@@ -319,7 +292,65 @@ class MainView extends StatelessWidget {
   Widget _buildEventTable(MainViewModel viewModel) {
     return Obx(() {
       if (viewModel.isEventsLoading.value) {
-        return const EventTableSkeleton();
+        return Container(
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(8),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.grey.withOpacity(0.1),
+                spreadRadius: 1,
+                blurRadius: 3,
+                offset: const Offset(0, 1),
+              ),
+            ],
+          ),
+          child: Column(
+            children: [
+              // 테이블 헤더
+              Container(
+                padding: const EdgeInsets.symmetric(vertical: 12),
+                decoration: BoxDecoration(
+                  color: Colors.grey[200],
+                  borderRadius: const BorderRadius.only(
+                    topLeft: Radius.circular(8),
+                    topRight: Radius.circular(8),
+                  ),
+                ),
+                child: const Row(
+                  children: [
+                    Expanded(
+                        flex: 3,
+                        child: Center(
+                            child: Text('날짜',
+                                style:
+                                    TextStyle(fontWeight: FontWeight.bold)))),
+                    Expanded(
+                        flex: 2,
+                        child: Center(
+                            child: Text('경과',
+                                style:
+                                    TextStyle(fontWeight: FontWeight.bold)))),
+                    Expanded(
+                        flex: 2,
+                        child: Center(
+                            child: Text('판단',
+                                style:
+                                    TextStyle(fontWeight: FontWeight.bold)))),
+                    Expanded(
+                        flex: 2,
+                        child: Center(
+                            child: Text('포인트',
+                                style:
+                                    TextStyle(fontWeight: FontWeight.bold)))),
+                  ],
+                ),
+              ),
+              // 스켈레톤 행들
+              ...List.generate(5, (index) => _buildSkeletonEventRow()),
+            ],
+          ),
+        );
       }
 
       return Container(
@@ -357,7 +388,7 @@ class MainView extends StatelessWidget {
                   Expanded(
                       flex: 2,
                       child: Center(
-                          child: Text('결과',
+                          child: Text('경과',
                               style: TextStyle(fontWeight: FontWeight.bold)))),
                   Expanded(
                       flex: 2,
@@ -417,7 +448,7 @@ class MainView extends StatelessWidget {
             flex: 2,
             child: Center(
               child: Text(
-                '${event.count}회',
+                event.elapsedTime,
                 style: const TextStyle(fontSize: 12),
               ),
             ),
@@ -445,6 +476,65 @@ class MainView extends StatelessWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  /// 스켈레톤 이벤트 행 위젯
+  Widget _buildSkeletonEventRow() {
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+      decoration: const BoxDecoration(
+        border: Border(
+          bottom: BorderSide(color: Colors.grey, width: 0.2),
+        ),
+      ),
+      child: SkeletonLoader(
+        child: Row(
+          children: [
+            // 날짜
+            Expanded(
+              flex: 3,
+              child: Center(
+                child: Text(
+                  '2025-01-15\n10:30:45',
+                  style: const TextStyle(fontSize: 12, color: Colors.transparent),
+                  textAlign: TextAlign.center,
+                ),
+              ),
+            ),
+            // 경과
+            Expanded(
+              flex: 2,
+              child: Center(
+                child: Text(
+                  '15초',
+                  style: const TextStyle(fontSize: 12, color: Colors.transparent),
+                ),
+              ),
+            ),
+            // 판단
+            Expanded(
+              flex: 2,
+              child: Center(
+                child: Text(
+                  '화재',
+                  style: const TextStyle(fontSize: 12, color: Colors.transparent),
+                ),
+              ),
+            ),
+            // 포인트
+            Expanded(
+              flex: 2,
+              child: Center(
+                child: Text(
+                  '1000 P',
+                  style: const TextStyle(fontSize: 12, color: Colors.transparent),
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

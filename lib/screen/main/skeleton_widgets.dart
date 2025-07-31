@@ -211,7 +211,7 @@ class EventTableSkeleton extends StatelessWidget {
             child: const Row(
               children: [
                 Expanded(flex: 3, child: Center(child: Text('날짜', style: TextStyle(fontWeight: FontWeight.bold)))),
-                Expanded(flex: 2, child: Center(child: Text('결과', style: TextStyle(fontWeight: FontWeight.bold)))),
+                Expanded(flex: 2, child: Center(child: Text('경과', style: TextStyle(fontWeight: FontWeight.bold)))),
                 Expanded(flex: 2, child: Center(child: Text('판단', style: TextStyle(fontWeight: FontWeight.bold)))),
                 Expanded(flex: 2, child: Center(child: Text('포인트', style: TextStyle(fontWeight: FontWeight.bold)))),
               ],
@@ -232,30 +232,55 @@ class EventTableSkeleton extends StatelessWidget {
           bottom: BorderSide(color: Colors.grey, width: 0.2),
         ),
       ),
-      child: const Row(
+      child: Row(
         children: [
+          // 날짜
           Expanded(
             flex: 3,
             child: Center(
-              child: SkeletonText(width: 60, height: 12),
+              child: SkeletonLoader(
+                child: Text(
+                  '2025-01-15\n10:30:45',
+                  style: const TextStyle(fontSize: 12, color: Colors.transparent),
+                  textAlign: TextAlign.center,
+                ),
+              ),
             ),
           ),
+          // 경과
           Expanded(
             flex: 2,
             child: Center(
-              child: SkeletonText(width: 30, height: 12),
+              child: SkeletonLoader(
+                child: Text(
+                  '15초',
+                  style: const TextStyle(fontSize: 12, color: Colors.transparent),
+                ),
+              ),
             ),
           ),
+          // 판단
           Expanded(
             flex: 2,
             child: Center(
-              child: SkeletonText(width: 40, height: 12),
+              child: SkeletonLoader(
+                child: Text(
+                  '화재',
+                  style: const TextStyle(fontSize: 12, color: Colors.transparent),
+                ),
+              ),
             ),
           ),
+          // 포인트
           Expanded(
             flex: 2,
             child: Center(
-              child: SkeletonText(width: 50, height: 12),
+              child: SkeletonLoader(
+                child: Text(
+                  '1000 P',
+                  style: const TextStyle(fontSize: 12, color: Colors.transparent),
+                ),
+              ),
             ),
           ),
         ],

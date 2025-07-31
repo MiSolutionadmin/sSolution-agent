@@ -11,52 +11,116 @@ class RecordView extends StatelessWidget {
     final RecordViewModel viewModel = Get.put(RecordViewModel());
 
     return Scaffold(
-      appBar: AppBar(
-        title: Obx(() => Text(viewModel.title.value)),
-        backgroundColor: Colors.white,
-        elevation: 1,
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.refresh),
-            onPressed: viewModel.refresh,
+      backgroundColor: Colors.grey[100],
+      body: SafeArea(
+        child: Column(
+          children: [
+            // 상단 헤더
+            _buildHeader(),
+            // 월별 네비게이션
+            _buildMonthNavigation(viewModel),
+            // 알림 내역 테이블
+            Expanded(
+              child: _buildAlertTable(viewModel),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// 상단 헤더
+  Widget _buildHeader() {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: const BoxDecoration(
+        color: Colors.white,
+        border: Border(
+          bottom: BorderSide(color: Colors.grey, width: 0.5),
+        ),
+      ),
+      child: const Row(
+        children: [
+          Text(
+            '알림 내역',
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              color: Colors.black,
+            ),
           ),
         ],
       ),
-      body: Column(
+    );
+  }
+
+  /// 월별 네비게이션
+  Widget _buildMonthNavigation(RecordViewModel viewModel) {
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 16),
+      color: Colors.grey[200],
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          // 필터 영역
+          IconButton(
+            icon: const Icon(Icons.chevron_left),
+            onPressed: viewModel.goToPreviousMonth,
+          ),
+          Obx(() => Text(
+            viewModel.monthDisplayText,
+            style: const TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
+            ),
+          )),
+          IconButton(
+            icon: const Icon(Icons.chevron_right),
+            onPressed: viewModel.goToNextMonth,
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// 알림 내역 테이블
+  Widget _buildAlertTable(RecordViewModel viewModel) {
+    return Container(
+      margin: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(8),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.grey.withOpacity(0.1),
+            spreadRadius: 1,
+            blurRadius: 3,
+            offset: const Offset(0, 1),
+          ),
+        ],
+      ),
+      child: Column(
+        children: [
+          // 테이블 헤더
           Container(
-            padding: const EdgeInsets.all(16.0),
-            child: Row(
+            padding: const EdgeInsets.symmetric(vertical: 12),
+            decoration: BoxDecoration(
+              color: Colors.grey[200],
+              borderRadius: const BorderRadius.only(
+                topLeft: Radius.circular(8),
+                topRight: Radius.circular(8),
+              ),
+            ),
+            child: const Row(
               children: [
-                const Text(
-                  '필터: ',
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-                Expanded(
-                  child: Obx(() => DropdownButton<String>(
-                    value: viewModel.selectedFilter.value,
-                    isExpanded: true,
-                    items: viewModel.filterOptions.map((String filter) {
-                      return DropdownMenuItem<String>(
-                        value: filter,
-                        child: Text(filter),
-                      );
-                    }).toList(),
-                    onChanged: (String? newValue) {
-                      if (newValue != null) {
-                        viewModel.changeFilter(newValue);
-                      }
-                    },
-                  )),
-                ),
+                Expanded(flex: 3, child: Center(child: Text('날짜', style: TextStyle(fontWeight: FontWeight.bold)))),
+                Expanded(flex: 2, child: Center(child: Text('알림', style: TextStyle(fontWeight: FontWeight.bold)))),
+                Expanded(flex: 2, child: Center(child: Text('이벤트', style: TextStyle(fontWeight: FontWeight.bold)))),
+                Expanded(flex: 2, child: Center(child: Text('결과', style: TextStyle(fontWeight: FontWeight.bold)))),
+                Expanded(flex: 2, child: Center(child: Text('영상', style: TextStyle(fontWeight: FontWeight.bold)))),
               ],
             ),
           ),
-          // 기록 목록
+          // 테이블 바디
           Expanded(
             child: Obx(() {
               if (viewModel.isLoading.value) {
@@ -68,9 +132,9 @@ class RecordView extends StatelessWidget {
               if (viewModel.records.isEmpty) {
                 return const Center(
                   child: Text(
-                    '기록이 없습니다',
+                    '알림 내역이 없습니다',
                     style: TextStyle(
-                      fontSize: 16,
+                      fontSize: 14,
                       color: Colors.grey,
                     ),
                   ),
@@ -78,11 +142,10 @@ class RecordView extends StatelessWidget {
               }
 
               return ListView.builder(
-                padding: const EdgeInsets.symmetric(horizontal: 16.0),
                 itemCount: viewModel.records.length,
                 itemBuilder: (context, index) {
                   final record = viewModel.records[index];
-                  return _buildRecordCard(record, viewModel);
+                  return _buildTableRow(record, viewModel);
                 },
               );
             }),
@@ -92,93 +155,89 @@ class RecordView extends StatelessWidget {
     );
   }
 
-  Widget _buildRecordCard(RecordItem record, RecordViewModel viewModel) {
-    return Card(
-      margin: const EdgeInsets.only(bottom: 12),
-      elevation: 2,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(8),
+  /// 테이블 행
+  Widget _buildTableRow(RecordItem record, RecordViewModel viewModel) {
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 8),
+      decoration: const BoxDecoration(
+        border: Border(
+          bottom: BorderSide(color: Colors.grey, width: 0.2),
+        ),
       ),
-      child: InkWell(
-        borderRadius: BorderRadius.circular(8),
-        onTap: () => viewModel.viewRecordDetail(record),
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 8,
-                      vertical: 4,
-                    ),
-                    decoration: BoxDecoration(
-                      color: _getTypeColor(record.type),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Text(
-                      record.type,
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 12,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                  ),
-                  Text(
-                    viewModel.getRelativeTime(record.timestamp),
-                    style: const TextStyle(
-                      fontSize: 12,
-                      color: Colors.grey,
-                    ),
-                  ),
-                ],
+      child: Row(
+        children: [
+          // 날짜
+          Expanded(
+            flex: 3,
+            child: Center(
+              child: Text(
+                record.dateText,
+                style: const TextStyle(fontSize: 12),
+                textAlign: TextAlign.center,
               ),
-              const SizedBox(height: 8),
-              Text(
-                record.location,
-                style: const TextStyle(
-                  fontSize: 16,
+            ),
+          ),
+          // 알림 (불꽃 알림, 연기 알림 등)
+          Expanded(
+            flex: 2,
+            child: Center(
+              child: Text(
+                record.alertType,
+                style: const TextStyle(fontSize: 12),
+              ),
+            ),
+          ),
+          // 이벤트 (비정상, 화재 등)
+          Expanded(
+            flex: 2,
+            child: Center(
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                decoration: BoxDecoration(
+                  color: record.eventColor,
+                  borderRadius: BorderRadius.circular(4),
+                ),
+                child: Text(
+                  record.eventType,
+                  style: const TextStyle(
+                    fontSize: 10,
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            ),
+          ),
+          // 결과 (OK, NG)
+          Expanded(
+            flex: 2,
+            child: Center(
+              child: Text(
+                record.result,
+                style: TextStyle(
+                  fontSize: 12,
+                  color: record.result == 'OK' ? Colors.black : Colors.red,
                   fontWeight: FontWeight.w500,
                 ),
               ),
-              const SizedBox(height: 4),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    '상태: ${record.status}',
-                    style: const TextStyle(
-                      fontSize: 14,
-                      color: Colors.grey,
-                    ),
-                  ),
-                  const Icon(
-                    Icons.chevron_right,
-                    color: Colors.grey,
-                  ),
-                ],
-              ),
-            ],
+            ),
           ),
-        ),
+          // 영상 (재생 버튼)
+          Expanded(
+            flex: 2,
+            child: Center(
+              child: IconButton(
+                icon: const Icon(
+                  Icons.play_arrow,
+                  color: Colors.blue,
+                  size: 20,
+                ),
+                onPressed: () => viewModel.playVideo(record),
+              ),
+            ),
+          ),
+        ],
       ),
     );
-  }
-
-  Color _getTypeColor(String type) {
-    switch (type) {
-      case '화재감지':
-        return Colors.red;
-      case '연기감지':
-        return Colors.orange;
-      case '정상':
-        return Colors.green;
-      default:
-        return Colors.blue;
-    }
   }
 }

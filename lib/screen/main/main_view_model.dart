@@ -71,7 +71,7 @@ class MainViewModel extends GetxController {
       originalWorkDates.clear();
       addDates.clear();
       deleteDates.clear();
-      
+
       final agentId = _userState.userData['id']?.toString() ?? '';
 
       final result = await _apiService.getWorkDates(agentId: agentId);
@@ -226,17 +226,19 @@ class MainViewModel extends GetxController {
       );
 
       if (eventsResult['success'] == true) {
-        final eventsData = eventsResult['data']['events'] as List?;
+        final eventsData = eventsResult['data']['result'] as List?;
         print('이벤트 데이터: $eventsData');
 
         if (eventsData != null && eventsData.isNotEmpty) {
           final events = eventsData
               .map((event) => EventItem(
-                    date: event['date']?.toString() ?? '',
-                    count: int.tryParse(event['count']?.toString() ?? '0') ?? 0,
-                    result: event['result']?.toString() ?? '',
+                    date: _formatEventDate(event['create_date']),
+                    count: _getEventCount(event),
+                    result: _getEventResult(event['false_positive']),
+                    elapsedTime: _calculateElapsedTime(
+                        event['create_date'], event['notiDate']),
                     points:
-                        int.tryParse(event['points']?.toString() ?? '0') ?? 0,
+                        int.tryParse(event['point']?.toString() ?? '0') ?? 0,
                   ))
               .toList();
 
@@ -316,23 +318,23 @@ class MainViewModel extends GetxController {
               ),
               const SizedBox(height: 16),
               // 선택된 날짜 개수 표시
-              Obx(() => Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                    decoration: BoxDecoration(
-                      color: Colors.orange.withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Text(
-                      '선택된 날짜: ${selectedWorkDates.length}일',
-                      style: const TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w500,
-                        color: Colors.orange,
-                      ),
-                    ),
-                  )),
-              const SizedBox(height: 16),
+              // Obx(() => Container(
+              //       padding:
+              //           const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+              //       decoration: BoxDecoration(
+              //         color: Colors.orange.withOpacity(0.1),
+              //         borderRadius: BorderRadius.circular(12),
+              //       ),
+              //       child: Text(
+              //         '선택된 날짜: ${selectedWorkDates.length}일',
+              //         style: const TextStyle(
+              //           fontSize: 12,
+              //           fontWeight: FontWeight.w500,
+              //           color: Colors.orange,
+              //         ),
+              //       ),
+              //     )),
+              // const SizedBox(height: 16),
               // 달력
               Obx(() => TableCalendar<DateTime>(
                     firstDay: DateTime.now(),
@@ -444,7 +446,7 @@ class MainViewModel extends GetxController {
       final addDateStrings = addDates.map((date) {
         return '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
       }).toList();
-      
+
       // 삭제할 날짜들을 문자열로 변환
       final deleteDateStrings = deleteDates.map((date) {
         return '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
@@ -465,7 +467,7 @@ class MainViewModel extends GetxController {
         if (deleteDates.isNotEmpty) {
           message += '${deleteDates.length}개 날짜 삭제 완료. ';
         }
-        
+
         Get.snackbar(
           '성공',
           message.isNotEmpty ? message : '근무 날짜가 성공적으로 업데이트되었습니다.',
@@ -503,14 +505,12 @@ class MainViewModel extends GetxController {
 
     if (isCurrentlySelected) {
       // 현재 선택된 날짜를 해제하는 경우
-      selectedWorkDates.removeWhere((date) => isSameDay(date, selectedDay));
-
       if (isOriginalDate) {
-        // 원본 데이터에 있던 날짜면 삭제 목록에 추가
-        deleteDates.add(selectedDay);
-        print('기존 날짜 삭제 예정: $selectedDay');
+        // 원본 데이터에 있던 날짜면 확인 모달 표시
+        _showDeleteConfirmDialog(selectedDay);
       } else {
-        // 새로 추가했던 날짜면 추가 목록에서 제거
+        // 새로 추가했던 날짜면 바로 추가 목록에서 제거
+        selectedWorkDates.removeWhere((date) => isSameDay(date, selectedDay));
         addDates.removeWhere((date) => isSameDay(date, selectedDay));
         print('신규 날짜 선택 취소: $selectedDay');
       }
@@ -531,6 +531,109 @@ class MainViewModel extends GetxController {
 
     print(
         '선택된 날짜: ${selectedWorkDates.length}개, 추가: ${addDates.length}개, 삭제: ${deleteDates.length}개');
+  }
+
+  /// 날짜 삭제 확인 모달
+  void _showDeleteConfirmDialog(DateTime selectedDay) {
+    Get.dialog(
+      Dialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child: Container(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // 제목
+              const Text(
+                '결근 처리 확인',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 16),
+              
+              // 내용
+              Text(
+                '${selectedDay.month}/${selectedDay.day}을 결근으로 처리하시겠습니까?\n\n결근으로 처리시 해당 날짜에는 알림을 받을 수 없습니다.',
+                style: const TextStyle(
+                  fontSize: 14,
+                  height: 1.5,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 24),
+              
+              // 버튼들
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+                  // 취소 버튼
+                  Expanded(
+                    child: TextButton(
+                      onPressed: () => Get.back(),
+                      style: TextButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                          side: const BorderSide(color: Colors.grey),
+                        ),
+                      ),
+                      child: const Text(
+                        '취소',
+                        style: TextStyle(
+                          color: Colors.grey,
+                          fontSize: 14,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  
+                  // 확인 버튼
+                  Expanded(
+                    child: ElevatedButton(
+                      onPressed: () {
+                        // 모달 닫기
+                        Get.back();
+                        
+                        // 날짜 삭제 처리
+                        selectedWorkDates.removeWhere((date) => isSameDay(date, selectedDay));
+                        deleteDates.add(selectedDay);
+                        print('기존 날짜 삭제 예정: $selectedDay');
+                        
+                        // UI 강제 업데이트
+                        final temp = focusedDay.value;
+                        focusedDay.value = temp.add(const Duration(milliseconds: 1));
+                        focusedDay.value = temp;
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.red,
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                      ),
+                      child: const Text(
+                        '확인',
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 
   /// 알림 아이콘 클릭
@@ -559,6 +662,53 @@ class MainViewModel extends GetxController {
         return '미정';
     }
   }
+
+  /// 이벤트 날짜 포맷
+  String _formatEventDate(String? dateStr) {
+    if (dateStr == null) return '';
+
+    try {
+      final date = DateTime.parse(dateStr);
+      return '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}\n${date.hour.toString().padLeft(2, '0')}:${date.minute.toString().padLeft(2, '0')}:${date.second.toString().padLeft(2, '0')}';
+    } catch (e) {
+      return dateStr;
+    }
+  }
+
+  /// 이벤트 횟수 계산
+  int _getEventCount(Map<String, dynamic> event) {
+    // 실제 이벤트 횟수 계산 로직 - API 구조에 따라 수정
+    return int.tryParse(event['count']?.toString() ?? '1') ?? 1;
+  }
+
+  /// 이벤트 결과 변환
+  String _getEventResult(dynamic falsePositive) {
+    // false_positive 값에 따라 결과 결정
+    if (falsePositive == 1 || falsePositive == '1') {
+      return '비화재';
+    } else if (falsePositive == 0 || falsePositive == '0') {
+      return '화재';
+    } else {
+      return '미정';
+    }
+  }
+
+  /// create_date와 notiDate 간의 시간차 계산
+  String _calculateElapsedTime(String? createDate, String? notiDate) {
+    if (createDate == null || notiDate == null) return '0초';
+
+    try {
+      final create = DateTime.parse(createDate);
+      final noti = DateTime.parse(notiDate);
+
+      final difference = create.difference(noti).abs();
+
+      return '${difference.inSeconds}초';
+    } catch (e) {
+      print('시간차 계산 오류: $e');
+      return '0초';
+    }
+  }
 }
 
 /// 이벤트 아이템 모델
@@ -566,12 +716,14 @@ class EventItem {
   final String date;
   final int count;
   final String result;
+  final String elapsedTime;
   final int points;
 
   EventItem({
     required this.date,
     required this.count,
     required this.result,
+    required this.elapsedTime,
     required this.points,
   });
 
@@ -580,8 +732,10 @@ class EventItem {
     switch (result) {
       case '화재':
         return Colors.red;
-      case '비정상':
-        return Colors.blue;
+      case '비화재':
+        return Colors.orange;
+      case '미정':
+        return Colors.grey;
       default:
         return Colors.grey;
     }
