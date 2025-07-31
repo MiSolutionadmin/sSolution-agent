@@ -28,8 +28,8 @@ class NotificationState extends GetxController{
   final notificationList = [].obs;
 
   NotificationState() {
-    // 생성자에서 주기적으로 확인
-    Timer.periodic(Duration(seconds: 10), (_) => removeExpiredNotifications());
+    // 생성자에서 주기적으로 확인 - 임시 비활성화
+    // Timer.periodic(Duration(seconds: 10), (_) => removeExpiredNotifications());
   }
 
   void removeExpiredNotifications() {
