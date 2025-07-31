@@ -505,14 +505,12 @@ class MainViewModel extends GetxController {
 
     if (isCurrentlySelected) {
       // 현재 선택된 날짜를 해제하는 경우
-      selectedWorkDates.removeWhere((date) => isSameDay(date, selectedDay));
-
       if (isOriginalDate) {
-        // 원본 데이터에 있던 날짜면 삭제 목록에 추가
-        deleteDates.add(selectedDay);
-        print('기존 날짜 삭제 예정: $selectedDay');
+        // 원본 데이터에 있던 날짜면 확인 모달 표시
+        _showDeleteConfirmDialog(selectedDay);
       } else {
-        // 새로 추가했던 날짜면 추가 목록에서 제거
+        // 새로 추가했던 날짜면 바로 추가 목록에서 제거
+        selectedWorkDates.removeWhere((date) => isSameDay(date, selectedDay));
         addDates.removeWhere((date) => isSameDay(date, selectedDay));
         print('신규 날짜 선택 취소: $selectedDay');
       }
@@ -533,6 +531,109 @@ class MainViewModel extends GetxController {
 
     print(
         '선택된 날짜: ${selectedWorkDates.length}개, 추가: ${addDates.length}개, 삭제: ${deleteDates.length}개');
+  }
+
+  /// 날짜 삭제 확인 모달
+  void _showDeleteConfirmDialog(DateTime selectedDay) {
+    Get.dialog(
+      Dialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child: Container(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // 제목
+              const Text(
+                '결근 처리 확인',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 16),
+              
+              // 내용
+              Text(
+                '${selectedDay.month}/${selectedDay.day}을 결근으로 처리하시겠습니까?\n\n결근으로 처리시 해당 날짜에는 알림을 받을 수 없습니다.',
+                style: const TextStyle(
+                  fontSize: 14,
+                  height: 1.5,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 24),
+              
+              // 버튼들
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+                  // 취소 버튼
+                  Expanded(
+                    child: TextButton(
+                      onPressed: () => Get.back(),
+                      style: TextButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                          side: const BorderSide(color: Colors.grey),
+                        ),
+                      ),
+                      child: const Text(
+                        '취소',
+                        style: TextStyle(
+                          color: Colors.grey,
+                          fontSize: 14,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  
+                  // 확인 버튼
+                  Expanded(
+                    child: ElevatedButton(
+                      onPressed: () {
+                        // 모달 닫기
+                        Get.back();
+                        
+                        // 날짜 삭제 처리
+                        selectedWorkDates.removeWhere((date) => isSameDay(date, selectedDay));
+                        deleteDates.add(selectedDay);
+                        print('기존 날짜 삭제 예정: $selectedDay');
+                        
+                        // UI 강제 업데이트
+                        final temp = focusedDay.value;
+                        focusedDay.value = temp.add(const Duration(milliseconds: 1));
+                        focusedDay.value = temp;
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.red,
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                      ),
+                      child: const Text(
+                        '확인',
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 
   /// 알림 아이콘 클릭
