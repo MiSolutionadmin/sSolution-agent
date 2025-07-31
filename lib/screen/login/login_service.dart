@@ -46,7 +46,9 @@ class LoginService {
 
       if (response.statusCode == 200) {
         final responseData = json.decode(response.body);
-        print("로그인 성공: ${responseData['message']}");
+        print("로그인 응답 데이터: $responseData");
+        print("토큰 존재 여부: ${responseData.containsKey('token')}");
+        print("토큰 값: ${responseData['token']}");
         
         if (responseData['message'] == "로그인 성공") {
           return LoginResponse.fromJson(responseData);

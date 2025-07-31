@@ -202,8 +202,13 @@ class LoginViewModel extends GetxController {
       userState.userData.value = response.user;
       
       // 유저정보 및 토큰 저장
+      print("저장할 토큰: ${response.token}");
       await loginService.saveLoginInfo(idController.text, passwordController.text);
       await loginService.saveToken(response.token);
+      
+      // 토큰 저장 확인
+      final savedToken = await loginService.getToken();
+      print("저장된 토큰: $savedToken");
       
       // 로그인 성공 후 공통 처리
       _safeHideLoading();

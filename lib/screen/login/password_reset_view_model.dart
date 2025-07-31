@@ -7,11 +7,13 @@ import '../../base_config/config.dart';
 import '../../components/dialog.dart';
 import '../../provider/user_state.dart';
 import '../navigation/bottom_navigator_view.dart';
+import 'login_service.dart';
 
 class PasswordResetViewModel extends GetxController {
   // Dependencies
   final AppConfig _config = AppConfig();
   final UserState _userState = Get.find<UserState>();
+  final LoginService _loginService = LoginService();
   final FlutterSecureStorage _storage = const FlutterSecureStorage(
     aOptions: AndroidOptions(
       encryptedSharedPreferences: true,
@@ -34,7 +36,6 @@ class PasswordResetViewModel extends GetxController {
   final RxString passwordError = ''.obs;
   final RxString confirmPasswordError = ''.obs;
   final RxBool isFormValid = false.obs;
-  final secureStorage = FlutterSecureStorage();
 
   // Page type (초기 비밀번호 설정 vs 설정에서 변경)
   final RxString pageType = 'initial'.obs; // 'initial' or 'setting'
@@ -207,7 +208,14 @@ class PasswordResetViewModel extends GetxController {
       'pw': password,
     };
 
-    final token = await secureStorage.read(key: "jwt_token");
+    // 두 가지 방법으로 토큰 가져오기 시도
+    final token1 = await _storage.read(key: "jwt_token");
+    final token2 = await _loginService.getToken();
+    
+    print("Direct storage token: $token1");
+    print("LoginService token: $token2");
+    
+    final token = token1 ?? token2;
 
     final response = await http.patch(
       Uri.parse(
@@ -215,11 +223,24 @@ class PasswordResetViewModel extends GetxController {
       body: body,
       headers: {
         'Authorization': 'Bearer $token',
+        'Content-Type': 'application/x-www-form-urlencoded',
       },
     );
 
-    if (response.statusCode != 200) {
-      throw Exception('서버 오류가 발생했습니다');
+    print("Response Status: ${response.statusCode}");
+    print("Response Body: ${response.body}");
+
+    if (response.statusCode != 200 && response.statusCode != 204) {
+      String errorMessage = '서버 오류가 발생했습니다';
+      try {
+        // 응답 본문에서 에러 메시지 추출 시도
+        if (response.body.isNotEmpty) {
+          errorMessage = '서버 오류: ${response.statusCode}';
+        }
+      } catch (e) {
+        print('에러 응답 파싱 실패: $e');
+      }
+      throw Exception(errorMessage);
     }
 
     // 사용자 상태 업데이트
