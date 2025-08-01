@@ -205,35 +205,37 @@ class PasswordResetView extends StatelessWidget {
 
   /// 제출 버튼
   Widget _buildSubmitButton(BuildContext context, PasswordResetViewModel viewModel) {
-    return Obx(() => GestureDetector(
-      onTap: viewModel.isLoading.value 
-        ? null 
-        : () => viewModel.changePassword(context),
-      child: Container(
-        width: double.infinity,
-        height: 60,
-        decoration: BoxDecoration(
-          color: viewModel.isLoading.value || !viewModel.isFormValid.value
-            ? Colors.grey.shade400
-            : const Color(0xff1955EE),
-        ),
-        child: Center(
-          child: viewModel.isLoading.value
-            ? const CircularProgressIndicator(
-                valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                strokeWidth: 2.0,
-              )
-            : Text(
-                viewModel.pageType.value == 'setting' ? '변경하기' : '메인화면으로 이동',
-                style: const TextStyle(
-                  fontFamily: 'Pretendard',
-                  fontSize: 18,
-                  fontWeight: FontWeight.w700,
-                  color: Colors.white,
+    return SafeArea(
+      child: Obx(() => GestureDetector(
+        onTap: viewModel.isLoading.value 
+          ? null 
+          : () => viewModel.changePassword(context),
+        child: Container(
+          width: double.infinity,
+          height: 60,
+          decoration: BoxDecoration(
+            color: viewModel.isLoading.value || !viewModel.isFormValid.value
+              ? Colors.grey.shade400
+              : const Color(0xff1955EE),
+          ),
+          child: Center(
+            child: viewModel.isLoading.value
+              ? const CircularProgressIndicator(
+                  valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                  strokeWidth: 2.0,
+                )
+              : Text(
+                  viewModel.pageType.value == 'setting' ? '변경하기' : '메인화면으로 이동',
+                  style: const TextStyle(
+                    fontFamily: 'Pretendard',
+                    fontSize: 18,
+                    fontWeight: FontWeight.w700,
+                    color: Colors.white,
+                  ),
                 ),
-              ),
+          ),
         ),
-      ),
-    ));
+      )),
+    );
   }
 }

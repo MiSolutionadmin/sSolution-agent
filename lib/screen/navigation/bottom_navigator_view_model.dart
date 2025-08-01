@@ -88,11 +88,14 @@ class BottomNavigatorViewModel extends GetxController with GetTickerProviderStat
 
   /// 위젯 옵션 초기화
   void _initializeWidgetOptions() {
+    print("alertVideoUrl.value ${alertVideoUrl.value}");
+
     widgetOptions.value = [
       const MainView(),
-      Obx(() => alertVideoUrl.value.isNotEmpty 
-        ? VideoPage(videoUrl: alertVideoUrl.value, type: alertVideoType.value)
-        : const VideoPage(videoUrl: "http://misnetwork.iptime.org:9099/videos/record_2025-07-29-16-05-38.mp4", type: '경보')), // 기본 경보용 비디오 페이지
+      VideoPage(
+        videoUrl: alertVideoUrl.value, 
+        type: alertVideoType.value.isNotEmpty ? alertVideoType.value : '경보'
+      ),
       const RecordView(),
       const SettingView(),
     ];
@@ -153,6 +156,20 @@ class BottomNavigatorViewModel extends GetxController with GetTickerProviderStat
   void onTabChanged(int index) {
     navigationService.changeTab(index);
     currentIndex.value = index;
+    
+    // 경보 탭(index 1)으로 이동할 때 VideoPage 재생성
+    if (index == 1) {
+      _updateVideoPageWidget();
+    }
+  }
+  
+  /// VideoPage 위젯 업데이트
+  void _updateVideoPageWidget() {
+    widgetOptions[1] = VideoPage(
+      videoUrl: alertVideoUrl.value, 
+      type: alertVideoType.value.isNotEmpty ? alertVideoType.value : '경보'
+    );
+    widgetOptions.refresh(); // RxList 강제 업데이트
   }
 
   /// 뒤로가기 처리

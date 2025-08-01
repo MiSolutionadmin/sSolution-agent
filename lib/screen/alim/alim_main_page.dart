@@ -5,6 +5,7 @@ import 'package:get/get.dart';
 import 'package:intl/intl.dart';
 import 'package:mms/components/dialogManager.dart';
 import 'package:mms/notification/firebase_cloud_messaging.dart';
+import 'package:mms/screen/navigation/bottom_navigator_view_model.dart';
 import 'package:mms/screen/video/video_page.dart';
 import '../../base_config/config.dart';
 import '../../routes/app_routes.dart';
@@ -74,6 +75,46 @@ class _AlimScreenState extends State<AlimScreen> {
       hex = sliceHex + remainText;
     }
     return hex;
+  }
+
+  /// createDate를 이용한 videoUrl 생성
+  String _generateVideoUrl(String createDate) {
+    // createDate 형식: "2025-07-21 10:29:24"
+    // 필요한 형식: "record_2025-07-21-10-29-24.mp4"
+    final formattedDate = createDate.replaceAll(' ', '-').replaceAll(':', '-');
+    // return 'http://${baseUrl}/videos/record_$formattedDate.mp4';
+
+    return "";
+  }
+
+  /// 경보 페이지로 이동 (BottomNavigator 사용)
+  void _navigateToAlertTab(String videoUrl, String type) {
+    try {
+
+      // BottomNavigator가 이미 열려있는지 확인
+      if (Get.currentRoute == '/main') {
+        // 이미 메인 페이지에 있으면 BottomNavigatorViewModel을 찾아서 경보 탭으로 이동
+        try {
+          final bottomNavViewModel = Get.find<BottomNavigatorViewModel>();
+          bottomNavViewModel.navigateToAlertWithVideo(videoUrl, type);
+        } catch (e) {
+          print('BottomNavigatorViewModel을 찾을 수 없음: $e');
+        }
+      } else {
+        // 다른 페이지에 있으면 BottomNavigator 메인으로 이동 후 경보 탭 설정
+        Get.offAllNamed('/main');
+        Future.delayed(Duration(milliseconds: 100), () {
+          try {
+            final bottomNavViewModel = Get.find<BottomNavigatorViewModel>();
+            bottomNavViewModel.navigateToAlertWithVideo(videoUrl, type);
+          } catch (e) {
+            print('지연된 BottomNavigatorViewModel 접근 실패: $e');
+          }
+        });
+      }
+    } catch (e) {
+      print('경보 페이지 이동 오류: $e');
+    }
   }
 
   /// 데이터 가져오기

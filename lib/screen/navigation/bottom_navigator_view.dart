@@ -7,6 +7,7 @@ import 'package:get/get.dart';
 import '../../utils/font/font.dart';
 import 'bottom_navigator_model.dart';
 import 'bottom_navigator_view_model.dart';
+import '../video/video_page.dart';
 
 class BottomNavigatorView extends StatelessWidget {
   static const String routeName = '/main';
@@ -192,14 +193,22 @@ class BottomNavigatorView extends StatelessWidget {
 
   /// 탭 바 뷰
   Widget _buildTabBarView(BottomNavigatorViewModel viewModel) {
-    return viewModel.isTabControllerReady
-      ? TabBarView(
-          physics: const NeverScrollableScrollPhysics(),
-          controller: viewModel.bottomTabController,
-          children: viewModel.widgetOptions,
-        )
-      : viewModel.widgetOptions.isNotEmpty 
-          ? viewModel.widgetOptions[viewModel.currentIndex.value.clamp(0, viewModel.widgetOptions.length - 1)]
-          : const SizedBox.shrink();
+    return Obx(() {
+      // 경보 탭(index 1)인 경우 매번 새로운 VideoPage 생성
+      if (viewModel.currentIndex.value == 1) {
+        return VideoPage(
+          videoUrl: viewModel.alertVideoUrl.value,
+          type: viewModel.alertVideoType.value.isNotEmpty 
+            ? viewModel.alertVideoType.value 
+            : '경보',
+        );
+      }
+      
+      // 다른 탭들은 기존 위젯 사용
+      return IndexedStack(
+        index: viewModel.currentIndex.value,
+        children: viewModel.widgetOptions,
+      );
+    });
   }
 }

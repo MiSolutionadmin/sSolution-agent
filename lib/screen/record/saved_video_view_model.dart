@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:video_player/video_player.dart';
+import '../video/video_fullscreen_page.dart';
 
 class SavedVideoViewModel extends GetxController {
   // 비디오 정보
@@ -26,6 +27,8 @@ class SavedVideoViewModel extends GetxController {
   final RxBool showControls = true.obs;
   final RxDouble currentPosition = 0.0.obs;
   final RxDouble duration = 0.0.obs;
+  final RxString currentPositionText = '00:00'.obs;
+  final RxString durationText = '00:00'.obs;
 
   // 비디오 URL
   final String videoUrl;
@@ -86,8 +89,12 @@ class SavedVideoViewModel extends GetxController {
       isReady.value = true;
       isLoading.value = false;
       duration.value = _controller!.value.duration.inSeconds.toDouble();
+      durationText.value = formatDuration(_controller!.value.duration);
 
       print('✅ 비디오 초기화 성공: ${_controller!.value.duration}');
+      
+      // 자동 재생
+      _controller!.play();
     } catch (e) {
       print('❌ 비디오 초기화 실패: $e');
       hasError.value = true;
@@ -112,6 +119,10 @@ class SavedVideoViewModel extends GetxController {
     // 재생 상태 업데이트
     isPlaying.value = value.isPlaying;
     currentPosition.value = value.position.inSeconds.toDouble();
+    currentPositionText.value = formatDuration(value.position);
+    
+    // 상태 변경 시 UI 업데이트를 위해 명시적으로 업데이트
+    update();
 
     // 비디오 종료 시 처리
     if (value.position >= value.duration && value.isPlaying) {
@@ -189,21 +200,29 @@ class SavedVideoViewModel extends GetxController {
     }
   }
 
-  /// 현재 위치 시간 문자열
-  String get currentPositionText {
-    if (_controller == null || !isReady.value) return '00:00';
-    return formatDuration(_controller!.value.position);
-  }
-
-  /// 전체 시간 문자열
-  String get durationText {
-    if (_controller == null || !isReady.value) return '00:00';
-    return formatDuration(_controller!.value.duration);
-  }
 
   /// 비디오 종횡비
   double get aspectRatio {
     if (_controller == null || !isReady.value) return 16 / 9;
     return _controller!.value.aspectRatio;
+  }
+
+  /// 전체화면으로 이동
+  void goToFullscreen() {
+    if (_controller != null && _controller!.value.isInitialized) {
+      Get.to(
+        () => VideoFullscreenPage(
+          controller: _controller!,
+          videoUrl: videoUrl,
+          type: alertType,
+          initialVolumeMuted: isVolumeMuted.value,
+          onVolumeChanged: (isMuted) {
+            isVolumeMuted.value = isMuted;
+          },
+        ),
+        transition: Transition.fade,
+        duration: Duration.zero, // 애니메이션 없음
+      );
+    }
   }
 }

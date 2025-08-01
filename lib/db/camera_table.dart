@@ -93,7 +93,7 @@ Future<void> completeAgentWork(String? reason, int falsePositive) async {
   final ns = Get.find<NotificationState>();
   final us = Get.find<UserState>();
 
-  final url = '${config.baseUrl}/agent/me/work';
+  final url = '${config.baseUrl}/agents/${us.userData['id']}/works';
   final body = {
     'agentId': us.userData['id'],
     'reason': reason,

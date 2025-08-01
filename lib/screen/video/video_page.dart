@@ -9,6 +9,8 @@ import 'package:http/http.dart' as http;
 import 'package:get/get.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'video_fullscreen_page.dart';
+import 'dart:async';
+import '../navigation/bottom_navigator_view_model.dart';
 
 class VideoPage extends StatefulWidget {
   final String videoUrl;
@@ -31,13 +33,23 @@ class _VideoPageState extends State<VideoPage> {
   Duration _lastPosition = Duration.zero;
   bool _isVolumeMuted = false;
   bool _showControls = true;
+  Timer? _timer;
+  String _currentVideoUrl = '';
+  bool _isVideoExpired = false;
 
   @override
   void initState() {
     super.initState();
-    _initializeVideo();
-
-
+    _currentVideoUrl = widget.videoUrl;
+    
+    if (_currentVideoUrl.isNotEmpty) {
+      _initializeVideo();
+      _startExpirationTimer();
+    } else {
+      setState(() {
+        _isVideoExpired = true;
+      });
+    }
   }
 
   Future<bool> _checkVideoUrlWithRetry(String url, {int retries = 10}) async {
@@ -78,8 +90,69 @@ class _VideoPageState extends State<VideoPage> {
     return false;
   }
 
+  void _startExpirationTimer() {
+    _timer?.cancel();
+    _timer = Timer.periodic(Duration(seconds: 1), (timer) {
+      _checkVideoExpiration();
+    });
+  }
+  
+  void _checkVideoExpiration() {
+    if (_currentVideoUrl.isEmpty) {
+      setState(() {
+        _isVideoExpired = true;
+      });
+      _timer?.cancel();
+      return;
+    }
+    
+    try {
+      // URL에서 날짜 추출 (record_2025-07-21-10-29-24.mp4)
+      final regex = RegExp(r'record_(\d{4})-(\d{2})-(\d{2})-(\d{2})-(\d{2})-(\d{2})\.mp4');
+      final match = regex.firstMatch(_currentVideoUrl);
+      
+      if (match != null) {
+        final year = int.parse(match.group(1)!);
+        final month = int.parse(match.group(2)!);
+        final day = int.parse(match.group(3)!);
+        final hour = int.parse(match.group(4)!);
+        final minute = int.parse(match.group(5)!);
+        final second = int.parse(match.group(6)!);
+        
+        final videoDate = DateTime(year, month, day, hour, minute, second);
+        final now = DateTime.now();
+        final difference = now.difference(videoDate);
+        
+        print('비디오 날짜: $videoDate');
+        print('현재 시간: $now');
+        print('경과 시간: ${difference.inSeconds}초');
+        
+        if (difference.inMinutes >= 1) {
+          // GetX의 videoUrl 초기화
+          final bottomNavViewModel = Get.find<BottomNavigatorViewModel>();
+          bottomNavViewModel.alertVideoUrl.value = '';
+          
+          setState(() {
+            _currentVideoUrl = '';
+            _isVideoExpired = true;
+          });
+          
+          if (_controller != null) {
+            _controller!.pause();
+            _controller!.dispose();
+            _controller = null;
+          }
+          
+          _timer?.cancel();
+        }
+      }
+    } catch (e) {
+      print('날짜 파싱 오류: $e');
+    }
+  }
+  
   void _initializeVideo() async {
-    print("get url ? : ${widget.videoUrl}");
+    print("get url ? : ${_currentVideoUrl}");
     
     // 에러 상태 초기화
     setState(() {
@@ -87,7 +160,7 @@ class _VideoPageState extends State<VideoPage> {
       _errorMessage = '';
     });
 
-    final exists = await _checkVideoUrlWithRetry(widget.videoUrl);
+    final exists = await _checkVideoUrlWithRetry(_currentVideoUrl);
     if (!exists) {
       print("❌ 영상이 존재하지 않습니다");
       setState(() {
@@ -106,11 +179,11 @@ class _VideoPageState extends State<VideoPage> {
     }
 
     try {
-      print("📹 비디오 URL 확인: ${widget.videoUrl}");
-      print("📹 HTTP/HTTPS 확인: ${widget.videoUrl.startsWith('https') ? 'HTTPS' : 'HTTP'}");
+      print("📹 비디오 URL 확인: ${_currentVideoUrl}");
+      print("📹 HTTP/HTTPS 확인: ${_currentVideoUrl.startsWith('https') ? 'HTTPS' : 'HTTP'}");
       
       final controller = VideoPlayerController.network(
-        widget.videoUrl,
+        _currentVideoUrl,
         videoPlayerOptions: VideoPlayerOptions(
           mixWithOthers: true,
           allowBackgroundPlayback: false,
@@ -227,6 +300,8 @@ class _VideoPageState extends State<VideoPage> {
     ]);
     SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
 
+    _timer?.cancel();
+    
     if (_controller != null) {
       if (_controller!.value.isInitialized) {
         _lastPosition = _controller!.value.position;
@@ -347,6 +422,39 @@ class _VideoPageState extends State<VideoPage> {
 
   @override
   Widget build(BuildContext context) {
+    // videoUrl이 없거나 만료된 경우
+    if (_currentVideoUrl.isEmpty || _isVideoExpired) {
+      return Scaffold(
+        appBar: AppBar(
+          title: Text("실시간 경보 영상"),
+          centerTitle: true,
+          backgroundColor: Colors.white,
+        ),
+        backgroundColor: Colors.white,
+        body: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                Icons.info_outline,
+                size: 60,
+                color: Colors.grey,
+              ),
+              SizedBox(height: 20),
+              Text(
+                '진행중인 이벤트가 없습니다.',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w500,
+                  color: Colors.grey[700],
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+    
     final isControllerReady = _controller != null && _isReady;
     final rawDuration = isControllerReady ? _controller!.value.duration : Duration.zero;
     final rawPosition = isControllerReady ? _controller!.value.position : Duration.zero;
@@ -555,10 +663,19 @@ class _VideoPageState extends State<VideoPage> {
                         _showStyledConfirmDialog(
                           context,
                           "비화재",
-                          Colors.grey,
+                          Colors.black,
                               () async {
-                            // 오탐 처리 로직
-                            showAlimCheckTapDialog(context, "");
+                                DialogManager.showLoading(context);
+                                await completeAgentWork(null, 1);
+                                DialogManager.hideLoading();
+                                
+                                // videoUrl 관련 값 초기화
+                                setState(() {
+                                  _currentVideoUrl = '';
+                                });
+                                
+                                Get.back();
+                                Get.back();
                           },
                         );
                       },

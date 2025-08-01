@@ -78,11 +78,11 @@ Future<void> goBootpayRequest(BuildContext context, String pw, String path) asyn
 
           /// 개인정보 변경 핸드폰 번호 변경
           case 'setting':
-            us.userList[0]['phoneNumber'] = us.bootPhone.value;
-            us.userInfoList[4] = us.bootPhone.value;
-            us.userInfoList.refresh();
-            us.userList.refresh();
-            us.update();
+            us.userData['phone_number'] = us.bootPhone.value;
+            // us.userInfoList[4] = us.bootPhone.value;
+            // us.userInfoList.refresh();
+            // us.userList.refresh();
+            // us.update();
             await changePhoneNumber(us.bootPhone.value);
             Get.to(() => PrivateChange());
             break;

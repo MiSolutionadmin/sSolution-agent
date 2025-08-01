@@ -96,10 +96,20 @@ Future<void> userTokenUpdate(String token) async {
 /// 핸드폰 번호 변경
 Future<void> changePhoneNumber(String phone) async {
   final us = Get.put(UserState());
-  final url = '${config.baseUrl}/changePhone?id=${us.userList[0]['email']}&phone=${phone}';
-  final response = await http.get(Uri.parse(url));
+
+  final url = '${config.baseUrl}/agents/${us.userData['id']}/phone';
+  final response = await http.patch(
+    Uri.parse(url),
+    headers: {
+      'Content-Type': 'application/json', // JSON으로 전송
+    },
+    body: jsonEncode({
+      "phone": phone,
+    }),
+  );
+
   if (response.statusCode != 200) {
-    throw Exception('Failed');
+    throw Exception('Failed: ${response.statusCode}');
   }
 }
 

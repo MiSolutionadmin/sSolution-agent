@@ -3,6 +3,10 @@ import 'package:get/get.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:mms/db/camera_table.dart';
+import 'package:mms/provider/notification_state.dart';
+import 'package:mms/screen/navigation/bottom_navigator_view.dart';
+import 'package:mms/screen/navigation/bottom_navigator_view_model.dart';
 import '../../base_config/config.dart';
 import '../../provider/user_state.dart';
 import 'saved_video_view.dart';
@@ -88,6 +92,7 @@ class RecordViewModel extends GetxController {
           final recordItems = notisData
               .map((item) => RecordItem(
                     id: item['id']?.toString() ?? '',
+                    docId: item['docId']?.toString() ?? '',
                     dateText: _formatDateText(item['createDate']),
                     alertType: _getAlertType(item['type']),
                     eventType: _getEventType(item['false_positive']),
@@ -201,12 +206,9 @@ class RecordViewModel extends GetxController {
 
   /// 영상 재생
   void playVideo(RecordItem record) {
-    print('영상 재생: ${record.id}');
-    
-    // TODO: 실제 비디오 URL을 API에서 가져와야 함
-    // 현재는 임시로 동일한 URL 사용
-    const tempVideoUrl = 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4';
-    
+    // createDate를 2025-07-21 10:29:24 형식에서 2025-07-21-10-29-24 형식으로 변환
+    String videoUrl = _generateVideoUrl(record.dateText);
+
     // 저장 영상 재생 페이지로 이동
     Get.to(() => SavedVideoView(
       recordId: record.id,
@@ -214,13 +216,92 @@ class RecordViewModel extends GetxController {
       alertType: record.alertType,
       eventType: record.eventType,
       result: record.result,
-      videoUrl: tempVideoUrl,
+      videoUrl: videoUrl,
     ));
+  }
+
+  /// videoUrl을 생성하는 함수
+  String _generateVideoUrl(String dateText) {
+    try {
+      // dateText는 "2025-07-21\n10:29:24" 형식일 수 있으므로 변환
+      String cleanedDate = dateText.replaceAll('\n', ' ');
+      DateTime date = DateTime.parse(cleanedDate);
+      
+      String formattedDate = '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}-${date.hour.toString().padLeft(2, '0')}-${date.minute.toString().padLeft(2, '0')}-${date.second.toString().padLeft(2, '0')}';
+      
+      return 'http://misnetwork.iptime.org:9099/videos/record_$formattedDate.mp4';
+    } catch (e) {
+      print('날짜 변환 오류: $e');
+      return 'http://misnetwork.iptime.org:9099/videos/record_2025-01-01-00-00-00.mp4';
+    }
+  }
+
+  /// 알림 타입을 type으로 변환
+  String _mapAlertTypeToType(String alertType) {
+    switch (alertType) {
+      case '불꽃 알림':
+        return '불꽃 감지';
+      case '연기 알림':
+        return '연기 감지';
+      default:
+        return '감지';
+    }
+  }
+
+  /// videoUrl이 직접 주어진 경우의 agent 비디오 다시보기로 BottomNavigator 경보 탭으로 이동
+  Future<void> openAgentVideoPageWithUrl(String videoUrl, String type) async {
+    // BottomNavigator가 이미 열려있는지 확인
+    if (Get.currentRoute == BottomNavigatorView.routeName) {
+      // 이미 메인 페이지에 있으면 BottomNavigatorViewModel을 찾아서 경보 탭으로 이동
+      try {
+        final bottomNavViewModel = Get.find<BottomNavigatorViewModel>();
+        bottomNavViewModel.navigateToAlertWithVideo(videoUrl, type);
+      } catch (e) {
+        // BottomNavigatorViewModel을 찾을 수 없으면 새로 이동
+        Get.offAll(() => const BottomNavigatorView());
+        await Future.delayed(Duration(milliseconds: 100)); // 페이지 로딩 대기
+        final bottomNavViewModel = Get.find<BottomNavigatorViewModel>();
+        bottomNavViewModel.navigateToAlertWithVideo(videoUrl, type);
+      }
+    } else {
+      // 다른 페이지에 있으면 BottomNavigator로 이동 후 경보 탭 설정
+      Get.offAll(() => const BottomNavigatorView());
+      await Future.delayed(Duration(milliseconds: 100)); // 페이지 로딩 대기
+      final bottomNavViewModel = Get.find<BottomNavigatorViewModel>();
+      bottomNavViewModel.navigateToAlertWithVideo(videoUrl, type);
+    }
+  }
+
+  /// agent 비디오 다시보기로 BottomNavigator 경보 탭으로 이동
+  Future<void> openAgentVideoPage(String docId, String type) async{
+    final videoUrl = await getVideoUrl(docId);
+
+    // BottomNavigator가 이미 열려있는지 확인
+    if (Get.currentRoute == BottomNavigatorView.routeName) {
+      // 이미 메인 페이지에 있으면 BottomNavigatorViewModel을 찾아서 경보 탭으로 이동
+      try {
+        final bottomNavViewModel = Get.find<BottomNavigatorViewModel>();
+        bottomNavViewModel.navigateToAlertWithVideo(videoUrl, type);
+      } catch (e) {
+        // BottomNavigatorViewModel을 찾을 수 없으면 새로 이동
+        Get.offAll(() => const BottomNavigatorView());
+        await Future.delayed(Duration(milliseconds: 100)); // 페이지 로딩 대기
+        final bottomNavViewModel = Get.find<BottomNavigatorViewModel>();
+        bottomNavViewModel.navigateToAlertWithVideo(videoUrl, type);
+      }
+    } else {
+      // 다른 페이지에 있으면 BottomNavigator로 이동 후 경보 탭 설정
+      Get.offAll(() => const BottomNavigatorView());
+      await Future.delayed(Duration(milliseconds: 100)); // 페이지 로딩 대기
+      final bottomNavViewModel = Get.find<BottomNavigatorViewModel>();
+      bottomNavViewModel.navigateToAlertWithVideo(videoUrl, type);
+    }
   }
 }
 
 class RecordItem {
   final String id;
+  final String docId;
   final String dateText;
   final String alertType;
   final String eventType;
@@ -228,6 +309,7 @@ class RecordItem {
 
   RecordItem({
     required this.id,
+    required this.docId,
     required this.dateText,
     required this.alertType,
     required this.eventType,

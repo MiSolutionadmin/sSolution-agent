@@ -303,9 +303,6 @@ class FCM {
           final isSmokeDetection = cameraType == '연기 감지';
           final notificationBody = notificationList[0];
 
-          // 확인 버튼을 누를시 다이얼로그를 닫음
-          Get.back();
-
           // 알림 해제 내역 세팅
           if (isFlameDetection) {
             ns.alertTurnOffList.value = ['불꽃 감지 오류', '기타 (직접입력)'];

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:video_player/video_player.dart';
 import 'saved_video_view_model.dart';
+import '../video/video_fullscreen_page.dart';
 
 class SavedVideoView extends StatelessWidget {
   final String recordId;
@@ -282,11 +283,11 @@ class SavedVideoView extends StatelessWidget {
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Obx(() => Text(
-                          viewModel.currentPositionText,
+                          viewModel.currentPositionText.value,
                           style: const TextStyle(color: Colors.white, fontSize: 11),
                         )),
                         Obx(() => Text(
-                          viewModel.durationText,
+                          viewModel.durationText.value,
                           style: const TextStyle(color: Colors.white, fontSize: 11),
                         )),
                       ],
@@ -299,9 +300,7 @@ class SavedVideoView extends StatelessWidget {
             // 전체화면 버튼
             IconButton(
               icon: const Icon(Icons.fullscreen, color: Colors.white),
-              onPressed: () {
-                Get.snackbar('알림', '전체화면 기능은 준비 중입니다.');
-              },
+              onPressed: () => viewModel.goToFullscreen(),
             )
           ],
         ),

@@ -186,6 +186,7 @@ class PasswordResetViewModel extends GetxController {
       // 성공 메시지 표시 후 적절한 화면으로 이동
       if (pageType.value == 'setting') {
         _showSuccessDialog(context, '비밀번호가 변경되었습니다', () {
+          Get.back(); // 모달 닫기
           Get.back(); // 설정 화면으로 돌아가기
         });
       } else {
@@ -204,8 +205,7 @@ class PasswordResetViewModel extends GetxController {
   /// 비밀번호 변경 API 호출
   Future<void> _performPasswordChange(String password) async {
     final body = {
-      'id': _userState.userData['email'],
-      'pw': password,
+      'password': password,
     };
 
     // 두 가지 방법으로 토큰 가져오기 시도
