@@ -89,35 +89,7 @@ Future<void> addNotiDeleteCamera(String reson) async{
   }
 }
 
-Future<void> completeAgentWork(String? reason, int falsePositive) async {
-  final ns = Get.find<NotificationState>();
-  final us = Get.find<UserState>();
-
-  final url = '${config.baseUrl}/agents/${us.userData['id']}/works';
-  final body = {
-    'agentId': us.userData['id'],
-    'reason': reason,
-    'type': ns.notificationData['type'],
-    'notiId': ns.notificationData['docId'],
-    'falsePositive': falsePositive,
-  };
-
-  try {
-    final response = await http.post(Uri.parse(url),
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode(body),
-    );
-    if (response.statusCode != 200) {
-      throw Exception('Failed to complete agent work');
-    }
-    //ns.notificationData['docId'] 에 해당하는 list 에서 제거
-    ns.notificationList.removeWhere((item) => item['docId'] == ns.notificationData['docId']);
-
-  } catch (e) {
-    print('작업 완료 처리 중 예외 발생: $e');
-    rethrow; // 🔥 이 부분 추가
-  }
-}
+// completeAgentWork 함수는 CameraNotificationService로 이동됨
 
 
 /// cameraDetail switch

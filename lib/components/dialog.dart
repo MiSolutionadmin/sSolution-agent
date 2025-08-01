@@ -18,7 +18,8 @@ import '../utils/loading.dart';
 
 import 'package:http/http.dart' as http;
 
-showFireStationDialog(BuildContext context, String agency,String address,String cameraName,String cameraPath, VoidCallback onTap) {
+showFireStationDialog(BuildContext context, String agency, String address,
+    String cameraName, String cameraPath, VoidCallback onTap) {
   showDialog(
       context: context,
       barrierDismissible: true,
@@ -45,39 +46,55 @@ showFireStationDialog(BuildContext context, String agency,String address,String 
                       height: 50,
                       color: Colors.red,
                     ),
-                    const SizedBox(width: 4,),
+                    const SizedBox(
+                      width: 4,
+                    ),
                     Text(
                       '문자신고',
                       style: f22w700RedSize(),
                     ),
                   ],
                 ),
-                const SizedBox(height: 10,),
+                const SizedBox(
+                  height: 10,
+                ),
                 Container(
-                  
                   decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(10)
-                  ),
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(10)),
                   child: Padding(
                     padding: const EdgeInsets.all(8),
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.start,
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text('현장명 : ${agency}',style: f14w700Black,),
-                        const SizedBox(height: 2,),
-                        Text('주소 : ${address}',style: f14w700Black),
-                        const SizedBox(height: 2,),
-                        Text('카메라 이름 : ${cameraName}',style: f14w700Black),
-                        const SizedBox(height: 2,),
-                        Text('카메라 영상 실시간 보기',style: f14w700Black),
-                        Text(': ${cameraPath}',style: f12w500Blue(),),
+                        Text(
+                          '현장명 : ${agency}',
+                          style: f14w700Black,
+                        ),
+                        const SizedBox(
+                          height: 2,
+                        ),
+                        Text('주소 : ${address}', style: f14w700Black),
+                        const SizedBox(
+                          height: 2,
+                        ),
+                        Text('카메라 이름 : ${cameraName}', style: f14w700Black),
+                        const SizedBox(
+                          height: 2,
+                        ),
+                        Text('카메라 영상 실시간 보기', style: f14w700Black),
+                        Text(
+                          ': ${cameraPath}',
+                          style: f12w500Blue(),
+                        ),
                       ],
                     ),
                   ),
                 ),
-                const SizedBox(height: 10,),
+                const SizedBox(
+                  height: 10,
+                ),
                 Text(
                   '\n아래 신고 버튼을 누르면 신고자의 핸드폰 번호로 소방서 문자 신고가 진행됩니다.\n\n문자 화면으로 이동 후 문자 전송\n 버튼을 눌러주시길 바랍니다.',
                   style: f12w600Size(),
@@ -99,12 +116,14 @@ showFireStationDialog(BuildContext context, String agency,String address,String 
                       child: Container(
                         width: Get.width,
                         height: 42,
-                        decoration: BoxDecoration(color: Color(0xffD3D8DE), borderRadius: BorderRadius.circular(8)),
+                        decoration: BoxDecoration(
+                            color: Color(0xffD3D8DE),
+                            borderRadius: BorderRadius.circular(8)),
                         child: Center(
                             child: Text(
-                              '취소',
-                              style: f16w700Size(),
-                            )),
+                          '취소',
+                          style: f16w700Size(),
+                        )),
                       ),
                     ),
                   ),
@@ -120,12 +139,14 @@ showFireStationDialog(BuildContext context, String agency,String address,String 
                       child: Container(
                         width: Get.width,
                         height: 42,
-                        decoration: BoxDecoration(color: Color(0xff1955EE), borderRadius: BorderRadius.circular(8)),
+                        decoration: BoxDecoration(
+                            color: Color(0xff1955EE),
+                            borderRadius: BorderRadius.circular(8)),
                         child: Center(
                             child: Text(
-                              '신고',
-                              style: f16w700WhiteSize(),
-                            )),
+                          '신고',
+                          style: f16w700WhiteSize(),
+                        )),
                       ),
                     ),
                   ),
@@ -175,10 +196,7 @@ showOnlyFireStationConfirmDialog(BuildContext context) {
                         text: "안내방송",
                         style: f14RedColorw700,
                       ),
-                      TextSpan(
-                        text: "을 실시.\n",
-                        style: f12w500
-                      ),
+                      TextSpan(text: "을 실시.\n", style: f12w500),
                       WidgetSpan(
                         child: SizedBox(height: 24),
                       ),
@@ -189,10 +207,7 @@ showOnlyFireStationConfirmDialog(BuildContext context) {
                         text: "아파트 출입구의 자동문",
                         style: f14RedColorw700,
                       ),
-                      TextSpan(
-                        text: "을 ",
-                          style: f12w500
-                      ),
+                      TextSpan(text: "을 ", style: f12w500),
                       TextSpan(
                         text: "일괄 개방.\n",
                         style: f14RedColorw700,
@@ -203,26 +218,17 @@ showOnlyFireStationConfirmDialog(BuildContext context) {
                       TextSpan(
                         text: "3. ",
                       ),
-                      TextSpan(
-                        text: "입주민을 ",
-                          style: f12w500
-                      ),
+                      TextSpan(text: "입주민을 ", style: f12w500),
                       TextSpan(
                         text: "피난통로",
                         style: f14RedColorw700,
                       ),
-                      TextSpan(
-                        text: "로 ",
-                          style: f12w500
-                      ),
+                      TextSpan(text: "로 ", style: f12w500),
                       TextSpan(
                         text: "대피",
                         style: f14RedColorw700,
                       ),
-                      TextSpan(
-                        text: "하도록 안내.\n",
-                          style: f12w500
-                      ),
+                      TextSpan(text: "하도록 안내.\n", style: f12w500),
                       WidgetSpan(
                         child: SizedBox(height: 24),
                       ),
@@ -237,10 +243,7 @@ showOnlyFireStationConfirmDialog(BuildContext context) {
                         text: "스프링클러",
                         style: f14RedColorw700,
                       ),
-                      TextSpan(
-                        text: "를 ",
-                          style: f12w500
-                      ),
+                      TextSpan(text: "를 ", style: f12w500),
                       TextSpan(
                         text: "수동 개방.\n",
                         style: f14RedColorw700,
@@ -251,18 +254,12 @@ showOnlyFireStationConfirmDialog(BuildContext context) {
                       TextSpan(
                         text: "5. ",
                       ),
-                      TextSpan(
-                        text: "화재초기를 제외하고 ",
-                          style: f12w500
-                      ),
+                      TextSpan(text: "화재초기를 제외하고 ", style: f12w500),
                       TextSpan(
                         text: "직접진압",
                         style: f14RedColorw700,
                       ),
-                      TextSpan(
-                        text: "은 ",
-                          style: f12w500
-                      ),
+                      TextSpan(text: "은 ", style: f12w500),
                       TextSpan(
                         text: "자제.",
                         style: f14RedColorw700,
@@ -291,12 +288,14 @@ showOnlyFireStationConfirmDialog(BuildContext context) {
                       child: Container(
                         width: Get.width,
                         height: 42,
-                        decoration: BoxDecoration(color: Color(0xff1955EE), borderRadius: BorderRadius.circular(8)),
+                        decoration: BoxDecoration(
+                            color: Color(0xff1955EE),
+                            borderRadius: BorderRadius.circular(8)),
                         child: Center(
                             child: Text(
-                              '확인',
-                              style: f16w700WhiteSize(),
-                            )),
+                          '확인',
+                          style: f16w700WhiteSize(),
+                        )),
                       ),
                     ),
                   ),
@@ -307,6 +306,7 @@ showOnlyFireStationConfirmDialog(BuildContext context) {
         );
       });
 }
+
 /// 로그인 로딩
 showLoadingDialog(BuildContext context) {
   showDialog(
@@ -382,7 +382,6 @@ showLoadingDialog2(BuildContext context) {
   );
 }
 
-
 showAlimCheckTapDialog(BuildContext context, String title) {
   final ns = Get.find<NotificationState>();
   final cs = Get.find<CameraState>();
@@ -392,9 +391,8 @@ showAlimCheckTapDialog(BuildContext context, String title) {
       context: context,
       barrierDismissible: true,
       builder: (BuildContext context) {
-
         return StatefulBuilder(
-          builder: (context,StateSetter setState){
+          builder: (context, StateSetter setState) {
             return AlertDialog(
               backgroundColor: const Color(0xffF1F4F7),
               shape: RoundedRectangleBorder(
@@ -405,13 +403,16 @@ showAlimCheckTapDialog(BuildContext context, String title) {
                 width: Get.width,
                 height: 500,
                 child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
                   child: SingleChildScrollView(
                     physics: const ClampingScrollPhysics(),
                     child: Column(
                       children: [
                         Text('${title}'),
-                        const SizedBox(height: 10,),
+                        const SizedBox(
+                          height: 10,
+                        ),
                         ListView.builder(
                             itemCount: ns.alertTurnOffList.length,
                             shrinkWrap: true,
@@ -422,11 +423,13 @@ showAlimCheckTapDialog(BuildContext context, String title) {
                                 onTap: () {
                                   // _isLastIndex = index == _alertTitle.length - 1;
                                   _selectedIndex = index;
-                                  if(_selectedIndex==ns.alertTurnOffList.length - 1){
+                                  if (_selectedIndex ==
+                                      ns.alertTurnOffList.length - 1) {
                                     _reasonCon.text = '';
                                   } else {
                                     // 선택한 박스의 텍스트를 _reasonCon.text에 설정
-                                    _reasonCon.text = ns.alertTurnOffList[index];
+                                    _reasonCon.text =
+                                        ns.alertTurnOffList[index];
                                   }
 
                                   setState(() {});
@@ -435,10 +438,14 @@ showAlimCheckTapDialog(BuildContext context, String title) {
                                   margin: const EdgeInsets.only(bottom: 10),
                                   decoration: BoxDecoration(
                                     borderRadius: BorderRadius.circular(20),
-                                    border: Border.all(color: _selectedIndex == index ? const Color(0xffE83B3B) : Colors.transparent),
+                                    border: Border.all(
+                                        color: _selectedIndex == index
+                                            ? const Color(0xffE83B3B)
+                                            : Colors.transparent),
                                     color: Colors.white,
                                   ),
-                                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 20),
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 10, vertical: 20),
                                   width: Get.width,
                                   child: Text(
                                     '${ns.alertTurnOffList[index]}',
@@ -449,11 +456,17 @@ showAlimCheckTapDialog(BuildContext context, String title) {
                               );
                             }),
                         AnimatedContainer(
-                          width: _selectedIndex == ns.alertTurnOffList.length - 1 ? Get.width : 0,
-                          height: _selectedIndex == ns.alertTurnOffList.length - 1 ? 160 : 0,
+                          width:
+                              _selectedIndex == ns.alertTurnOffList.length - 1
+                                  ? Get.width
+                                  : 0,
+                          height:
+                              _selectedIndex == ns.alertTurnOffList.length - 1
+                                  ? 160
+                                  : 0,
                           duration: Duration(milliseconds: 500),
                           curve: Curves.fastOutSlowIn,
-                          child:  TextFormField(
+                          child: TextFormField(
                             controller: _reasonCon,
                             minLines: 3,
                             maxLines: 3,
@@ -465,18 +478,22 @@ showAlimCheckTapDialog(BuildContext context, String title) {
                               fillColor: Colors.white,
                               enabledBorder: OutlineInputBorder(
                                   borderSide: BorderSide(
-                                    color: _selectedIndex == ns.alertTurnOffList.length - 1 ? Color(0xffE83B3B) : Colors.transparent,
+                                    color: _selectedIndex ==
+                                            ns.alertTurnOffList.length - 1
+                                        ? Color(0xffE83B3B)
+                                        : Colors.transparent,
                                     width: 1.0,
                                   ),
-                                  borderRadius: BorderRadius.circular(12)
-                              ),
+                                  borderRadius: BorderRadius.circular(12)),
                               focusedBorder: OutlineInputBorder(
                                   borderSide: BorderSide(
-                                    color: _selectedIndex == ns.alertTurnOffList.length - 1 ? Color(0xffE83B3B) : Colors.transparent,
+                                    color: _selectedIndex ==
+                                            ns.alertTurnOffList.length - 1
+                                        ? Color(0xffE83B3B)
+                                        : Colors.transparent,
                                     width: 1.0,
                                   ),
-                                  borderRadius: BorderRadius.circular(12)
-                              ),
+                                  borderRadius: BorderRadius.circular(12)),
                             ),
                           ),
                         ),
@@ -498,37 +515,43 @@ showAlimCheckTapDialog(BuildContext context, String title) {
                           child: Container(
                             width: Get.width,
                             height: 42,
-                            decoration: BoxDecoration(color: Color(0xffD3D8DE), borderRadius: BorderRadius.circular(8)),
+                            decoration: BoxDecoration(
+                                color: Color(0xffD3D8DE),
+                                borderRadius: BorderRadius.circular(8)),
                             child: Center(
                                 child: Text(
-                                  '취소',
-                                  style: f16w700Size(),
-                                )),
+                              '취소',
+                              style: f16w700Size(),
+                            )),
                           ),
                         ),
                       ),
                     ),
-                    SizedBox(width: 8,),
+                    SizedBox(
+                      width: 8,
+                    ),
                     Expanded(
                       child: GestureDetector(
-                        onTap: ()async{
+                        onTap: () async {
                           /// 만약 기타 면
-                          if(_selectedIndex==null){
+                          if (_selectedIndex == null) {
                             showOnlyConfirmDialog(context, '해제 사유를 선택해주세요');
-                          } else if(_selectedIndex==ns.alertTurnOffList.length - 1 && _reasonCon.text.trim().isEmpty){
+                          } else if (_selectedIndex ==
+                                  ns.alertTurnOffList.length - 1 &&
+                              _reasonCon.text.trim().isEmpty) {
                             showOnlyConfirmDialog(context, '해제 사유를 입력해주세요');
-                          }
-                          else{
+                          } else {
                             Get.back();
                             DialogManager.showLoading(context);
                             try {
-
-                              await completeAgentWork(_reasonCon.text, 1);
-                              showOnlyConfirmTapDialog(context, '서버로 전송에 선공하였습니다.', () {
+                              // await completeAgentWork(_reasonCon.text, 1);
+                              showOnlyConfirmTapDialog(
+                                  context, '서버로 전송에 선공하였습니다.', () {
                                 //Get.offAll(()=> AlimScreen());
                               });
                             } catch (e) {
-                              showOnlyConfirmTapDialog(context, '서버 연결에 실패하였습니다.\n 다시 시도해 주세요.', () {
+                              showOnlyConfirmTapDialog(
+                                  context, '서버 연결에 실패하였습니다.\n 다시 시도해 주세요.', () {
                                 //Get.offAll(()=> AlimScreen());
                               });
                             }
@@ -542,12 +565,14 @@ showAlimCheckTapDialog(BuildContext context, String title) {
                           child: Container(
                             width: Get.width,
                             height: 42,
-                            decoration: BoxDecoration(color: Color(0xff1955EE), borderRadius: BorderRadius.circular(8)),
+                            decoration: BoxDecoration(
+                                color: Color(0xff1955EE),
+                                borderRadius: BorderRadius.circular(8)),
                             child: Center(
                                 child: Text(
-                                  '확인',
-                                  style: f16w700WhiteSize(),
-                                )),
+                              '확인',
+                              style: f16w700WhiteSize(),
+                            )),
                           ),
                         ),
                       ),
@@ -561,15 +586,13 @@ showAlimCheckTapDialog(BuildContext context, String title) {
       });
 }
 
-
-
 showLoading(BuildContext context) {
   showDialog(
     barrierDismissible: false,
     builder: (ctx) {
-      return Center(child: WillPopScope(
-          onWillPop: () async => false,
-          child: LoadingScreen()));
+      return Center(
+          child: WillPopScope(
+              onWillPop: () async => false, child: LoadingScreen()));
     },
     context: context,
   );
@@ -585,8 +608,8 @@ showLoadingNotBarrier(BuildContext context) {
   );
 }
 
-
-Future<void>showConfirmTapDialog(BuildContext context, String title,VoidCallback onTap)async {
+Future<void> showConfirmTapDialog(
+    BuildContext context, String title, VoidCallback onTap) async {
   showDialog(
       context: context,
       barrierDismissible: true,
@@ -619,17 +642,21 @@ Future<void>showConfirmTapDialog(BuildContext context, String title,VoidCallback
                       child: Container(
                         width: Get.width,
                         height: 42,
-                        decoration: BoxDecoration(color: Color(0xffD3D8DE), borderRadius: BorderRadius.circular(8)),
+                        decoration: BoxDecoration(
+                            color: Color(0xffD3D8DE),
+                            borderRadius: BorderRadius.circular(8)),
                         child: Center(
                             child: Text(
-                              '취소',
-                              style: f16w700Size(),
-                            )),
+                          '취소',
+                          style: f16w700Size(),
+                        )),
                       ),
                     ),
                   ),
                 ),
-                SizedBox(width: 8,),
+                SizedBox(
+                  width: 8,
+                ),
                 Expanded(
                   child: GestureDetector(
                     onTap: onTap,
@@ -638,12 +665,14 @@ Future<void>showConfirmTapDialog(BuildContext context, String title,VoidCallback
                       child: Container(
                         width: Get.width,
                         height: 42,
-                        decoration: BoxDecoration(color: Color(0xff1955EE), borderRadius: BorderRadius.circular(8)),
+                        decoration: BoxDecoration(
+                            color: Color(0xff1955EE),
+                            borderRadius: BorderRadius.circular(8)),
                         child: Center(
                             child: Text(
-                              '확인',
-                              style: f16w700WhiteSize(),
-                            )),
+                          '확인',
+                          style: f16w700WhiteSize(),
+                        )),
                       ),
                     ),
                   ),
@@ -654,8 +683,6 @@ Future<void>showConfirmTapDialog(BuildContext context, String title,VoidCallback
         );
       });
 }
-
-
 
 showOnlyConfirmDialog(BuildContext context, String title) {
   showDialog(
@@ -689,12 +716,14 @@ showOnlyConfirmDialog(BuildContext context, String title) {
                       child: Container(
                         width: Get.width,
                         height: 42,
-                        decoration: BoxDecoration(color: Color(0xff1955EE), borderRadius: BorderRadius.circular(8)),
+                        decoration: BoxDecoration(
+                            color: Color(0xff1955EE),
+                            borderRadius: BorderRadius.circular(8)),
                         child: Center(
                             child: Text(
-                              '확인',
-                              style: f16w700WhiteSize(),
-                            )),
+                          '확인',
+                          style: f16w700WhiteSize(),
+                        )),
                       ),
                     ),
                   ),
@@ -706,8 +735,8 @@ showOnlyConfirmDialog(BuildContext context, String title) {
       });
 }
 
-
-showOnlyConfirmTapDialog(BuildContext context, String title,VoidCallback ontap) {
+showOnlyConfirmTapDialog(
+    BuildContext context, String title, VoidCallback ontap) {
   showDialog(
       context: context,
       barrierDismissible: false,
@@ -738,12 +767,14 @@ showOnlyConfirmTapDialog(BuildContext context, String title,VoidCallback ontap) 
                       child: Container(
                         width: Get.width,
                         height: 42,
-                        decoration: BoxDecoration(color: Color(0xff1955EE), borderRadius: BorderRadius.circular(8)),
+                        decoration: BoxDecoration(
+                            color: Color(0xff1955EE),
+                            borderRadius: BorderRadius.circular(8)),
                         child: Center(
                             child: Text(
-                              '확인',
-                              style: f16w700WhiteSize(),
-                            )),
+                          '확인',
+                          style: f16w700WhiteSize(),
+                        )),
                       ),
                     ),
                   ),
@@ -754,7 +785,9 @@ showOnlyConfirmTapDialog(BuildContext context, String title,VoidCallback ontap) 
         );
       });
 }
-showOnlyConfirmTapDialogWillpop(BuildContext context, String title,VoidCallback ontap) {
+
+showOnlyConfirmTapDialogWillpop(
+    BuildContext context, String title, VoidCallback ontap) {
   showDialog(
       context: context,
       barrierDismissible: false,
@@ -787,12 +820,14 @@ showOnlyConfirmTapDialogWillpop(BuildContext context, String title,VoidCallback 
                         child: Container(
                           width: Get.width,
                           height: 42,
-                          decoration: BoxDecoration(color: Color(0xff1955EE), borderRadius: BorderRadius.circular(8)),
+                          decoration: BoxDecoration(
+                              color: Color(0xff1955EE),
+                              borderRadius: BorderRadius.circular(8)),
                           child: Center(
                               child: Text(
-                                '확인',
-                                style: f16w700WhiteSize(),
-                              )),
+                            '확인',
+                            style: f16w700WhiteSize(),
+                          )),
                         ),
                       ),
                     ),
@@ -804,7 +839,9 @@ showOnlyConfirmTapDialogWillpop(BuildContext context, String title,VoidCallback 
         );
       });
 }
-showSettingValueDialog(BuildContext context,  TextEditingController _con1,VoidCallback onTap) {
+
+showSettingValueDialog(
+    BuildContext context, TextEditingController _con1, VoidCallback onTap) {
   showDialog(
       context: context,
       builder: (BuildContext context) {
@@ -827,14 +864,14 @@ showSettingValueDialog(BuildContext context,  TextEditingController _con1,VoidCa
                       style: f16w700Size(),
                       textAlign: TextAlign.center,
                     ),
-                    const SizedBox(height: 10,),
+                    const SizedBox(
+                      height: 10,
+                    ),
                     TextFormField(
                       // obscuringCharacter: "*",
                       controller: _con1,
                       keyboardType: TextInputType.number,
-                      inputFormatters: [
-                        LengthLimitingTextInputFormatter(20)
-                      ],
+                      inputFormatters: [LengthLimitingTextInputFormatter(20)],
                       decoration: InputDecoration(
                         hintText: '값 입력',
                         hintStyle: TextStyle(
@@ -855,8 +892,7 @@ showSettingValueDialog(BuildContext context,  TextEditingController _con1,VoidCa
                       ),
                     ),
                   ],
-                )
-            ),
+                )),
             actions: [
               Row(
                 children: [
@@ -870,17 +906,21 @@ showSettingValueDialog(BuildContext context,  TextEditingController _con1,VoidCa
                         child: Container(
                           width: Get.width,
                           height: 42,
-                          decoration: BoxDecoration(color: Color(0xffD3D8DE), borderRadius: BorderRadius.circular(8)),
+                          decoration: BoxDecoration(
+                              color: Color(0xffD3D8DE),
+                              borderRadius: BorderRadius.circular(8)),
                           child: Center(
                               child: Text(
-                                '취소',
-                                style: f16w700Size(),
-                              )),
+                            '취소',
+                            style: f16w700Size(),
+                          )),
                         ),
                       ),
                     ),
                   ),
-                  const SizedBox(width: 8,),
+                  const SizedBox(
+                    width: 8,
+                  ),
                   Expanded(
                     child: GestureDetector(
                       onTap: onTap,
@@ -889,12 +929,14 @@ showSettingValueDialog(BuildContext context,  TextEditingController _con1,VoidCa
                         child: Container(
                           width: Get.width,
                           height: 42,
-                          decoration: BoxDecoration(color: Color(0xff1955EE), borderRadius: BorderRadius.circular(8)),
+                          decoration: BoxDecoration(
+                              color: Color(0xff1955EE),
+                              borderRadius: BorderRadius.circular(8)),
                           child: Center(
                               child: Text(
-                                '확인',
-                                style: f16w700WhiteSize(),
-                              )),
+                            '확인',
+                            style: f16w700WhiteSize(),
+                          )),
                         ),
                       ),
                     ),
@@ -907,7 +949,12 @@ showSettingValueDialog(BuildContext context,  TextEditingController _con1,VoidCa
       });
 }
 
-showCameraAddDialog(BuildContext context,VoidCallback onTap,TextEditingController _con1, TextEditingController _con2, TextEditingController _con3) {
+showCameraAddDialog(
+    BuildContext context,
+    VoidCallback onTap,
+    TextEditingController _con1,
+    TextEditingController _con2,
+    TextEditingController _con3) {
   showDialog(
       context: context,
       barrierDismissible: false,
@@ -930,13 +977,13 @@ showCameraAddDialog(BuildContext context,VoidCallback onTap,TextEditingControlle
                       style: f16w700Size(),
                       textAlign: TextAlign.center,
                     ),
-                    const SizedBox(height: 10,),
+                    const SizedBox(
+                      height: 10,
+                    ),
                     TextFormField(
                       // obscuringCharacter: "*",
                       controller: _con1,
-                      inputFormatters: [
-                        LengthLimitingTextInputFormatter(20)
-                      ],
+                      inputFormatters: [LengthLimitingTextInputFormatter(20)],
                       decoration: InputDecoration(
                         hintText: '카메라 uid 입력',
                         hintStyle: TextStyle(
@@ -956,12 +1003,12 @@ showCameraAddDialog(BuildContext context,VoidCallback onTap,TextEditingControlle
                         ),
                       ),
                     ),
-                    const SizedBox(height: 10,),
+                    const SizedBox(
+                      height: 10,
+                    ),
                     TextFormField(
                       controller: _con2,
-                      inputFormatters: [
-                        LengthLimitingTextInputFormatter(20)
-                      ],
+                      inputFormatters: [LengthLimitingTextInputFormatter(20)],
                       decoration: InputDecoration(
                         hintText: '카메라 id 입력',
                         hintStyle: TextStyle(
@@ -981,13 +1028,13 @@ showCameraAddDialog(BuildContext context,VoidCallback onTap,TextEditingControlle
                         ),
                       ),
                     ),
-                    const SizedBox(height: 10,),
+                    const SizedBox(
+                      height: 10,
+                    ),
                     TextFormField(
                       controller: _con3,
                       obscuringCharacter: "*",
-                      inputFormatters: [
-                        LengthLimitingTextInputFormatter(20)
-                      ],
+                      inputFormatters: [LengthLimitingTextInputFormatter(20)],
                       obscureText: true,
                       decoration: InputDecoration(
                         hintText: '카메라 비밀번호 입력',
@@ -1008,10 +1055,8 @@ showCameraAddDialog(BuildContext context,VoidCallback onTap,TextEditingControlle
                         ),
                       ),
                     ),
-            
                   ],
-                )
-            ),
+                )),
           ),
           actions: [
             Row(
@@ -1026,17 +1071,21 @@ showCameraAddDialog(BuildContext context,VoidCallback onTap,TextEditingControlle
                       child: Container(
                         width: Get.width,
                         height: 42,
-                        decoration: BoxDecoration(color: Color(0xffD3D8DE), borderRadius: BorderRadius.circular(8)),
+                        decoration: BoxDecoration(
+                            color: Color(0xffD3D8DE),
+                            borderRadius: BorderRadius.circular(8)),
                         child: Center(
                             child: Text(
-                              '취소',
-                              style: f16w700Size(),
-                            )),
+                          '취소',
+                          style: f16w700Size(),
+                        )),
                       ),
                     ),
                   ),
                 ),
-                const SizedBox(width: 8,),
+                const SizedBox(
+                  width: 8,
+                ),
                 Expanded(
                   child: GestureDetector(
                     onTap: onTap,
@@ -1045,12 +1094,14 @@ showCameraAddDialog(BuildContext context,VoidCallback onTap,TextEditingControlle
                       child: Container(
                         width: Get.width,
                         height: 42,
-                        decoration: BoxDecoration(color: Color(0xff1955EE), borderRadius: BorderRadius.circular(8)),
+                        decoration: BoxDecoration(
+                            color: Color(0xff1955EE),
+                            borderRadius: BorderRadius.circular(8)),
                         child: Center(
                             child: Text(
-                              '등록',
-                              style: f16w700WhiteSize(),
-                            )),
+                          '등록',
+                          style: f16w700WhiteSize(),
+                        )),
                       ),
                     ),
                   ),
@@ -1062,7 +1113,8 @@ showCameraAddDialog(BuildContext context,VoidCallback onTap,TextEditingControlle
       });
 }
 
-showIpCamIdAddDialog(BuildContext context,VoidCallback onTap,TextEditingController _con1) {
+showIpCamIdAddDialog(
+    BuildContext context, VoidCallback onTap, TextEditingController _con1) {
   showDialog(
       context: context,
       barrierDismissible: false,
@@ -1085,13 +1137,13 @@ showIpCamIdAddDialog(BuildContext context,VoidCallback onTap,TextEditingControll
                       style: f16w700Size(),
                       textAlign: TextAlign.center,
                     ),
-                    const SizedBox(height: 10,),
+                    const SizedBox(
+                      height: 10,
+                    ),
                     TextFormField(
                       // obscuringCharacter: "*",
                       controller: _con1,
-                      inputFormatters: [
-                        LengthLimitingTextInputFormatter(20)
-                      ],
+                      inputFormatters: [LengthLimitingTextInputFormatter(20)],
                       decoration: InputDecoration(
                         hintText: 'IpCamId 입력',
                         hintStyle: TextStyle(
@@ -1111,11 +1163,11 @@ showIpCamIdAddDialog(BuildContext context,VoidCallback onTap,TextEditingControll
                         ),
                       ),
                     ),
-                    const SizedBox(height: 10,),
-
+                    const SizedBox(
+                      height: 10,
+                    ),
                   ],
-                )
-            ),
+                )),
           ),
           actions: [
             Row(
@@ -1130,17 +1182,21 @@ showIpCamIdAddDialog(BuildContext context,VoidCallback onTap,TextEditingControll
                       child: Container(
                         width: Get.width,
                         height: 42,
-                        decoration: BoxDecoration(color: Color(0xffD3D8DE), borderRadius: BorderRadius.circular(8)),
+                        decoration: BoxDecoration(
+                            color: Color(0xffD3D8DE),
+                            borderRadius: BorderRadius.circular(8)),
                         child: Center(
                             child: Text(
-                              '취소',
-                              style: f16w700Size(),
-                            )),
+                          '취소',
+                          style: f16w700Size(),
+                        )),
                       ),
                     ),
                   ),
                 ),
-                const SizedBox(width: 8,),
+                const SizedBox(
+                  width: 8,
+                ),
                 Expanded(
                   child: GestureDetector(
                     onTap: onTap,
@@ -1149,12 +1205,14 @@ showIpCamIdAddDialog(BuildContext context,VoidCallback onTap,TextEditingControll
                       child: Container(
                         width: Get.width,
                         height: 42,
-                        decoration: BoxDecoration(color: Color(0xff1955EE), borderRadius: BorderRadius.circular(8)),
+                        decoration: BoxDecoration(
+                            color: Color(0xff1955EE),
+                            borderRadius: BorderRadius.circular(8)),
                         child: Center(
                             child: Text(
-                              '등록',
-                              style: f16w700WhiteSize(),
-                            )),
+                          '등록',
+                          style: f16w700WhiteSize(),
+                        )),
                       ),
                     ),
                   ),
@@ -1166,7 +1224,7 @@ showIpCamIdAddDialog(BuildContext context,VoidCallback onTap,TextEditingControll
       });
 }
 
-showValveTapDialog(BuildContext context, String title,VoidCallback onTap) {
+showValveTapDialog(BuildContext context, String title, VoidCallback onTap) {
   showDialog(
       context: context,
       barrierDismissible: true,
@@ -1199,17 +1257,21 @@ showValveTapDialog(BuildContext context, String title,VoidCallback onTap) {
                       child: Container(
                         width: Get.width,
                         height: 42,
-                        decoration: BoxDecoration(color: Color(0xffD3D8DE), borderRadius: BorderRadius.circular(8)),
+                        decoration: BoxDecoration(
+                            color: Color(0xffD3D8DE),
+                            borderRadius: BorderRadius.circular(8)),
                         child: Center(
                             child: Text(
-                              '아니오',
-                              style: f16w700Size(),
-                            )),
+                          '아니오',
+                          style: f16w700Size(),
+                        )),
                       ),
                     ),
                   ),
                 ),
-                SizedBox(width: 8,),
+                SizedBox(
+                  width: 8,
+                ),
                 Expanded(
                   child: GestureDetector(
                     onTap: onTap,
@@ -1218,12 +1280,14 @@ showValveTapDialog(BuildContext context, String title,VoidCallback onTap) {
                       child: Container(
                         width: Get.width,
                         height: 42,
-                        decoration: BoxDecoration(color: Color(0xff1955EE), borderRadius: BorderRadius.circular(8)),
+                        decoration: BoxDecoration(
+                            color: Color(0xff1955EE),
+                            borderRadius: BorderRadius.circular(8)),
                         child: Center(
                             child: Text(
-                              '네',
-                              style: f16w700WhiteSize(),
-                            )),
+                          '네',
+                          style: f16w700WhiteSize(),
+                        )),
                       ),
                     ),
                   ),
@@ -1235,8 +1299,11 @@ showValveTapDialog(BuildContext context, String title,VoidCallback onTap) {
       });
 }
 
-
-showPlaceDialog(BuildContext context,VoidCallback onTap,VoidCallback onTap2,) {
+showPlaceDialog(
+  BuildContext context,
+  VoidCallback onTap,
+  VoidCallback onTap2,
+) {
   showCupertinoModalPopup(
     context: context,
     builder: (BuildContext context) => CupertinoActionSheet(
@@ -1261,7 +1328,8 @@ showPlaceDialog(BuildContext context,VoidCallback onTap,VoidCallback onTap2,) {
   );
 }
 
-showOnlyDuplicateTapDialog(BuildContext context, String title,VoidCallback ontap) {
+showOnlyDuplicateTapDialog(
+    BuildContext context, String title, VoidCallback ontap) {
   showDialog(
       context: context,
       barrierDismissible: false,
@@ -1294,12 +1362,14 @@ showOnlyDuplicateTapDialog(BuildContext context, String title,VoidCallback ontap
                         child: Container(
                           width: Get.width,
                           height: 42,
-                          decoration: BoxDecoration(color: Color(0xff1955EE), borderRadius: BorderRadius.circular(8)),
+                          decoration: BoxDecoration(
+                              color: Color(0xff1955EE),
+                              borderRadius: BorderRadius.circular(8)),
                           child: Center(
                               child: Text(
-                                '확인',
-                                style: f16w700WhiteSize(),
-                              )),
+                            '확인',
+                            style: f16w700WhiteSize(),
+                          )),
                         ),
                       ),
                     ),
@@ -1311,6 +1381,7 @@ showOnlyDuplicateTapDialog(BuildContext context, String title,VoidCallback ontap
         );
       });
 }
+
 /// mms 다이얼로그
 class CustomAlertDialog extends StatefulWidget {
   final String title;
@@ -1319,7 +1390,14 @@ class CustomAlertDialog extends StatefulWidget {
   final String mmsName;
   final VoidCallback? onTap;
 
-  const CustomAlertDialog({Key? key, required this.title, this.onTap, required this.mms, required this.mmsName, required this.body}) : super(key: key);
+  const CustomAlertDialog(
+      {Key? key,
+      required this.title,
+      this.onTap,
+      required this.mms,
+      required this.mmsName,
+      required this.body})
+      : super(key: key);
 
   @override
   _CustomAlertDialogState createState() => _CustomAlertDialogState();
@@ -1340,19 +1418,32 @@ class _CustomAlertDialogState extends State<CustomAlertDialog> {
           mainAxisSize: MainAxisSize.min,
           children: [
             SvgPicture.asset('assets/icon/alert.svg'),
-            const SizedBox(height: 10,),
+            const SizedBox(
+              height: 10,
+            ),
             Text(
               widget.title,
               textAlign: TextAlign.center,
               style: f21wRed700Size(),
             ),
-            Text('${widget.body}',style: f20w700Size(),),
-            const SizedBox(height: 10,),
+            Text(
+              '${widget.body}',
+              style: f20w700Size(),
+            ),
+            const SizedBox(
+              height: 10,
+            ),
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Text('${widget.mms} ',style: f14w700Black,),
-                Text('(${widget.mmsName})',style: f14w700Black,)
+                Text(
+                  '${widget.mms} ',
+                  style: f14w700Black,
+                ),
+                Text(
+                  '(${widget.mmsName})',
+                  style: f14w700Black,
+                )
               ],
             )
           ],
@@ -1368,11 +1459,16 @@ class _CustomAlertDialogState extends State<CustomAlertDialog> {
                 child: Center(
                   child: Container(
                     height: 42,
-                    decoration: BoxDecoration(color: Color(0xff1955EE), borderRadius: BorderRadius.circular(8)),
+                    decoration: BoxDecoration(
+                        color: Color(0xff1955EE),
+                        borderRadius: BorderRadius.circular(8)),
                     child: Center(
                       child: Text(
                         '확인',
-                        style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: Colors.white),
+                        style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w700,
+                            color: Colors.white),
                       ),
                     ),
                   ),
@@ -1393,7 +1489,13 @@ class CameraAlertDialog extends StatefulWidget {
   final String body;
   final VoidCallback? onTap;
 
-  const CameraAlertDialog({Key? key, required this.title, this.onTap, required this.cameraName, required this.body,}) : super(key: key);
+  const CameraAlertDialog({
+    Key? key,
+    required this.title,
+    this.onTap,
+    required this.cameraName,
+    required this.body,
+  }) : super(key: key);
 
   @override
   _CameraAlertDialogState createState() => _CameraAlertDialogState();
@@ -1414,14 +1516,22 @@ class _CameraAlertDialogState extends State<CameraAlertDialog> {
           mainAxisSize: MainAxisSize.min,
           children: [
             SvgPicture.asset('assets/icon/alert.svg'),
-            const SizedBox(height: 10,),
+            const SizedBox(
+              height: 10,
+            ),
             Text(
               widget.title,
               textAlign: TextAlign.center,
               style: f21wRed700Size(),
             ),
-            Text('${widget.body}',style: f20w700Size(),textAlign: TextAlign.center,),
-            const SizedBox(height: 10,),
+            Text(
+              '${widget.body}',
+              style: f20w700Size(),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(
+              height: 10,
+            ),
             // Text('${widget.cameraName} ',style: f14w700Black,),
           ],
         ),
@@ -1436,11 +1546,16 @@ class _CameraAlertDialogState extends State<CameraAlertDialog> {
                 child: Center(
                   child: Container(
                     height: 42,
-                    decoration: BoxDecoration(color: Color(0xff1955EE), borderRadius: BorderRadius.circular(8)),
+                    decoration: BoxDecoration(
+                        color: Color(0xff1955EE),
+                        borderRadius: BorderRadius.circular(8)),
                     child: Center(
                       child: Text(
                         '확인',
-                        style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: Colors.white),
+                        style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w700,
+                            color: Colors.white),
                       ),
                     ),
                   ),
@@ -1453,7 +1568,6 @@ class _CameraAlertDialogState extends State<CameraAlertDialog> {
     );
   }
 }
-
 
 class CustomAlertDialog2 extends StatefulWidget {
   final VoidCallback? onTap;
@@ -1494,7 +1608,8 @@ class _CustomAlertDialog2State extends State<CustomAlertDialog2> {
   }
 }
 
-showCameraTextDialog(BuildContext context,VoidCallback onTap,TextEditingController _con1) {
+showCameraTextDialog(
+    BuildContext context, VoidCallback onTap, TextEditingController _con1) {
   showDialog(
       context: context,
       barrierDismissible: false,
@@ -1517,13 +1632,13 @@ showCameraTextDialog(BuildContext context,VoidCallback onTap,TextEditingControll
                       style: f16w700Size(),
                       textAlign: TextAlign.center,
                     ),
-                    const SizedBox(height: 20,),
+                    const SizedBox(
+                      height: 20,
+                    ),
                     TextFormField(
                       // obscuringCharacter: "*",
                       controller: _con1,
-                      inputFormatters: [
-                        LengthLimitingTextInputFormatter(20)
-                      ],
+                      inputFormatters: [LengthLimitingTextInputFormatter(20)],
                       decoration: InputDecoration(
                         hintText: '알림소리 입력',
                         hintStyle: TextStyle(
@@ -1543,11 +1658,11 @@ showCameraTextDialog(BuildContext context,VoidCallback onTap,TextEditingControll
                         ),
                       ),
                     ),
-                    const SizedBox(height: 10,),
-
+                    const SizedBox(
+                      height: 10,
+                    ),
                   ],
-                )
-            ),
+                )),
           ),
           actions: [
             Row(
@@ -1562,17 +1677,21 @@ showCameraTextDialog(BuildContext context,VoidCallback onTap,TextEditingControll
                       child: Container(
                         width: Get.width,
                         height: 42,
-                        decoration: BoxDecoration(color: Color(0xffD3D8DE), borderRadius: BorderRadius.circular(8)),
+                        decoration: BoxDecoration(
+                            color: Color(0xffD3D8DE),
+                            borderRadius: BorderRadius.circular(8)),
                         child: Center(
                             child: Text(
-                              '취소',
-                              style: f16w700Size(),
-                            )),
+                          '취소',
+                          style: f16w700Size(),
+                        )),
                       ),
                     ),
                   ),
                 ),
-                const SizedBox(width: 8,),
+                const SizedBox(
+                  width: 8,
+                ),
                 Expanded(
                   child: GestureDetector(
                     onTap: onTap,
@@ -1581,12 +1700,14 @@ showCameraTextDialog(BuildContext context,VoidCallback onTap,TextEditingControll
                       child: Container(
                         width: Get.width,
                         height: 42,
-                        decoration: BoxDecoration(color: Color(0xff1955EE), borderRadius: BorderRadius.circular(8)),
+                        decoration: BoxDecoration(
+                            color: Color(0xff1955EE),
+                            borderRadius: BorderRadius.circular(8)),
                         child: Center(
                             child: Text(
-                              '등록',
-                              style: f16w700WhiteSize(),
-                            )),
+                          '등록',
+                          style: f16w700WhiteSize(),
+                        )),
                       ),
                     ),
                   ),
@@ -1597,20 +1718,25 @@ showCameraTextDialog(BuildContext context,VoidCallback onTap,TextEditingControll
         );
       });
 }
+
 /// 카메라 이름 변경 다이얼로그
-showCameraNameChangeDialog(BuildContext context,TextEditingController Con, String cameraUid,VoidCallback onTap) {
+showCameraNameChangeDialog(BuildContext context, TextEditingController Con,
+    String cameraUid, VoidCallback onTap) {
   showDialog(
       context: context,
       barrierDismissible: true,
       builder: (BuildContext context) {
         return StatefulBuilder(
-          builder: (context,StateSetter setState){
+          builder: (context, StateSetter setState) {
             return AlertDialog(
               backgroundColor: Colors.white,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(14),
               ),
-              title: Text('카메라 이름 변경',style: f20w700Size(),),
+              title: Text(
+                '카메라 이름 변경',
+                style: f20w700Size(),
+              ),
               content: Container(
                 width: Get.width,
                 child: SingleChildScrollView(
@@ -1618,23 +1744,29 @@ showCameraNameChangeDialog(BuildContext context,TextEditingController Con, Strin
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text('UID : ${cameraUid}',style: hintf14w400Size(),),
-                      const SizedBox(height: 30,),
+                      Text(
+                        'UID : ${cameraUid}',
+                        style: hintf14w400Size(),
+                      ),
+                      const SizedBox(
+                        height: 30,
+                      ),
                       Container(
                         decoration: BoxDecoration(
                           color: Colors.grey[200],
-                            borderRadius: BorderRadius.circular(12),
+                          borderRadius: BorderRadius.circular(12),
                         ),
                         child: TextFormField(
                           controller: Con,
                           maxLength: 15,
                           buildCounter: (
-                              BuildContext context, {
-                                required int currentLength,
-                                required bool isFocused,
-                                required int? maxLength,
-                              }) {
-                            return Padding( // 카운터 텍스트에 패딩 추가
+                            BuildContext context, {
+                            required int currentLength,
+                            required bool isFocused,
+                            required int? maxLength,
+                          }) {
+                            return Padding(
+                              // 카운터 텍스트에 패딩 추가
                               padding: const EdgeInsets.only(bottom: 5),
                               child: Text(
                                 '$currentLength/$maxLength',
@@ -1645,7 +1777,8 @@ showCameraNameChangeDialog(BuildContext context,TextEditingController Con, Strin
                             );
                           },
                           decoration: InputDecoration(
-                            contentPadding: const EdgeInsets.only(top: 10,bottom: 10,left: 20,right: 20),
+                            contentPadding: const EdgeInsets.only(
+                                top: 10, bottom: 10, left: 20, right: 20),
                             hintText: '사용할 이름을 입력하세요',
                             hintStyle: hintf14w400Size(),
                             filled: true,
@@ -1655,16 +1788,13 @@ showCameraNameChangeDialog(BuildContext context,TextEditingController Con, Strin
                                   color: Colors.transparent,
                                   width: 1.0,
                                 ),
-                                borderRadius: BorderRadius.circular(12)
-                            ),
+                                borderRadius: BorderRadius.circular(12)),
                             focusedBorder: OutlineInputBorder(
                                 borderSide: BorderSide(
                                   color: Colors.transparent,
                                   width: 1.0,
                                 ),
-                                borderRadius: BorderRadius.circular(12)
-                            ),
-
+                                borderRadius: BorderRadius.circular(12)),
                           ),
                         ),
                       )
@@ -1685,17 +1815,21 @@ showCameraNameChangeDialog(BuildContext context,TextEditingController Con, Strin
                           child: Container(
                             width: Get.width,
                             height: 42,
-                            decoration: BoxDecoration(color: Color(0xffD3D8DE), borderRadius: BorderRadius.circular(8)),
+                            decoration: BoxDecoration(
+                                color: Color(0xffD3D8DE),
+                                borderRadius: BorderRadius.circular(8)),
                             child: Center(
                                 child: Text(
-                                  '취소',
-                                  style: f16w700Size(),
-                                )),
+                              '취소',
+                              style: f16w700Size(),
+                            )),
                           ),
                         ),
                       ),
                     ),
-                    SizedBox(width: 8,),
+                    SizedBox(
+                      width: 8,
+                    ),
                     Expanded(
                       child: GestureDetector(
                         onTap: onTap,
@@ -1704,12 +1838,14 @@ showCameraNameChangeDialog(BuildContext context,TextEditingController Con, Strin
                           child: Container(
                             width: Get.width,
                             height: 42,
-                            decoration: BoxDecoration(color: Color(0xff1955EE), borderRadius: BorderRadius.circular(8)),
+                            decoration: BoxDecoration(
+                                color: Color(0xff1955EE),
+                                borderRadius: BorderRadius.circular(8)),
                             child: Center(
                                 child: Text(
-                                  '확인',
-                                  style: f16w700WhiteSize(),
-                                )),
+                              '확인',
+                              style: f16w700WhiteSize(),
+                            )),
                           ),
                         ),
                       ),
@@ -1724,19 +1860,23 @@ showCameraNameChangeDialog(BuildContext context,TextEditingController Con, Strin
 }
 
 /// mms 이름 변경 다이얼로그
-showMmsNameChangeDialog(BuildContext context,TextEditingController Con, String mms,VoidCallback onTap) {
+showMmsNameChangeDialog(BuildContext context, TextEditingController Con,
+    String mms, VoidCallback onTap) {
   showDialog(
       context: context,
       barrierDismissible: true,
       builder: (BuildContext context) {
         return StatefulBuilder(
-          builder: (context,StateSetter setState){
+          builder: (context, StateSetter setState) {
             return AlertDialog(
               backgroundColor: Colors.white,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(14),
               ),
-              title: Text('mms 이름 변경',style: f20w700Size(),),
+              title: Text(
+                'mms 이름 변경',
+                style: f20w700Size(),
+              ),
               content: Container(
                 width: Get.width,
                 child: SingleChildScrollView(
@@ -1744,8 +1884,13 @@ showMmsNameChangeDialog(BuildContext context,TextEditingController Con, String m
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text('MMS : ${mms}',style: hintf14w400Size(),),
-                      const SizedBox(height: 30,),
+                      Text(
+                        'MMS : ${mms}',
+                        style: hintf14w400Size(),
+                      ),
+                      const SizedBox(
+                        height: 30,
+                      ),
                       Container(
                         decoration: BoxDecoration(
                           color: Colors.grey[200],
@@ -1755,12 +1900,13 @@ showMmsNameChangeDialog(BuildContext context,TextEditingController Con, String m
                           controller: Con,
                           maxLength: 15,
                           buildCounter: (
-                              BuildContext context, {
-                                required int currentLength,
-                                required bool isFocused,
-                                required int? maxLength,
-                              }) {
-                            return Padding( // 카운터 텍스트에 패딩 추가
+                            BuildContext context, {
+                            required int currentLength,
+                            required bool isFocused,
+                            required int? maxLength,
+                          }) {
+                            return Padding(
+                              // 카운터 텍스트에 패딩 추가
                               padding: const EdgeInsets.only(bottom: 5),
                               child: Text(
                                 '$currentLength/$maxLength',
@@ -1771,7 +1917,8 @@ showMmsNameChangeDialog(BuildContext context,TextEditingController Con, String m
                             );
                           },
                           decoration: InputDecoration(
-                            contentPadding: const EdgeInsets.only(top: 10,bottom: 10,left: 20,right: 20),
+                            contentPadding: const EdgeInsets.only(
+                                top: 10, bottom: 10, left: 20, right: 20),
                             hintText: '사용할 이름을 입력하세요',
                             hintStyle: hintf14w400Size(),
                             filled: true,
@@ -1781,16 +1928,13 @@ showMmsNameChangeDialog(BuildContext context,TextEditingController Con, String m
                                   color: Colors.transparent,
                                   width: 1.0,
                                 ),
-                                borderRadius: BorderRadius.circular(12)
-                            ),
+                                borderRadius: BorderRadius.circular(12)),
                             focusedBorder: OutlineInputBorder(
                                 borderSide: BorderSide(
                                   color: Colors.transparent,
                                   width: 1.0,
                                 ),
-                                borderRadius: BorderRadius.circular(12)
-                            ),
-
+                                borderRadius: BorderRadius.circular(12)),
                           ),
                         ),
                       )
@@ -1811,17 +1955,21 @@ showMmsNameChangeDialog(BuildContext context,TextEditingController Con, String m
                           child: Container(
                             width: Get.width,
                             height: 42,
-                            decoration: BoxDecoration(color: Color(0xffD3D8DE), borderRadius: BorderRadius.circular(8)),
+                            decoration: BoxDecoration(
+                                color: Color(0xffD3D8DE),
+                                borderRadius: BorderRadius.circular(8)),
                             child: Center(
                                 child: Text(
-                                  '취소',
-                                  style: f16w700Size(),
-                                )),
+                              '취소',
+                              style: f16w700Size(),
+                            )),
                           ),
                         ),
                       ),
                     ),
-                    SizedBox(width: 8,),
+                    SizedBox(
+                      width: 8,
+                    ),
                     Expanded(
                       child: GestureDetector(
                         onTap: onTap,
@@ -1830,12 +1978,14 @@ showMmsNameChangeDialog(BuildContext context,TextEditingController Con, String m
                           child: Container(
                             width: Get.width,
                             height: 42,
-                            decoration: BoxDecoration(color: Color(0xff1955EE), borderRadius: BorderRadius.circular(8)),
+                            decoration: BoxDecoration(
+                                color: Color(0xff1955EE),
+                                borderRadius: BorderRadius.circular(8)),
                             child: Center(
                                 child: Text(
-                                  '확인',
-                                  style: f16w700WhiteSize(),
-                                )),
+                              '확인',
+                              style: f16w700WhiteSize(),
+                            )),
                           ),
                         ),
                       ),
@@ -1852,7 +2002,9 @@ showMmsNameChangeDialog(BuildContext context,TextEditingController Con, String m
 Future<void> releaseNoteDialog(BuildContext context) async {
   final UserState us = Get.find<UserState>();
 
-  await us.getReleaseNoteList(); /// get releasenote list from DB
+  await us.getReleaseNoteList();
+
+  /// get releasenote list from DB
 
   return showDialog(
       context: context,
@@ -1865,6 +2017,7 @@ Future<void> releaseNoteDialog(BuildContext context) async {
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(14),
             ),
+
             /// padding
             contentPadding: const EdgeInsets.only(top: 20, bottom: 35),
             content: Container(
@@ -1888,29 +2041,36 @@ Future<void> releaseNoteDialog(BuildContext context) async {
                           child: Column(
                             children: [
                               ListView.builder(
-                                  shrinkWrap: true, // ListView가 Column 내부에서 크기 문제를 일으키지 않도록 설정
-                                  physics: NeverScrollableScrollPhysics(), // SingleChildScrollView가 스크롤을 관리하므로 ListView는 자체 스크롤 비활성화
+                                  shrinkWrap:
+                                      true, // ListView가 Column 내부에서 크기 문제를 일으키지 않도록 설정
+                                  physics:
+                                      NeverScrollableScrollPhysics(), // SingleChildScrollView가 스크롤을 관리하므로 ListView는 자체 스크롤 비활성화
                                   itemCount: us.releaseNote.length,
-                                  itemBuilder: (context,index) {
+                                  itemBuilder: (context, index) {
                                     return Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
                                       children: [
                                         /// date
-                                        Text("${us.releaseNote[index]['version']} ver ${index == 0 ? "[현재버전]" : ""}",
-                                          style : f18greyW700(),
+                                        Text(
+                                          "${us.releaseNote[index]['version']} ver ${index == 0 ? "[현재버전]" : ""}",
+                                          style: f18greyW700(),
                                         ),
                                         const SizedBox(height: 4),
+
                                         /// date
-                                        Text(us.releaseNote[index]['content'].replaceAll(r'\n', '\n'),
-                                          style : f14blackW600(),
-                                          softWrap: true,          // 자동 줄 바꿈 허용
-                                          overflow: TextOverflow.visible, // 줄 바꿈이 필요한 경우 내용을 숨기지 않음
+                                        Text(
+                                          us.releaseNote[index]['content']
+                                              .replaceAll(r'\n', '\n'),
+                                          style: f14blackW600(),
+                                          softWrap: true, // 자동 줄 바꿈 허용
+                                          overflow: TextOverflow
+                                              .visible, // 줄 바꿈이 필요한 경우 내용을 숨기지 않음
                                         ),
                                         const SizedBox(height: 14),
                                       ],
                                     );
-                                  }
-                              ),
+                                  }),
                             ],
                           ),
                         ),
@@ -1933,12 +2093,14 @@ Future<void> releaseNoteDialog(BuildContext context) async {
                     child: Container(
                       width: Get.width,
                       height: 42,
-                      decoration: BoxDecoration(color: Color(0xff1955EE), borderRadius: BorderRadius.circular(8)),
+                      decoration: BoxDecoration(
+                          color: Color(0xff1955EE),
+                          borderRadius: BorderRadius.circular(8)),
                       child: Center(
                           child: Text(
-                            '확인',
-                            style: f16w700WhiteSize(),
-                          )),
+                        '확인',
+                        style: f16w700WhiteSize(),
+                      )),
                     ),
                   ),
                 ),
@@ -1950,7 +2112,8 @@ Future<void> releaseNoteDialog(BuildContext context) async {
 }
 
 /// 소화장치 작동 다이얼로그
-showFireFightingDialog(BuildContext context,String? cameraUid, String cameraName, int millisecond) {
+showFireFightingDialog(BuildContext context, String? cameraUid,
+    String cameraName, int millisecond) {
   showDialog(
       context: context,
       barrierDismissible: true,
@@ -1960,7 +2123,8 @@ showFireFightingDialog(BuildContext context,String? cameraUid, String cameraName
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(14),
           ),
-          contentPadding: const EdgeInsets.symmetric(vertical: 20, horizontal: 20),
+          contentPadding:
+              const EdgeInsets.symmetric(vertical: 20, horizontal: 20),
           content: Container(
             width: Get.width,
             // padding: const EdgeInsets.symmetric(horizontal: 30),
@@ -1981,12 +2145,14 @@ showFireFightingDialog(BuildContext context,String? cameraUid, String cameraName
                 const SizedBox(height: 20),
                 Container(
                   width: Get.width,
-                  padding: EdgeInsets.symmetric(vertical: 16,horizontal: 16),
+                  padding: EdgeInsets.symmetric(vertical: 16, horizontal: 16),
                   decoration: BoxDecoration(
                       color: Colors.white,
-                      borderRadius: BorderRadius.circular(10)
+                      borderRadius: BorderRadius.circular(10)),
+                  child: Text(
+                    '카메라 이름 : ${cameraName != null ? cameraName : cameraUid}',
+                    style: f14w700Black,
                   ),
-                  child: Text('카메라 이름 : ${cameraName != null ? cameraName : cameraUid}',style: f14w700Black,),
                 ),
                 const SizedBox(height: 10),
                 Text(
@@ -2011,31 +2177,32 @@ showFireFightingDialog(BuildContext context,String? cameraUid, String cameraName
                       child: Container(
                         width: Get.width,
                         height: 42,
-                        decoration: BoxDecoration(color: Color(0xffD3D8DE), borderRadius: BorderRadius.circular(8)),
+                        decoration: BoxDecoration(
+                            color: Color(0xffD3D8DE),
+                            borderRadius: BorderRadius.circular(8)),
                         child: Center(
                             child: Text(
-                              '취소',
-                              style: f16w700Size(),
-                            )),
+                          '취소',
+                          style: f16w700Size(),
+                        )),
                       ),
                     ),
                   ),
                 ),
                 SizedBox(
                   width: 8,
-
                 ),
                 Expanded(
                   child: GestureDetector(
                     // onTap: onTap,
                     onTap: () async {
-
-
                       // 1. 더블체크
-                      final response = await http.get(Uri.parse('${config.baseUrl}/getFireFightingData?cameraUid=$cameraUid'));
-                      Map<dynamic,dynamic> data = jsonDecode(response.body);
+                      final response = await http.get(Uri.parse(
+                          '${config.baseUrl}/getFireFightingData?cameraUid=$cameraUid'));
+                      Map<dynamic, dynamic> data = jsonDecode(response.body);
 
-                      if (data['fireFighting'] == 0 || data['fireFightingStatus'] != 0) {
+                      if (data['fireFighting'] == 0 ||
+                          data['fireFightingStatus'] != 0) {
                         Get.back();
                         return; // 이미 작동했거나 작동중일시 리턴
                       }
@@ -2044,50 +2211,55 @@ showFireFightingDialog(BuildContext context,String? cameraUid, String cameraName
 
                       DialogManager.showLoading(context);
 
-
                       // print("send 1");
                       // 2. 소화장치 실행
 
                       print("cameraDevice : ${cs.cameraDevice}");
-                      final cgi1 = "trans_cmd_string.cgi?cmd=2109&command=0&alarmLed=1&";
-                      final resp = await cs.cameraDevice!.writeCgi("trans_cmd_string.cgi?cmd=2109&command=0&alarmLed=1&");
+                      final cgi1 =
+                          "trans_cmd_string.cgi?cmd=2109&command=0&alarmLed=1&";
+                      final resp = await cs.cameraDevice!.writeCgi(
+                          "trans_cmd_string.cgi?cmd=2109&command=0&alarmLed=1&");
                       print("보냄 1 ${cgi1}");
                       print("보냄 1.5 ${resp}");
-                      cs.cameraDevice!.writeCgi("trans_cmd_string.cgi?cmd=2109&command=0&light=1&");
+                      cs.cameraDevice!.writeCgi(
+                          "trans_cmd_string.cgi?cmd=2109&command=0&light=1&");
 
                       // 2-1. 1.5초뒤에 다시 0 보냄
-                      Future.delayed(Duration(milliseconds: millisecond), () async{
-                        final cgi2 = "trans_cmd_string.cgi?cmd=2109&command=0&alarmLed=0&";
-                         final resp2 = await cs.cameraDevice!.writeCgi("trans_cmd_string.cgi?cmd=2109&command=0&alarmLed=0&");
-                         print("보냄 2 ${cgi2}");
+                      Future.delayed(Duration(milliseconds: millisecond),
+                          () async {
+                        final cgi2 =
+                            "trans_cmd_string.cgi?cmd=2109&command=0&alarmLed=0&";
+                        final resp2 = await cs.cameraDevice!.writeCgi(
+                            "trans_cmd_string.cgi?cmd=2109&command=0&alarmLed=0&");
+                        print("보냄 2 ${cgi2}");
                         print("보냄 2.5 ${resp2}");
-                         cs.cameraDevice!.writeCgi("trans_cmd_string.cgi?cmd=2109&command=0&light=0&");
-                         print("${millisecond}초 후 실행됨!!");
-                         DialogManager.hideLoading();
+                        cs.cameraDevice!.writeCgi(
+                            "trans_cmd_string.cgi?cmd=2109&command=0&light=0&");
+                        print("${millisecond}초 후 실행됨!!");
+                        DialogManager.hideLoading();
 
+                        // print("확인 1 ");
+                        // 3.5 fcm알림 보내기
+                        final fcmBody = {
+                          "vuid": cameraUid,
+                          "name": us.userList?[0]['name'] ?? "",
+                        };
+                        await http.post(
+                          Uri.parse(
+                              'http://${config.cameraNotiUrl}/fireFightingOperated'),
+                          headers: {
+                            "Content-Type": "application/json",
+                          },
+                          body: jsonEncode(fcmBody),
+                        );
 
-                         // print("확인 1 ");
-                         // 3.5 fcm알림 보내기
-                         final fcmBody = {
-                           "vuid" : cameraUid,
-                           "name" : us.userList?[0]['name'] ?? "",
-                         };
-                         await http.post(
-                           Uri.parse('http://${config.cameraNotiUrl}/fireFightingOperated'),
-                           headers: {
-                             "Content-Type": "application/json",
-                           },
-                           body: jsonEncode(fcmBody),
-                         );
-
-
-                         //  Get.back();
+                        //  Get.back();
                       });
 
                       // 3. db값 변경
                       final body = {
-                        "cameraUid" : cameraUid,
-                        "fireFightingStatus" : 1,
+                        "cameraUid": cameraUid,
+                        "fireFightingStatus": 1,
                       };
                       await http.post(
                         Uri.parse('${config.baseUrl}/changeFireFightingData'),
@@ -2100,19 +2272,20 @@ showFireFightingDialog(BuildContext context,String? cameraUid, String cameraName
                       // print("확인 2 ");
                       // 4. 소방장치 데이터 갱신
                       cs.getFireFightingData(cameraUid ?? "");
-
                     },
                     behavior: HitTestBehavior.opaque,
                     child: Center(
                       child: Container(
                         width: Get.width,
                         height: 42,
-                        decoration: BoxDecoration(color: Color(0xff1955EE), borderRadius: BorderRadius.circular(8)),
+                        decoration: BoxDecoration(
+                            color: Color(0xff1955EE),
+                            borderRadius: BorderRadius.circular(8)),
                         child: Center(
                             child: Text(
-                              '소화',
-                              style: f16w700WhiteSize(),
-                            )),
+                          '소화',
+                          style: f16w700WhiteSize(),
+                        )),
                       ),
                     ),
                   ),
@@ -2135,7 +2308,8 @@ showFireFightingCompleteDialog(BuildContext context) {
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(14),
           ),
-          contentPadding: const EdgeInsets.symmetric(vertical: 20, horizontal: 20),
+          contentPadding:
+              const EdgeInsets.symmetric(vertical: 20, horizontal: 20),
           content: Container(
             width: Get.width,
             child: Column(
@@ -2185,13 +2359,12 @@ showFireFightingCompleteDialog(BuildContext context) {
                     height: 42,
                     decoration: BoxDecoration(
                         color: Color(0xff1955EE),
-                        borderRadius: BorderRadius.circular(8)
-                    ),
+                        borderRadius: BorderRadius.circular(8)),
                     child: Center(
                         child: Text(
-                          '확인',
-                          style: f16w700WhiteSize(),
-                        )),
+                      '확인',
+                      style: f16w700WhiteSize(),
+                    )),
                   ),
                 ),
               ),

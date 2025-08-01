@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:mms/components/dialog.dart';
 import 'package:mms/components/dialogManager.dart';
-import 'package:mms/db/camera_table.dart';
 import 'package:mms/utils/font/font.dart';
 import 'package:video_player/video_player.dart';
 import 'package:http/http.dart' as http;
@@ -11,6 +10,7 @@ import 'package:url_launcher/url_launcher.dart';
 import 'video_fullscreen_page.dart';
 import 'dart:async';
 import '../navigation/bottom_navigator_view_model.dart';
+import '../../services/camera_notification_service.dart';
 
 class VideoPage extends StatefulWidget {
   final String videoUrl;
@@ -46,9 +46,11 @@ class _VideoPageState extends State<VideoPage> {
       _initializeVideo();
       _startExpirationTimer();
     } else {
-      setState(() {
-        _isVideoExpired = true;
-      });
+      if (mounted) {
+        setState(() {
+          _isVideoExpired = true;
+        });
+      }
     }
   }
 
@@ -99,9 +101,11 @@ class _VideoPageState extends State<VideoPage> {
   
   void _checkVideoExpiration() {
     if (_currentVideoUrl.isEmpty) {
-      setState(() {
-        _isVideoExpired = true;
-      });
+      if (mounted) {
+        setState(() {
+          _isVideoExpired = true;
+        });
+      }
       _timer?.cancel();
       return;
     }
@@ -132,10 +136,12 @@ class _VideoPageState extends State<VideoPage> {
           final bottomNavViewModel = Get.find<BottomNavigatorViewModel>();
           bottomNavViewModel.alertVideoUrl.value = '';
           
-          setState(() {
-            _currentVideoUrl = '';
-            _isVideoExpired = true;
-          });
+          if (mounted) {
+            setState(() {
+              _currentVideoUrl = '';
+              _isVideoExpired = true;
+            });
+          }
           
           if (_controller != null) {
             _controller!.pause();
@@ -155,18 +161,22 @@ class _VideoPageState extends State<VideoPage> {
     print("get url ? : ${_currentVideoUrl}");
     
     // 에러 상태 초기화
-    setState(() {
-      _hasError = false;
-      _errorMessage = '';
-    });
+    if (mounted) {
+      setState(() {
+        _hasError = false;
+        _errorMessage = '';
+      });
+    }
 
     final exists = await _checkVideoUrlWithRetry(_currentVideoUrl);
     if (!exists) {
       print("❌ 영상이 존재하지 않습니다");
-      setState(() {
-        _hasError = true;
-        _errorMessage = '영상을 불러올 수 없습니다. URL을 확인해주세요.';
-      });
+      if (mounted) {
+        setState(() {
+          _hasError = true;
+          _errorMessage = '영상을 불러올 수 없습니다. URL을 확인해주세요.';
+        });
+      }
       return;
     }
 
@@ -182,8 +192,8 @@ class _VideoPageState extends State<VideoPage> {
       print("📹 비디오 URL 확인: ${_currentVideoUrl}");
       print("📹 HTTP/HTTPS 확인: ${_currentVideoUrl.startsWith('https') ? 'HTTPS' : 'HTTP'}");
       
-      final controller = VideoPlayerController.network(
-        _currentVideoUrl,
+      final controller = VideoPlayerController.networkUrl(
+        Uri.parse(_currentVideoUrl),
         videoPlayerOptions: VideoPlayerOptions(
           mixWithOthers: true,
           allowBackgroundPlayback: false,
@@ -205,12 +215,14 @@ class _VideoPageState extends State<VideoPage> {
         await controller.seekTo(_lastPosition);
       }
 
-      setState(() {
-        _controller = controller;
-        _isReady = true;
-        _hasError = false;
-        _errorMessage = '';
-      });
+      if (mounted) {
+        setState(() {
+          _controller = controller;
+          _isReady = true;
+          _hasError = false;
+          _errorMessage = '';
+        });
+      }
 
       // 상태 감시 추가
       _controller!.addListener(_videoListener);
@@ -219,10 +231,12 @@ class _VideoPageState extends State<VideoPage> {
       _controller!.play();
     } catch (e) {
       print("영상 초기화 실패: $e");
-      setState(() {
-        _hasError = true;
-        _errorMessage = '영상 재생 중 오류가 발생했습니다: ${e.toString()}';
-      });
+      if (mounted) {
+        setState(() {
+          _hasError = true;
+          _errorMessage = '영상 재생 중 오류가 발생했습니다: ${e.toString()}';
+        });
+      }
       
       // 3초 후 재시도
       Future.delayed(Duration(seconds: 3), () {
@@ -240,10 +254,12 @@ class _VideoPageState extends State<VideoPage> {
 
     if (value.hasError) {
       print("❌ 영상 오류 감지: ${value.errorDescription}");
-      setState(() {
-        _hasError = true;
-        _errorMessage = '재생 중 오류가 발생했습니다: ${value.errorDescription}';
-      });
+      if (mounted) {
+        setState(() {
+          _hasError = true;
+          _errorMessage = '재생 중 오류가 발생했습니다: ${value.errorDescription}';
+        });
+      }
       
       // 5초 후 재연결 시도
       Future.delayed(Duration(seconds: 5), () {
@@ -283,11 +299,13 @@ class _VideoPageState extends State<VideoPage> {
       _controller = null;
     }
 
-    setState(() {
-      _isReady = false;
-      _hasError = false;
-      _errorMessage = '';
-    });
+    if (mounted) {
+      setState(() {
+        _isReady = false;
+        _hasError = false;
+        _errorMessage = '';
+      });
+    }
 
     _initializeVideo();
   }
@@ -381,9 +399,11 @@ class _VideoPageState extends State<VideoPage> {
           type: widget.type,
           initialVolumeMuted: _isVolumeMuted,
           onVolumeChanged: (isMuted) {
-            setState(() {
-              _isVolumeMuted = isMuted;
-            });
+            if (mounted) {
+              setState(() {
+                _isVolumeMuted = isMuted;
+              });
+            }
           },
         ),
         transition: Transition.fade,
@@ -394,7 +414,7 @@ class _VideoPageState extends State<VideoPage> {
 
   // 볼륨 토글
   void _toggleVolume() {
-    if (_controller != null) {
+    if (_controller != null && mounted) {
       setState(() {
         _isVolumeMuted = !_isVolumeMuted;
         _controller!.setVolume(_isVolumeMuted ? 0.0 : 1.0);
@@ -404,9 +424,11 @@ class _VideoPageState extends State<VideoPage> {
 
   // 컨트롤 표시/숨김 토글
   void _toggleControls() {
-    setState(() {
-      _showControls = !_showControls;
-    });
+    if (mounted) {
+      setState(() {
+        _showControls = !_showControls;
+      });
+    }
     
     // 3초 후 자동으로 컨트롤 숨김
     if (_showControls) {
@@ -634,11 +656,14 @@ class _VideoPageState extends State<VideoPage> {
                           Colors.red,
                               () async {
                             DialogManager.showLoading(context);
-                            await completeAgentWork(null, 0);
+                            final cameraService = CameraNotificationService();
+                            await cameraService.submitCameraResponse(
+                              falsePositive: 0, // 화재
+                              reason: null,
+                            );
                             DialogManager.hideLoading();
                             Get.back();
                             Get.back();
-                            //Get.offAll(() => AlimScreen());
                           },
                         ); // ✅ 화재감지 버튼 함수
                       },
@@ -666,13 +691,19 @@ class _VideoPageState extends State<VideoPage> {
                           Colors.black,
                               () async {
                                 DialogManager.showLoading(context);
-                                await completeAgentWork(null, 1);
+                                final cameraService = CameraNotificationService();
+                                await cameraService.submitCameraResponse(
+                                  falsePositive: 1, // 비화재(오탐)
+                                  reason: null,
+                                );
                                 DialogManager.hideLoading();
                                 
                                 // videoUrl 관련 값 초기화
-                                setState(() {
-                                  _currentVideoUrl = '';
-                                });
+                                if (mounted) {
+                                  setState(() {
+                                    _currentVideoUrl = '';
+                                  });
+                                }
                                 
                                 Get.back();
                                 Get.back();
@@ -716,11 +747,13 @@ class _VideoPageState extends State<VideoPage> {
             ),
             color: Colors.white,
             onPressed: () {
-              setState(() {
-                _controller!.value.isPlaying
-                    ? _controller!.pause()
-                    : _controller!.play();
-              });
+              if (mounted) {
+                setState(() {
+                  _controller!.value.isPlaying
+                      ? _controller!.pause()
+                      : _controller!.play();
+                });
+              }
             },
           ),
 

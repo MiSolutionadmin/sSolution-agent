@@ -15,9 +15,8 @@ import '../record/record_view.dart';
 import '../setting/setting_view.dart';
 import 'navigation_service.dart';
 
-class BottomNavigatorViewModel extends GetxController with GetTickerProviderStateMixin {
-  // Tab Controller
-  late TabController bottomTabController;
+class BottomNavigatorViewModel extends GetxController {
+  // TabController 제거 - Ticker 문제 해결
   
   // Reactive Variables
   final RxInt currentIndex = 0.obs;
@@ -48,40 +47,24 @@ class BottomNavigatorViewModel extends GetxController with GetTickerProviderStat
   @override
   void onInit() {
     super.onInit();
-    _initializeTabController();
+    _initializeIndex();
     _initializeWidgetOptions();
     _initializeApp();
   }
 
   @override
   void onClose() {
-    try {
-      // TabController가 사용 중이 아닐 때만 dispose
-      if (!bottomTabController.indexIsChanging) {
-        bottomTabController.dispose();
-      }
-    } catch (e) {
-      print('TabController dispose 오류: $e');
-      try {
-        bottomTabController.dispose();
-      } catch (e2) {
-        print('TabController 강제 dispose 오류: $e2');
-      }
-    }
+    // TabController 제거로 인해 별도 dispose 불필요
     super.onClose();
   }
 
-  /// 탭 컨트롤러 초기화
-  void _initializeTabController() {
+  /// 초기 인덱스 설정
+  void _initializeIndex() {
     try {
-      bottomTabController = TabController(length: 4, vsync: this);
       final targetIndex = userState.bottomIndex.value.clamp(0, 3);
-      bottomTabController.animateTo(targetIndex);
       currentIndex.value = targetIndex;
     } catch (e) {
-      print('TabController 초기화 오류: $e');
-      // 기본값으로 초기화
-      bottomTabController = TabController(length: 4, vsync: this);
+      print('인덱스 초기화 오류: $e');
       currentIndex.value = 0;
     }
   }
@@ -187,6 +170,13 @@ class BottomNavigatorViewModel extends GetxController with GetTickerProviderStat
   void showCustomSnackbar(BuildContext context, String message) {
     if (_snackBarEntry != null) return;
 
+    // Overlay 존재 여부 확인
+    final overlay = Overlay.maybeOf(context);
+    if (overlay == null) {
+      print('Overlay를 찾을 수 없습니다');
+      return;
+    }
+
     _snackBarEntry = OverlayEntry(
       builder: (context) => Positioned(
         bottom: 100,
@@ -201,7 +191,7 @@ class BottomNavigatorViewModel extends GetxController with GetTickerProviderStat
               borderRadius: BorderRadius.circular(16),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.3),
+                  color: Colors.black.withValues(alpha: 0.3),
                   blurRadius: 10,
                   offset: const Offset(0, 4),
                 ),
@@ -238,7 +228,7 @@ class BottomNavigatorViewModel extends GetxController with GetTickerProviderStat
       ),
     );
 
-    Overlay.of(context).insert(_snackBarEntry!);
+    overlay.insert(_snackBarEntry!);
 
     // 일정 시간 뒤 자동 제거
     Future.delayed(const Duration(seconds: 2), () {
@@ -263,12 +253,12 @@ class BottomNavigatorViewModel extends GetxController with GetTickerProviderStat
   /// 현재 페이지 위젯
   Widget get currentPageWidget => widgetOptions[currentIndex.value];
 
-  /// TabController가 사용 가능한지 확인
-  bool get isTabControllerReady {
+  /// 위젯이 준비되었는지 확인
+  bool get isWidgetReady {
     try {
-      return bottomTabController.length == 4 && widgetOptions.length == 4;
+      return widgetOptions.length == 4;
     } catch (e) {
-      print('TabController 상태 확인 오류: $e');
+      print('위젯 상태 확인 오류: $e');
       return false;
     }
   }
@@ -289,16 +279,7 @@ class BottomNavigatorViewModel extends GetxController with GetTickerProviderStat
       // 경보 탭(index 1)로 이동
       onTabChanged(1);
       
-      // TabController 상태를 체크하고 안전하게 이동
-      Future.delayed(Duration(milliseconds: 100), () {
-        if (isTabControllerReady && !isClosed) {
-          try {
-            bottomTabController.animateTo(1);
-          } catch (e) {
-            print('TabController animateTo 오류: $e');
-          }
-        }
-      });
+      // TabController 제거로 인해 별도 애니메이션 처리 불필요
     } catch (e) {
       print('navigateToAlertWithVideo 오류: $e');
       // 오류 발생 시 안전하게 기본 초기화

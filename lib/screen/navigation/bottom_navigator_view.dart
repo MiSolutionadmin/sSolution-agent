@@ -77,46 +77,12 @@ class BottomNavigatorView extends StatelessWidget {
               ? (bottomPadding > 0 ? bottomPadding + 0 : 0)
               : (bottomPadding > 0 ? bottomPadding + 0 : 0),
           ),
-          child: viewModel.isTabControllerReady
-            ? Builder(
-                builder: (context) {
-                  try {
-                    return TabBar(
-                      onTap: viewModel.onTabChanged,
-                      dividerColor: Colors.transparent,
-                      indicatorColor: Colors.transparent,
-                      indicatorSize: TabBarIndicatorSize.label,
-                      controller: viewModel.bottomTabController,
-                      unselectedLabelStyle: hintf14w700,
-                      labelStyle: f14w700,
-                      labelColor: Colors.black,
-                      padding: const EdgeInsets.only(left: 10, right: 10, bottom: 0),
-                      labelPadding: EdgeInsets.zero,
-                      tabs: _buildTabs(viewModel),
-                    );
-                  } catch (e) {
-                    print('TabBar 렌더링 오류: $e');
-                    return _buildFallbackNavigationBar(viewModel);
-                  }
-                },
-              )
-            : _buildFallbackNavigationBar(viewModel), // TabController가 초기화되지 않은 경우 대체 UI
+          child: _buildFallbackNavigationBar(viewModel),
         );
       },
     );
   }
 
-  /// 탭 목록 생성
-  List<Widget> _buildTabs(BottomNavigatorViewModel viewModel) {
-    final navigationConfig = NavigationConfig.getDefault();
-    
-    return navigationConfig.tabs.map((tabItem) => 
-      Obx(() => Tab(
-        icon: _buildTabIcon(tabItem, viewModel.currentIndex.value == tabItem.index),
-        text: tabItem.label,
-      ))
-    ).toList();
-  }
 
   /// 탭 아이콘 생성
   Widget _buildTabIcon(NavigationTabItem tabItem, bool isSelected) {
@@ -127,7 +93,7 @@ class BottomNavigatorView extends StatelessWidget {
             isSelected ? Colors.black : Colors.grey,
             BlendMode.srcIn,
           ),
-          child: const Icon(FontAwesomeIcons.home, size: 24),
+          child: const Icon(FontAwesomeIcons.house, size: 24),
         );
       case 1: // 경보
         return ColorFiltered(
@@ -135,7 +101,7 @@ class BottomNavigatorView extends StatelessWidget {
             isSelected ? Colors.black : Colors.grey,
             BlendMode.srcIn,
           ),
-          child: const Icon(FontAwesomeIcons.exclamationTriangle, size: 24),
+          child: const Icon(FontAwesomeIcons.triangleExclamation, size: 24),
         );
       case 2: // 기록
         return ColorFiltered(
@@ -160,22 +126,23 @@ class BottomNavigatorView extends StatelessWidget {
     }
   }
 
-  /// TabBar 대체 네비게이션 바 (오류 시 사용)
+  /// 네비게이션 바
   Widget _buildFallbackNavigationBar(BottomNavigatorViewModel viewModel) {
     final navigationConfig = NavigationConfig.getDefault();
     
-    return Row(
+    return Obx(() => Row(
       children: navigationConfig.tabs.map((tabItem) => 
         Expanded(
           child: GestureDetector(
             onTap: () => viewModel.onTabChanged(tabItem.index),
+            behavior: HitTestBehavior.opaque,
             child: Container(
-              padding: const EdgeInsets.symmetric(vertical: 12),
+              padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 8),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   _buildTabIcon(tabItem, viewModel.currentIndex.value == tabItem.index),
-                  const SizedBox(height: 4),
+                  const SizedBox(height: 6),
                   Text(
                     tabItem.label,
                     style: viewModel.currentIndex.value == tabItem.index 
@@ -188,7 +155,7 @@ class BottomNavigatorView extends StatelessWidget {
           ),
         )
       ).toList(),
-    );
+    ));
   }
 
   /// 탭 바 뷰

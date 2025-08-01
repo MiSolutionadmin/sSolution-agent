@@ -66,15 +66,14 @@ class PlayerPage extends GetView<PlayLogic> {
   late final SettingsNormalLogic nLogic;
   GlobalKey playKey = GlobalKey();
 
-
   PlayerPage({super.key});
 
   /// ✅ 소화장치 눌렀을때 함수
-  void pressedFireFightingButton (BuildContext context, int milliseconds) async {
-
+  void pressedFireFightingButton(BuildContext context, int milliseconds) async {
     print("firefight ${cs.fireFightingData['fireFightingStatus']}");
     if (cs.fireFightingData['fireFightingStatus'] == 0) {
-      showFireFightingDialog(context, cs.cameraUID.value, cs.cameraName.value, milliseconds);
+      showFireFightingDialog(
+          context, cs.cameraUID.value, cs.cameraName.value, milliseconds);
       return;
     }
 
@@ -95,40 +94,67 @@ class PlayerPage extends GetView<PlayLogic> {
       cs.cameraIndex.value = index;
     }
   }
-  
+
   /// ✅ 전체화면 기능아이콘 함수
-  void pressedFullScreenButton(BuildContext context,int index) {
+  void pressedFullScreenButton(BuildContext context, int index) {
     switch (index) {
-      case 0 :  /// 서치라이트
-        pressedSearchLight(); /// ✅ 서치라이트 함수
+      case 0:
+
+        /// 서치라이트
+        pressedSearchLight();
+
+        /// ✅ 서치라이트 함수
         break;
-      case 1 :  /// 사이렌
-        pressedSiren(); /// ✅ 사이렌 함수
+      case 1:
+
+        /// 사이렌
+        pressedSiren();
+
+        /// ✅ 사이렌 함수
         break;
-      case 2 :  /// 화면 캡쳐
-        pressedCapture(); /// ✅ 캡쳐 함수
+      case 2:
+
+        /// 화면 캡쳐
+        pressedCapture();
+
+        /// ✅ 캡쳐 함수
         break;
-      case 3 :
+      case 3:
         break;
-      case 4 :  /// 소리 설정
-        if (cs.sound_stream_status.value == true || cs.sound_stream_status.value == false) {
-          pressedSound(index); /// ✅ 소리 수신 함수
+      case 4:
+
+        /// 소리 설정
+        if (cs.sound_stream_status.value == true ||
+            cs.sound_stream_status.value == false) {
+          pressedSound(index);
+
+          /// ✅ 소리 수신 함수
         }
         break;
-      case 5 :  /// 전체 화면 해제
-        cs.fullScreen.value = !cs.fullScreen.value; /// ✅ 전체화면 해제
+      case 5:
+
+        /// 전체 화면 해제
+        cs.fullScreen.value = !cs.fullScreen.value;
+
+        /// ✅ 전체화면 해제
         break;
-      case 6 :  /// 119 문자신고
-        cs.fullScreen.value = !cs.fullScreen.value; /// ✅ 전체화면 해제
-        pressedMessageReport(context); /// ✅ 문자신고 함수
+      case 6:
+
+        /// 119 문자신고
+        cs.fullScreen.value = !cs.fullScreen.value;
+
+        /// ✅ 전체화면 해제
+        pressedMessageReport(context);
+
+        /// ✅ 문자신고 함수
         break;
-      default :
+      default:
         break;
     }
   }
 
   /// ✅ 일반화면 기능아이콘 함수
-  void pressedNormalScreenButton(BuildContext context,int index) async{
+  void pressedNormalScreenButton(BuildContext context, int index) async {
     switch (index) {
       case 0: // 불꽃 감지
         Get.to(() => CameraFireAlertScreen());
@@ -153,9 +179,9 @@ class PlayerPage extends GetView<PlayLogic> {
         pressedSiren(); // ✅ 사이렌 함수
         break;
       case 8: // 119 문자신고꽃
-      // 소화장치 0 테스트용 코드
-      //   cs.cameraDevice!.writeCgi("trans_cmd_string.cgi?cmd=2109&command=0&alarmLed=0&");
-      //   return;
+        // 소화장치 0 테스트용 코드
+        //   cs.cameraDevice!.writeCgi("trans_cmd_string.cgi?cmd=2109&command=0&alarmLed=0&");
+        //   return;
         pressedMessageReport(context); // ✅ 119 문자신고 함수
         break;
       default:
@@ -166,7 +192,10 @@ class PlayerPage extends GetView<PlayLogic> {
   /// ✅ 서치라이트 눌렀을때 함수
   void pressedSearchLight() async {
     if (cs.cameraDetailList[0]['searchLight'] == 'false') {
-      bool result1 = await DeviceManager.getInstance().mDevice!.lightCommand!.controlLight(true);
+      bool result1 = await DeviceManager.getInstance()
+          .mDevice!
+          .lightCommand!
+          .controlLight(true);
       if (result1 == true) {
         await cameraDetailSwitch(cs.cameraUID.value, 'searchLight', 'true');
         final updatedCameraDetailList = [...cs.cameraDetailList];
@@ -174,7 +203,10 @@ class PlayerPage extends GetView<PlayLogic> {
         cs.cameraDetailList.assignAll(updatedCameraDetailList);
       }
     } else {
-      bool result2 = await DeviceManager.getInstance().mDevice!.lightCommand!.controlLight(false);
+      bool result2 = await DeviceManager.getInstance()
+          .mDevice!
+          .lightCommand!
+          .controlLight(false);
       if (result2 == true) {
         await cameraDetailSwitch(cs.cameraUID.value, 'searchLight', 'false');
         final updatedCameraDetailList = [...cs.cameraDetailList];
@@ -183,11 +215,14 @@ class PlayerPage extends GetView<PlayLogic> {
       }
     }
   }
-  
+
   /// ✅ 사이렌 눌렀을때 함수
   void pressedSiren() async {
     if (cs.cameraDetailList[0]['siren'] == 'false') {
-      bool siren1 = await DeviceManager.getInstance().mDevice!.sirenCommand!.controlSiren(true, timeout: 5);
+      bool siren1 = await DeviceManager.getInstance()
+          .mDevice!
+          .sirenCommand!
+          .controlSiren(true, timeout: 5);
       if (siren1 == true) {
         await cameraDetailSwitch(cs.cameraUID.value, 'siren', 'true');
         final updatedCameraDetailList = [...cs.cameraDetailList];
@@ -195,7 +230,10 @@ class PlayerPage extends GetView<PlayLogic> {
         cs.cameraDetailList.assignAll(updatedCameraDetailList);
       }
     } else {
-      bool siren2 = await DeviceManager.getInstance().mDevice!.sirenCommand!.controlSiren(false, timeout: 5);
+      bool siren2 = await DeviceManager.getInstance()
+          .mDevice!
+          .sirenCommand!
+          .controlSiren(false, timeout: 5);
       if (siren2 == true) {
         await cameraDetailSwitch(cs.cameraUID.value, 'siren', 'false');
         final updatedCameraDetailList = [...cs.cameraDetailList];
@@ -209,14 +247,17 @@ class PlayerPage extends GetView<PlayLogic> {
   void pressedCapture() async {
     bool snapBool = await cs.cameraDevice!.writeCgi('snapshot.cgi?res=2');
     if (snapBool) {
-      CommandResult result = await cs.cameraDevice!.waitCommandResult((int cmd, Uint8List data) {
+      CommandResult result =
+          await cs.cameraDevice!.waitCommandResult((int cmd, Uint8List data) {
         return cmd == 24597;
       }, 5);
       if (Platform.isAndroid) {
-        RenderRepaintBoundary boundary = playKey.currentContext!.findRenderObject() as RenderRepaintBoundary;
+        RenderRepaintBoundary boundary =
+            playKey.currentContext!.findRenderObject() as RenderRepaintBoundary;
         double pixelRatio = 5.0;
         ui.Image image = await boundary.toImage(pixelRatio: pixelRatio);
-        ByteData? byteData = await image.toByteData(format: ui.ImageByteFormat.png);
+        ByteData? byteData =
+            await image.toByteData(format: ui.ImageByteFormat.png);
         Uint8List? imageBytes = byteData?.buffer.asUint8List();
         final results2 = await ImageGallerySaverPlus.saveImage(
           imageBytes!,
@@ -232,11 +273,13 @@ class PlayerPage extends GetView<PlayLogic> {
             Directory? appDocDir = await getApplicationDocumentsDirectory();
 
             /// 폴더 만들고
-            final screenshotsDirectory = Directory('${appDocDir!.path}/Download/screenshots');
+            final screenshotsDirectory =
+                Directory('${appDocDir!.path}/Download/screenshots');
             if (!await screenshotsDirectory.exists()) {
               await screenshotsDirectory.create(recursive: true);
             }
-            final file = File('${screenshotsDirectory.path}/${DateTime.now()}.jpg');
+            final file =
+                File('${screenshotsDirectory.path}/${DateTime.now()}.jpg');
             file.writeAsBytes(result.data!);
             Get.snackbar("사진이 캡처되었습니다", '사진이 캡처되었습니다');
           }
@@ -286,7 +329,8 @@ class PlayerPage extends GetView<PlayLogic> {
   void pressedCaptureAtNormalScreen() async {
     bool snapBool = await cs.cameraDevice!.writeCgi('snapshot.cgi?res=2');
     if (snapBool) {
-      CommandResult result = await cs.cameraDevice!.waitCommandResult((int cmd, Uint8List data) {
+      CommandResult result =
+          await cs.cameraDevice!.waitCommandResult((int cmd, Uint8List data) {
         return cmd == 24597;
       }, 5);
       if (Platform.isAndroid) {
@@ -306,7 +350,8 @@ class PlayerPage extends GetView<PlayLogic> {
 
   /// ✅ 화면 캡쳐 함수
   Future<void> captureScreen() async {
-    RenderRepaintBoundary boundary = playKey.currentContext!.findRenderObject() as RenderRepaintBoundary;
+    RenderRepaintBoundary boundary =
+        playKey.currentContext!.findRenderObject() as RenderRepaintBoundary;
     double pixelRatio = 5.0;
     ui.Image image = await boundary.toImage(pixelRatio: pixelRatio);
     ByteData? byteData = await image.toByteData(format: ui.ImageByteFormat.png);
@@ -319,8 +364,14 @@ class PlayerPage extends GetView<PlayLogic> {
   }
 
   /// ✅ 문자신고 함수
-  void pressedMessageReport(BuildContext context,{bool setFireStationSend = false}) async {
-    showFireStationDialog(context, us.userList[0]['agency'], us.userList[0]['address'], cs.cameraName.value, 'http://mmskorea.com:4014/checkcam/${cs.cameraUID.value}', () async {
+  void pressedMessageReport(BuildContext context,
+      {bool setFireStationSend = false}) async {
+    showFireStationDialog(
+        context,
+        us.userList[0]['agency'],
+        us.userList[0]['address'],
+        cs.cameraName.value,
+        'http://mmskorea.com:4014/checkcam/${cs.cameraUID.value}', () async {
       Get.back();
       String phoneNumber = "119";
       String message = Uri.encodeComponent('''
@@ -343,7 +394,8 @@ http://mmskorea.com:4014/checkcam/${cs.cameraUID.value}
       String smsUri = "sms:$phoneNumber?body=$message";
       await _launchURL(Uri.parse(smsUri));
 
-      if (setFireStationSend) { /// ✅ 함수화
+      if (setFireStationSend) {
+        /// ✅ 함수화
         ns.fireStationSend.value = true;
       }
 
@@ -382,9 +434,13 @@ http://mmskorea.com:4014/checkcam/${cs.cameraUID.value}
 
     switch (index) {
       case 0: // 서치라이트
-        return cs.cameraDetailList[0]['searchLight'] == 'true' ? Colors.blue : Colors.white;
+        return cs.cameraDetailList[0]['searchLight'] == 'true'
+            ? Colors.blue
+            : Colors.white;
       case 1: // 사이렌
-        return cs.cameraDetailList[0]['siren'] == 'true' ? Colors.blue : Colors.white;
+        return cs.cameraDetailList[0]['siren'] == 'true'
+            ? Colors.blue
+            : Colors.white;
       case 5:
         return Colors.white;
       case 6:
@@ -400,15 +456,25 @@ http://mmskorea.com:4014/checkcam/${cs.cameraUID.value}
 
     switch (index) {
       case 0: // ✅ 불꽃 감지
-        return cs.cameraDetailList[0]['fireDetect'] == 'true' ? Colors.blue : Colors.black;
+        return cs.cameraDetailList[0]['fireDetect'] == 'true'
+            ? Colors.blue
+            : Colors.black;
       case 1: // ✅ 연기 감지
-        return cs.cameraDetailList[0]['smokeDetect'] == 'true' ? Colors.blue : Colors.black;
+        return cs.cameraDetailList[0]['smokeDetect'] == 'true'
+            ? Colors.blue
+            : Colors.black;
       case 2: // ✅ 모션 감지
-        return cs.cameraDetailList[0]['motionDetect'] == 'true' ? Colors.blue : Colors.black;
+        return cs.cameraDetailList[0]['motionDetect'] == 'true'
+            ? Colors.blue
+            : Colors.black;
       case 6: // ✅ 서치라이트
-        return cs.cameraDetailList[0]['searchLight'] == 'true' ? Colors.blue : Colors.black;
+        return cs.cameraDetailList[0]['searchLight'] == 'true'
+            ? Colors.blue
+            : Colors.black;
       case 7: // ✅ 사이렌
-        return cs.cameraDetailList[0]['siren'] == 'true' ? Colors.blue : Colors.black;
+        return cs.cameraDetailList[0]['siren'] == 'true'
+            ? Colors.blue
+            : Colors.black;
       case 8: // ✅ 119 문자신고
         return Colors.red;
       default:
@@ -425,11 +491,13 @@ http://mmskorea.com:4014/checkcam/${cs.cameraUID.value}
     cs.timeCon.value = ScrollController();
     cs.tfFullScreen.value = false;
     int a = 0;
+
     /// 25-05-09 작동완료 다이얼로그용 context 상속
     cs.context = context;
 
     Future<bool> backPress() async {
       await cs.cameraDevice?.deviceDestroy();
+
       /// 알림에서 들어왔을 떄
       if (ns.cameraNoti.value) {
         print("나니나니나니");
@@ -458,13 +526,19 @@ http://mmskorea.com:4014/checkcam/${cs.cameraUID.value}
         await cs.cameraDevice!.deviceDestroy();
         print('hey there ----------------- 11111');
 
-        var camera = cs.cameraDetailSelectList.firstWhere((camera) => camera['cameraUid'] == cs.ptzList[0].deviceid, orElse: () => null);
+        var camera = cs.cameraDetailSelectList.firstWhere(
+            (camera) => camera['cameraUid'] == cs.ptzList[0].deviceid,
+            orElse: () => null);
         if (camera != null) {
           camera['currentFirmware'] = cs.ptzList[0].sys_ver;
         }
-        if (camera != null && int.parse('${us.versionList[0]['camera'].split('.').last}') <= int.parse('${camera['currentFirmware'].split('.').last}')) {
-          cs.cameraList.removeWhere((data) => data['cameraUid'] == cs.ptzList[0].deviceid);
-          cs.cameraDetailSelectList.removeWhere((data) => data['cameraUid'] == cs.ptzList[0].deviceid);
+        if (camera != null &&
+            int.parse('${us.versionList[0]['camera'].split('.').last}') <=
+                int.parse('${camera['currentFirmware'].split('.').last}')) {
+          cs.cameraList.removeWhere(
+              (data) => data['cameraUid'] == cs.ptzList[0].deviceid);
+          cs.cameraDetailSelectList.removeWhere(
+              (data) => data['cameraUid'] == cs.ptzList[0].deviceid);
         }
         ns.cameraNoti.value = false;
         if (!Get.isRegistered<MainLogic>()) {
@@ -487,7 +561,8 @@ http://mmskorea.com:4014/checkcam/${cs.cameraUID.value}
     /// ✅ 메인 위젯
     return Obx(() => ConditionalWillPopScope(
           onWillPop: backPress,
-          shouldAddCallback: cs.fullScreen.value || cs.tfFullScreen.value ? true : false,
+          shouldAddCallback:
+              cs.fullScreen.value || cs.tfFullScreen.value ? true : false,
           child: Obx(() => Scaffold(
                 appBar: cs.tfFullScreen.value || cs.fullScreen.value
                     ? null
@@ -504,18 +579,24 @@ http://mmskorea.com:4014/checkcam/${cs.cameraUID.value}
                       ),
                 backgroundColor: Colors.white,
                 body: cs.fullScreen.value
+
                     /// ✅ 전체화면 페이지
                     ? buildSinglePlayWidget(context)
-
                     : !cs.tfFullScreen.value
                         ? // 메모리 카드 재생 에서 전체 화면 일 때 스크롤 삭제 위함
                         /// ✅ 일반화면 페이지
                         CustomScrollView(
-                            slivers: [SliverFillRemaining(hasScrollBody: false, child: cs.cameraIndex.value == 0 ? buildSinglePlayWidget(context) : _MemoryPage(context))],
+                            slivers: [
+                              SliverFillRemaining(
+                                  hasScrollBody: false,
+                                  child: cs.cameraIndex.value == 0
+                                      ? buildSinglePlayWidget(context)
+                                      : _MemoryPage(context))
+                            ],
                           )
+
                         /// ✅ 메모리카드 페이지
                         : _MemoryPage(context),
-
               )),
         ));
   }
@@ -528,6 +609,7 @@ http://mmskorea.com:4014/checkcam/${cs.cameraUID.value}
     final config = AppConfig();
 
     return Obx(() => cs.fullScreen.value
+
         /// ✅ 전체화면 구성
         ? Center(
             child: InteractiveViewer(
@@ -550,6 +632,7 @@ http://mmskorea.com:4014/checkcam/${cs.cameraUID.value}
                     width: Get.width,
                     height: Get.height,
                   ),
+
                   /// ✅ 카메라 화면
                   Center(
                     child: FittedBox(
@@ -569,6 +652,7 @@ http://mmskorea.com:4014/checkcam/${cs.cameraUID.value}
                       ),
                     ),
                   ),
+
                   /// ✅ 좌측 아이콘
                   // Positioned(
                   //     top: Get.height * 0.1,
@@ -630,6 +714,7 @@ http://mmskorea.com:4014/checkcam/${cs.cameraUID.value}
               ),
             ),
           )
+
         /// ✅ 일반화면 구성
         : Column(
             children: [
@@ -662,9 +747,11 @@ http://mmskorea.com:4014/checkcam/${cs.cameraUID.value}
                           children: [
                             /// ✅ 시작,중지 버튼
                             buildStartButton(logic, state),
+
                             /// ✅ 소리버튼
                             buildVoiceButton(logic, state),
                             const Spacer(),
+
                             /// ✅ 전체화면버튼
                             IconButton(
                               icon: const Icon(Icons.fullscreen),
@@ -684,6 +771,7 @@ http://mmskorea.com:4014/checkcam/${cs.cameraUID.value}
 
               /// ✅ 아이콘 모음
               ns.cameraNoti.value
+
                   /// ✅ fcm알림 || 알림내역에서 들어왔을때 (아이콘3개만 표시)
                   ? Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 30),
@@ -700,63 +788,67 @@ http://mmskorea.com:4014/checkcam/${cs.cameraUID.value}
                         ],
                       ),
                     )
+
                   /// ✅ 그 외 모든 카메라아이콘 표시
                   : Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 30),
-                  child: Column(
-                    children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
+                      padding: const EdgeInsets.symmetric(horizontal: 30),
+                      child: Column(
                         children: [
-                          TextButton(
-                            onPressed: () {
-                              // 화재감지 버튼 클릭 시 처리
-                              showConfirmTapDialog(
-                                context,
-                                "서버로 전송 하시겠습니까?",
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              TextButton(
+                                onPressed: () {
+                                  // 화재감지 버튼 클릭 시 처리
+                                  showConfirmTapDialog(
+                                    context,
+                                    "서버로 전송 하시겠습니까?",
                                     () async {
-                                  DialogManager.showLoading(context);
-                                  await completeAgentWork(null, 0);
-                                  DialogManager.hideLoading();
-                                  Get.back();
-                                  Get.back();
-                                  //Get.offAll(() => AlimScreen());
+                                      DialogManager.showLoading(context);
+                                      //await completeAgentWork(null, 0);
+                                      DialogManager.hideLoading();
+                                      Get.back();
+                                      Get.back();
+                                      //Get.offAll(() => AlimScreen());
+                                    },
+                                  ); // ✅ 화재감지 버튼 함수
                                 },
-                              ); // ✅ 화재감지 버튼 함수
-                            },
-                            style: TextButton.styleFrom(
-                              backgroundColor: Colors.red,
-                              foregroundColor: Colors.white,
-                              padding: EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(8),
+                                style: TextButton.styleFrom(
+                                  backgroundColor: Colors.red,
+                                  foregroundColor: Colors.white,
+                                  padding: EdgeInsets.symmetric(
+                                      horizontal: 20, vertical: 12),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                ),
+                                child: Text(
+                                  ns.notificationData['type'] == '6'
+                                      ? '화재감지'
+                                      : '연기감지',
+                                ),
                               ),
-                            ),
-                            child: Text(
-                              ns.notificationData['type'] == '6' ? '화재감지' : '연기감지',
-                            ),
-                          ),
-                          SizedBox(width: 16),
-                          TextButton(
-                            onPressed: () {
-                              // 오탐 버튼 클릭 시 처리
-                              showAlimCheckTapDialog(context, "");
-                            },
-                            style: TextButton.styleFrom(
-                              backgroundColor: Colors.grey,        // 배경색
-                              foregroundColor: Colors.white,       // 텍스트 색
-                              padding: EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(8),
+                              SizedBox(width: 16),
+                              TextButton(
+                                onPressed: () {
+                                  // 오탐 버튼 클릭 시 처리
+                                  showAlimCheckTapDialog(context, "");
+                                },
+                                style: TextButton.styleFrom(
+                                  backgroundColor: Colors.grey, // 배경색
+                                  foregroundColor: Colors.white, // 텍스트 색
+                                  padding: EdgeInsets.symmetric(
+                                      horizontal: 20, vertical: 12),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                ),
+                                child: Text('오탐'),
                               ),
-                            ),
-                            child: Text('오탐'),
+                            ],
                           ),
                         ],
-                      ),
-                    ],
-                  )
-              ),
+                      )),
 
               /// ✅ 여백
               ns.cameraNoti.value
@@ -779,7 +871,8 @@ http://mmskorea.com:4014/checkcam/${cs.cameraUID.value}
                               ),
                               TextSpan(
                                 text: '119 문자신고',
-                                style: f14w700Size().copyWith(color: Colors.red),
+                                style:
+                                    f14w700Size().copyWith(color: Colors.red),
                               ),
                               TextSpan(
                                 text: '를 진행해주세요\n',
@@ -814,7 +907,9 @@ http://mmskorea.com:4014/checkcam/${cs.cameraUID.value}
                         if (ns.fireStationSend.value) {
                           return;
                         }
-                        pressedMessageReport(context,setFireStationSend : true); /// ✅ 문자신고 함수
+                        pressedMessageReport(context, setFireStationSend: true);
+
+                        /// ✅ 문자신고 함수
                       },
                       icon: Image.asset(
                         'assets/camera_icon/119.png',
@@ -824,11 +919,16 @@ http://mmskorea.com:4014/checkcam/${cs.cameraUID.value}
                       ),
                       label: Text(
                         '문자 신고',
-                        style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white),
+                        style: const TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white),
                       ),
                       style: ElevatedButton.styleFrom(
                         foregroundColor: Colors.black,
-                        backgroundColor: ns.fireStationSend.value ? Colors.grey[300] : Colors.red,
+                        backgroundColor: ns.fireStationSend.value
+                            ? Colors.grey[300]
+                            : Colors.red,
                         minimumSize: const Size(200, 50),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12),
@@ -836,7 +936,7 @@ http://mmskorea.com:4014/checkcam/${cs.cameraUID.value}
                       ),
                     )
                   : const SizedBox.shrink(),
-              
+
               const SizedBox(height: 40),
             ],
           ));
@@ -847,11 +947,14 @@ http://mmskorea.com:4014/checkcam/${cs.cameraUID.value}
     final cs = Get.find<CameraState>();
     return GestureDetector(
       onTap: () async {
-        pressedFullScreenButton(context,index); /// ✅ 전체화면 버튼 함수
+        pressedFullScreenButton(context, index);
+
+        /// ✅ 전체화면 버튼 함수
       },
 
       /// 마이크
-      onLongPressStart: (details) async { /// ✅ 꾹눌렀을때
+      onLongPressStart: (details) async {
+        /// ✅ 꾹눌렀을때
         var status = await Permission.microphone.request();
 
         /// ✅ 권한 필요할시
@@ -863,7 +966,8 @@ http://mmskorea.com:4014/checkcam/${cs.cameraUID.value}
           cs.cameraFullIconL[index] = !cs.cameraFullIconL[index];
         }
       },
-      onLongPressEnd: (details) { /// ✅ 누르는걸 끝냈을때
+      onLongPressEnd: (details) {
+        /// ✅ 누르는걸 끝냈을때
         if (index == 3) {
           SettingsMainLogic sLogic = Get.find<SettingsMainLogic>();
           sLogic.stopTalk(); // 마이크 송신 중단
@@ -881,19 +985,23 @@ http://mmskorea.com:4014/checkcam/${cs.cameraUID.value}
               border: Border.all(color: getFullIconColor(icon, index)),
             ),
             child: icon == 'mute'
-            /// ✅ 소리 아이콘은 따로표시
+
+                /// ✅ 소리 아이콘은 따로표시
                 ? Icon(
-              !state.videoVoiceStop.value ? Icons.volume_up : Icons.volume_off,
-              size: 40,
-              color: getFullIconColor(icon, index),
-            )
-            /// ✅ 그외 아이콘
+                    !state.videoVoiceStop.value
+                        ? Icons.volume_up
+                        : Icons.volume_off,
+                    size: 40,
+                    color: getFullIconColor(icon, index),
+                  )
+
+                /// ✅ 그외 아이콘
                 : Image.asset(
-              'assets/camera_icon/$icon.png',
-              width: 40,
-              height: 40,
-              color: getFullIconColor(icon, index),
-            ),
+                    'assets/camera_icon/$icon.png',
+                    width: 40,
+                    height: 40,
+                    color: getFullIconColor(icon, index),
+                  ),
           ),
         ],
       ),
@@ -901,11 +1009,14 @@ http://mmskorea.com:4014/checkcam/${cs.cameraUID.value}
   }
 
   /// 일반 화면 (아이콘)
-  Widget _CameraIcons(BuildContext context, String icon, String title, int index) {
+  Widget _CameraIcons(
+      BuildContext context, String icon, String title, int index) {
     final cs = Get.find<CameraState>();
     return GestureDetector(
       onTap: () async {
-        pressedNormalScreenButton(context,index); /// ✅ 일반화면 버튼 함수
+        pressedNormalScreenButton(context, index);
+
+        /// ✅ 일반화면 버튼 함수
       },
 
       /// ✅ 마이크 꾹 눌렀을때
@@ -960,7 +1071,8 @@ http://mmskorea.com:4014/checkcam/${cs.cameraUID.value}
             () => Container(
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
               decoration: BoxDecoration(
-                borderRadius: index == 8 ? BorderRadius.zero : BorderRadius.circular(100),
+                borderRadius:
+                    index == 8 ? BorderRadius.zero : BorderRadius.circular(100),
                 border: Border.all(color: getNormalIconColor(index)),
               ),
               child: Image.asset(
@@ -977,15 +1089,20 @@ http://mmskorea.com:4014/checkcam/${cs.cameraUID.value}
           Text(
             '$title',
             style: (() {
-              if (index == 0 && cs.cameraDetailList[0]['fireDetect'] == 'true') {
+              if (index == 0 &&
+                  cs.cameraDetailList[0]['fireDetect'] == 'true') {
                 return f14w700CameraBlueSize();
-              } else if (index == 1 && cs.cameraDetailList[0]['smokeDetect'] == 'true') {
+              } else if (index == 1 &&
+                  cs.cameraDetailList[0]['smokeDetect'] == 'true') {
                 return f14w700CameraBlueSize();
-              } else if (index == 2 && cs.cameraDetailList[0]['motionDetect'] == 'true') {
+              } else if (index == 2 &&
+                  cs.cameraDetailList[0]['motionDetect'] == 'true') {
                 return f14w700CameraBlueSize();
-              } else if (index == 6 && cs.cameraDetailList[0]['searchLight'] == 'true') {
+              } else if (index == 6 &&
+                  cs.cameraDetailList[0]['searchLight'] == 'true') {
                 return f14w700CameraBlueSize();
-              } else if (index == 7 && cs.cameraDetailList[0]['siren'] == 'true') {
+              } else if (index == 7 &&
+                  cs.cameraDetailList[0]['siren'] == 'true') {
                 return f14w700CameraBlueSize();
               } else {
                 if (cs.cameraIconL[index]) {
@@ -1070,53 +1187,44 @@ http://mmskorea.com:4014/checkcam/${cs.cameraUID.value}
     final isFireFightComplete = cs.fireFightingData['fireFightingStatus'] == 2;
 
     return Row(
-      // mainAxisAlignment: MainAxisAlignment.center,
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children : [
-        /// 소방장치 아이콘
-        Column(
-          children: [
-            GestureDetector(
-              onTap: () async {
-                pressedFireFightingButton(context, 4500);
-              },
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
-                decoration: BoxDecoration(
-                  border: Border.all(
-                     color: isFireFightComplete
-                         ?
-                         Colors.grey
-                         :
-                         Colors.red,
-                  width: 1
+        // mainAxisAlignment: MainAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          /// 소방장치 아이콘
+          Column(
+            children: [
+              GestureDetector(
+                onTap: () async {
+                  pressedFireFightingButton(context, 4500);
+                },
+                child: Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+                  decoration: BoxDecoration(
+                    border: Border.all(
+                        color: isFireFightComplete ? Colors.grey : Colors.red,
+                        width: 1),
+                  ),
+                  child: Image.asset(
+                    width: 40,
+                    height: 40,
+                    'assets/camera_icon/fire_fighting.png', // 소화기 아이콘
+                    color: isFireFightComplete ? Colors.grey : Colors.red,
                   ),
                 ),
-                child: Image.asset(
-                  width: 40,
-                  height: 40,
-                  'assets/camera_icon/fire_fighting.png', // 소화기 아이콘
-                  color: isFireFightComplete
-                      ?
-                      Colors.grey
-                      :
-                      Colors.red,
-                ),
               ),
-            ),
-            const SizedBox(height: 4),
-            Text("소화장치 작동", style: f14w700)
-          ],
-        ),
-        /// 소화장치 작동 아이콘
-        if (cs.fireFightingData['fireFightingStatus'] != 0)
-              Firefightingicon(),
+              const SizedBox(height: 4),
+              Text("소화장치 작동", style: f14w700)
+            ],
+          ),
 
-        ///화면 갱신용.... 더미
-        if(cs.test.value)
-          Text("",style: f14w700)
-      ]
-    );
+          /// 소화장치 작동 아이콘
+          if (cs.fireFightingData['fireFightingStatus'] != 0)
+            Firefightingicon(),
+
+          ///화면 갱신용.... 더미
+          if (cs.test.value) Text("", style: f14w700)
+        ]);
   }
 
   ///三目或假三目 /// ✅ 쓰는페이지 없음
@@ -1375,9 +1483,9 @@ class StartingWaveWidget extends StatelessWidget {
 
         return Center(
             child: SpinKitWave(
-              color: Colors.white,
-              size: 32,
-            ));
+          color: Colors.white,
+          size: 32,
+        ));
       } else {
         return const SizedBox.shrink();
       }
