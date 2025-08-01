@@ -36,11 +36,13 @@ class _VideoPageState extends State<VideoPage> {
   Timer? _timer;
   String _currentVideoUrl = '';
   bool _isVideoExpired = false;
+  bool _isSubmissionCompleted = false;
 
   @override
   void initState() {
     super.initState();
     _currentVideoUrl = widget.videoUrl;
+    _isSubmissionCompleted = false; // 새 인스턴스에서 항상 초기화
     
     if (_currentVideoUrl.isNotEmpty) {
       _initializeVideo();
@@ -50,6 +52,30 @@ class _VideoPageState extends State<VideoPage> {
         setState(() {
           _isVideoExpired = true;
         });
+      }
+    }
+  }
+
+  @override
+  void didUpdateWidget(VideoPage oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    
+    // videoUrl이 변경되면 상태 초기화
+    if (oldWidget.videoUrl != widget.videoUrl) {
+      if (mounted) {
+        setState(() {
+          _currentVideoUrl = widget.videoUrl;
+          _isSubmissionCompleted = false;
+          _isVideoExpired = false;
+          _hasError = false;
+          _errorMessage = '';
+        });
+      }
+      
+      // 새로운 비디오로 초기화
+      if (_currentVideoUrl.isNotEmpty) {
+        _initializeVideo();
+        _startExpirationTimer();
       }
     }
   }
@@ -444,8 +470,8 @@ class _VideoPageState extends State<VideoPage> {
 
   @override
   Widget build(BuildContext context) {
-    // videoUrl이 없거나 만료된 경우
-    if (_currentVideoUrl.isEmpty || _isVideoExpired) {
+    // 제출 완료된 경우 또는 videoUrl이 없거나 만료된 경우
+    if (_isSubmissionCompleted || _currentVideoUrl.isEmpty || _isVideoExpired) {
       return Scaffold(
         appBar: AppBar(
           title: Text("실시간 경보 영상"),
@@ -647,7 +673,7 @@ class _VideoPageState extends State<VideoPage> {
                 children: [
                   Expanded(
                     child: TextButton(
-                      onPressed: () {
+                      onPressed: _isSubmissionCompleted ? null : () {
                         // 화재감지 버튼 클릭 시 처리
                         final buttonText = _getButtonText();
                         _showStyledConfirmDialog(
@@ -656,19 +682,35 @@ class _VideoPageState extends State<VideoPage> {
                           Colors.red,
                               () async {
                             DialogManager.showLoading(context);
-                            final cameraService = CameraNotificationService();
-                            await cameraService.submitCameraResponse(
-                              falsePositive: 0, // 화재
-                              reason: null,
-                            );
-                            DialogManager.hideLoading();
-                            Get.back();
-                            Get.back();
+                            try {
+                              final cameraService = CameraNotificationService();
+                              await cameraService.submitCameraResponse(
+                                falsePositive: 0, // 화재
+                                reason: null,
+                              );
+                              DialogManager.hideLoading();
+                              
+                              if (mounted) {
+                                setState(() {
+                                  _isSubmissionCompleted = true;
+                                  _currentVideoUrl = '';
+                                  _isVideoExpired = true;
+                                });
+                              }
+                              
+                              // BottomNavigatorViewModel의 alertVideoUrl도 초기화
+                              final bottomNavViewModel = Get.find<BottomNavigatorViewModel>();
+                              bottomNavViewModel.alertVideoUrl.value = '';
+                              bottomNavViewModel.alertVideoType.value = '';
+                            } catch (e) {
+                              DialogManager.hideLoading();
+                              Get.snackbar('오류', '서버 전송 중 오류가 발생했습니다');
+                            }
                           },
                         ); // ✅ 화재감지 버튼 함수
                       },
                       style: TextButton.styleFrom(
-                        backgroundColor: Colors.red,
+                        backgroundColor: _isSubmissionCompleted ? Colors.grey : Colors.red,
                         foregroundColor: Colors.white,
                         padding: EdgeInsets.symmetric(horizontal: 20, vertical: 12),
                         shape: RoundedRectangleBorder(
@@ -683,7 +725,7 @@ class _VideoPageState extends State<VideoPage> {
                   ),
                   Expanded(
                     child: TextButton(
-                      onPressed: () {
+                      onPressed: _isSubmissionCompleted ? null : () {
                         // 오탐 버튼 클릭 시 처리
                         _showStyledConfirmDialog(
                           context,
@@ -691,27 +733,35 @@ class _VideoPageState extends State<VideoPage> {
                           Colors.black,
                               () async {
                                 DialogManager.showLoading(context);
-                                final cameraService = CameraNotificationService();
-                                await cameraService.submitCameraResponse(
-                                  falsePositive: 1, // 비화재(오탐)
-                                  reason: null,
-                                );
-                                DialogManager.hideLoading();
-                                
-                                // videoUrl 관련 값 초기화
-                                if (mounted) {
-                                  setState(() {
-                                    _currentVideoUrl = '';
-                                  });
+                                try {
+                                  final cameraService = CameraNotificationService();
+                                  await cameraService.submitCameraResponse(
+                                    falsePositive: 1, // 비화재(오탐)
+                                    reason: null,
+                                  );
+                                  DialogManager.hideLoading();
+                                  
+                                  if (mounted) {
+                                    setState(() {
+                                      _isSubmissionCompleted = true;
+                                      _currentVideoUrl = '';
+                                      _isVideoExpired = true;
+                                    });
+                                  }
+                                  
+                                  // BottomNavigatorViewModel의 alertVideoUrl도 초기화
+                                  final bottomNavViewModel = Get.find<BottomNavigatorViewModel>();
+                                  bottomNavViewModel.alertVideoUrl.value = '';
+                                  bottomNavViewModel.alertVideoType.value = '';
+                                } catch (e) {
+                                  DialogManager.hideLoading();
+                                  Get.snackbar('오류', '서버 전송 중 오류가 발생했습니다');
                                 }
-                                
-                                Get.back();
-                                Get.back();
                           },
                         );
                       },
                       style: TextButton.styleFrom(
-                        backgroundColor: Colors.black,        // 배경색
+                        backgroundColor: _isSubmissionCompleted ? Colors.grey : Colors.black,        // 배경색
                         foregroundColor: Colors.white,       // 텍스트 색
                         padding: EdgeInsets.symmetric(horizontal: 20, vertical: 12),
                         shape: RoundedRectangleBorder(

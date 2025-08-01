@@ -76,6 +76,7 @@ class BottomNavigatorViewModel extends GetxController {
     widgetOptions.value = [
       const MainView(),
       VideoPage(
+        key: ValueKey('${alertVideoUrl.value}_${DateTime.now().millisecondsSinceEpoch}'), // 고유 키로 새 인스턴스 보장
         videoUrl: alertVideoUrl.value, 
         type: alertVideoType.value.isNotEmpty ? alertVideoType.value : '경보'
       ),
@@ -140,20 +141,10 @@ class BottomNavigatorViewModel extends GetxController {
     navigationService.changeTab(index);
     currentIndex.value = index;
     
-    // 경보 탭(index 1)으로 이동할 때 VideoPage 재생성
-    if (index == 1) {
-      _updateVideoPageWidget();
-    }
+    // 탭 변경 시에는 VideoPage를 재생성하지 않음 (완료 상태 유지)
+    // VideoPage 재생성은 새로운 FCM 알림이 올 때만 수행
   }
   
-  /// VideoPage 위젯 업데이트
-  void _updateVideoPageWidget() {
-    widgetOptions[1] = VideoPage(
-      videoUrl: alertVideoUrl.value, 
-      type: alertVideoType.value.isNotEmpty ? alertVideoType.value : '경보'
-    );
-    widgetOptions.refresh(); // RxList 강제 업데이트
-  }
 
   /// 뒤로가기 처리
   Future<bool> handleBackPress() async {
@@ -251,7 +242,17 @@ class BottomNavigatorViewModel extends GetxController {
   bool get isTabBarVisible => !isLoading.value;
 
   /// 현재 페이지 위젯
-  Widget get currentPageWidget => widgetOptions[currentIndex.value];
+  Widget get currentPageWidget {
+    // 경보 탭(index 1)이고 alertVideoUrl이 비어있으면 빈 VideoPage 반환
+    if (currentIndex.value == 1 && alertVideoUrl.value.isEmpty) {
+      return VideoPage(
+        key: ValueKey('empty_${DateTime.now().millisecondsSinceEpoch}'),
+        videoUrl: '', 
+        type: '경보'
+      );
+    }
+    return widgetOptions[currentIndex.value];
+  }
 
   /// 위젯이 준비되었는지 확인
   bool get isWidgetReady {
@@ -269,9 +270,14 @@ class BottomNavigatorViewModel extends GetxController {
       alertVideoUrl.value = videoUrl;
       alertVideoType.value = type;
       
-      // 안전하게 위젯 옵션 업데이트 (재초기화 대신 직접 업데이트)
+      // 새로운 FCM 알림이 올 때만 VideoPage 재생성 (고유 키로 새 인스턴스 보장)
       if (widgetOptions.length >= 2) {
-        widgetOptions[1] = VideoPage(videoUrl: videoUrl, type: type);
+        widgetOptions[1] = VideoPage(
+          key: ValueKey('${videoUrl}_${DateTime.now().millisecondsSinceEpoch}'),
+          videoUrl: videoUrl, 
+          type: type
+        );
+        widgetOptions.refresh(); // RxList 강제 업데이트
       } else {
         _initializeWidgetOptions();
       }
