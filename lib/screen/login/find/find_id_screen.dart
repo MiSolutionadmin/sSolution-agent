@@ -86,25 +86,27 @@ class _FindIdState extends State<FindId> {
             ],
           ),
         ),
-        bottomNavigationBar: GestureDetector(
-          onTap: () async {
-            if(_phoneNumCon.text.trim().length != 11) {
-              showOnlyConfirmDialog(context, '(-)을 제외한 올바른 번호를 입력해주세요.');
-            } else {
-              goBootpayRequest(context,_phoneNumCon.text,'id');
-              // if (responseBody != '[]') {
-              //   Get.to(() => FindIdResult(responseBody : responseBody));
-              // } else {
-              //   showOnlyConfirmDialog(context, '일치하는 사용자가 없습니다.');
-              // }
-            }
-          },
-          child: Container(
-            width: Get.width,
-            height: 60,
-            color: const Color(0xff1955EE),
-            padding: const EdgeInsets.symmetric(vertical: 16),
-            child: Center(child: Text('인증하기',style: f18w700WhiteSize(),)),
+        bottomNavigationBar: SafeArea(
+          child: GestureDetector(
+            onTap: () async {
+              if(_phoneNumCon.text.trim().length != 11) {
+                showOnlyConfirmDialog(context, '(-)을 제외한 올바른 번호를 입력해주세요.');
+              } else {
+                goBootpayRequest(context,_phoneNumCon.text,"",'id');
+                // if (responseBody != '[]') {
+                //   Get.to(() => FindIdResult(responseBody : responseBody));
+                // } else {
+                //   showOnlyConfirmDialog(context, '일치하는 사용자가 없습니다.');
+                // }
+              }
+            },
+            child: Container(
+              width: Get.width,
+              height: 60,
+              color: const Color(0xff1955EE),
+              padding: const EdgeInsets.symmetric(vertical: 16),
+              child: Center(child: Text('인증하기',style: f18w700WhiteSize(),)),
+            ),
           ),
         ),
       ),

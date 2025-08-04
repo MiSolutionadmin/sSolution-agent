@@ -1,12 +1,14 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:get/get.dart';
 import 'package:http/http.dart' as http;
 import '../../../base_config/config.dart';
 import '../../../components/dialog.dart';
 import '../../../utils/encryption.dart';
 import '../../../utils/font/font.dart';
+import '../login_service.dart';
 import '../login_view.dart';
 
 
@@ -26,9 +28,19 @@ class _FindPwChangeState extends State<FindPwChange> {
   final TextEditingController _pwCon = TextEditingController();
   final TextEditingController _pwCon2 = TextEditingController();
 
+  /// ✅ jwt
+  final FlutterSecureStorage _storage = const FlutterSecureStorage(
+    aOptions: AndroidOptions(
+      encryptedSharedPreferences: true,
+    ),
+  );
+  final LoginService _loginService = LoginService();
+  final AppConfig _config = AppConfig();
+
   bool _obscurePassword = true;
   bool _obscurePassword2 = true;
   String email = '';
+  String id = '';
 
   @override
   void initState() {
@@ -36,7 +48,10 @@ class _FindPwChangeState extends State<FindPwChange> {
     String emailBody = widget.responseBody;
     List<dynamic> data = jsonDecode(emailBody);
     List<Map<String, dynamic>> dataList = List<Map<String, dynamic>>.from(data);
+
+    print("dataList ? ${dataList}");
     email = dataList.isNotEmpty ? dataList[0]["email"] : "";
+    id = dataList.isNotEmpty ? dataList[0]["id"] : "";
   }
 
   @override
@@ -187,26 +202,28 @@ class _FindPwChangeState extends State<FindPwChange> {
             ],
           ),
         ),
-        bottomNavigationBar: GestureDetector(
-          onTap: () async {
-            if (_pwCon.text.trim() != _pwCon2.text.trim()) {
-              showOnlyConfirmDialog(context, '비밀번호가 일치하지 않습니다');
-            } else if(!isValidPassword(_pwCon.text.trim())){
-              showOnlyConfirmDialog(context, '올바른 비밀번호를 입력해주세요');
-            }
-            else if (_pwCon2.text.trim().isNotEmpty) {
-              await changePw(_pwCon2.text.trim());
-              showOnlyConfirmTapDialog(context, '비밀번호가 변경되었습니다', () {Get.offAll(() => LoginView());});
-            } else {
-              showOnlyConfirmDialog(context, '입력되지 않은 값이 있습니다');
-            }
-          },
-          child: Container(
-            width: Get.width,
-            height: 60,
-            color: const Color(0xff1955EE),
-            padding: const EdgeInsets.symmetric(vertical: 16),
-            child: Center(child: Text('로그인 페이지로',style: f18w700WhiteSize(),)),
+        bottomNavigationBar: SafeArea(
+          child: GestureDetector(
+            onTap: () async {
+              if (_pwCon.text.trim() != _pwCon2.text.trim()) {
+                showOnlyConfirmDialog(context, '비밀번호가 일치하지 않습니다');
+              } else if(!isValidPassword(_pwCon.text.trim())){
+                showOnlyConfirmDialog(context, '올바른 비밀번호를 입력해주세요');
+              }
+              else if (_pwCon2.text.trim().isNotEmpty) {
+                await changePw(int.parse(id) ,_pwCon2.text.trim());
+                showOnlyConfirmTapDialog(context, '비밀번호가 변경되었습니다', () {Get.offAll(() => LoginView());});
+              } else {
+                showOnlyConfirmDialog(context, '입력되지 않은 값이 있습니다');
+              }
+            },
+            child: Container(
+              width: Get.width,
+              height: 60,
+              color: const Color(0xff1955EE),
+              padding: const EdgeInsets.symmetric(vertical: 16),
+              child: Center(child: Text('로그인 페이지로',style: f18w700WhiteSize(),)),
+            ),
           ),
         ),
       ),
@@ -246,24 +263,67 @@ class _FindPwChangeState extends State<FindPwChange> {
 
     return criteriaMet >= 3; // 3가지 조합 이상 필요
   }
-  /// 비밀번호 변경
-  Future<void> changePw(String pw) async {
-    // final url = '${config.apiUrl}/changepw?id=$email&pw=${pw}';
-    // final response = await http.get(Uri.parse(url));
+  // /// 비밀번호 변경
+  // Future<void> changePw(String pw) async {
+  //   // final url = '${config.apiUrl}/changepw?id=$email&pw=${pw}';
+  //   // final response = await http.get(Uri.parse(url));
+  //
+  //   /// 25-05-19 get방식에서 비밀번호에 #포함시 오류발생 => post로 변경
+  //   final body = {
+  //     'id' : email,
+  //     'pw' : pw,
+  //   };
+  //
+  //   final response = await http.post(
+  //       Uri.parse('${config.baseUrl}/changepw'),
+  //       body: body
+  //   );
+  //
+  //   if (response.statusCode != 200) {
+  //     throw Exception('Failed');
+  //   }
+  // }
 
-    /// 25-05-19 get방식에서 비밀번호에 #포함시 오류발생 => post로 변경
+  /// 비밀번호 변경 API 호출
+  Future<void> changePw(int id,String password) async {
+
     final body = {
-      'id' : email,
-      'pw' : pw,
+      'password': password,
     };
 
-    final response = await http.post(
-        Uri.parse('${config.baseUrl}/changepw'),
-        body: body
+    // 두 가지 방법으로 토큰 가져오기 시도
+    final token1 = await _storage.read(key: "jwt_token");
+    final token2 = await _loginService.getToken();
+
+    print("Direct storage token: $token1");
+    print("LoginService token: $token2");
+
+    final token = token1 ?? token2;
+
+    final response = await http.patch(
+      Uri.parse(
+          '${_config.baseUrl}/agents/${id}/password'),
+      body: body,
+      headers: {
+        'Authorization': 'Bearer $token',
+        'Content-Type': 'application/x-www-form-urlencoded',
+      },
     );
 
-    if (response.statusCode != 200) {
-      throw Exception('Failed');
+    print("Response Status: ${response.statusCode}");
+    print("Response Body: ${response.body}");
+
+    if (response.statusCode != 200 && response.statusCode != 204) {
+      String errorMessage = '서버 오류가 발생했습니다';
+      try {
+        // 응답 본문에서 에러 메시지 추출 시도
+        if (response.body.isNotEmpty) {
+          errorMessage = '서버 오류: ${response.statusCode}';
+        }
+      } catch (e) {
+        print('에러 응답 파싱 실패: $e');
+      }
+      throw Exception(errorMessage);
     }
   }
 }

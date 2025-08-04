@@ -5,6 +5,7 @@ import 'package:bootpay/model/extra.dart';
 import 'package:bootpay/model/payload.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:get/get.dart';
 import 'package:http/http.dart' as http;
 import '../base_config/config.dart';
@@ -16,7 +17,7 @@ import '../screen/login/find/find_pw_change_screen.dart';
 import '../screen/login/terms_screen.dart';
 import '../screen/setting/private/private_change_screen.dart';
 
-Future<void> goBootpayRequest(BuildContext context, String pw, String path) async {
+Future<void> goBootpayRequest(BuildContext context, String pw, String email, String path) async {
   final us = Get.put(UserState());
   final config = AppConfig();
   Payload payload = Payload();
@@ -66,7 +67,7 @@ Future<void> goBootpayRequest(BuildContext context, String pw, String path) asyn
             }
             break;
           case 'pw':
-            String responseBody = await findId(pw);
+            String responseBody = await findPw(pw,email);
             if (pw != us.bootPhone.value) {
               showOnlyConfirmDialog(context, '정보가 일치하지 않습니다');
             } else if ((responseBody == '[]')) {
@@ -111,10 +112,95 @@ Future<void> goBootpayRequest(BuildContext context, String pw, String path) asyn
 
 /// 아이디 찾기
 Future<String> findId(String phoneNum) async {
-  final url = '${config.baseUrl}/findid?phoneNumber=$phoneNum';
-  final response = await http.get(Uri.parse(url));
+  // Secure Storage 인스턴스 생성
+  const storage = FlutterSecureStorage(
+    aOptions: AndroidOptions(
+      encryptedSharedPreferences: true,
+    ),
+  );
+
+  final params = {
+    "phoneNumber": phoneNum,
+    "status": "1"
+  };
+
+  final url = Uri.parse('${config.baseUrl}/agents').replace(queryParameters: params);
+  final response = await http.get(url);
+
   if (response.statusCode != 200) {
     throw Exception('Failed');
   }
+
+  print("response.body ${response.body}");
+
+  // 아이디 찾기가 성공하면 임시 JWT 토큰 발급 요청
+  try {
+    final tokenUrl = Uri.parse('${config.baseUrl}/auth/phone'); // 임시 토큰 엔드포인트
+    final tokenResponse = await http.post(
+      tokenUrl,
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({
+        'phoneNumber': phoneNum,
+        '': 'find_id' // 용도 구분
+      }),
+    );
+
+    if (tokenResponse.statusCode == 200) {
+      final tokenData = jsonDecode(tokenResponse.body);
+      if (tokenData['token'] != null) {
+        await storage.write(key: 'temp_jwt_token', value: tokenData['token']);
+        print("임시 JWT 토큰 저장 완료");
+      }
+    }
+  } catch (e) {
+    print("임시 토큰 발급 실패: $e");
+  }
+
+  return response.body;
+}
+
+/// 아이디 찾기
+Future<String> findPw(String phoneNum,String email) async {
+  // Secure Storage 인스턴스 생성
+  const storage = FlutterSecureStorage(
+    aOptions: AndroidOptions(
+      encryptedSharedPreferences: true,
+    ),
+  );
+
+  final params = {
+    "phoneNumber": phoneNum,
+    "email": email,
+    "status": "1"
+  };
+
+  final url = Uri.parse('${config.baseUrl}/agents').replace(queryParameters: params);
+  final response = await http.get(url);
+
+  if (response.statusCode != 200) {
+    throw Exception('Failed');
+  }
+
+  print("response.body ${response.body}");
+
+  // 아이디 찾기가 성공하면 임시 JWT 토큰 발급 요청
+  try {
+    final tokenUrl = Uri.parse('${config.baseUrl}/auth/phone'); // 임시 토큰 엔드포인트
+    final tokenResponse = await http.post(
+      tokenUrl,
+      headers: {'Content-Type': 'application/json'},
+    );
+
+    if (tokenResponse.statusCode == 200) {
+      final tokenData = jsonDecode(tokenResponse.body);
+      if (tokenData['token'] != null) {
+        await storage.write(key: 'temp_jwt_token', value: tokenData['token']);
+        print("임시 JWT 토큰 저장 완료");
+      }
+    }
+  } catch (e) {
+    print("임시 토큰 발급 실패: $e");
+  }
+
   return response.body;
 }

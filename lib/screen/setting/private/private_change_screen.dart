@@ -250,7 +250,7 @@ class _PrivateChangeState extends State<PrivateChange> {
                                         if (index == 4) {
                                           showConfirmTapDialog(context, '전화번호를 변경하시겠습니까?', () async {
                                             Get.back();
-                                            goBootpayRequest(context, '', 'setting');
+                                            goBootpayRequest(context, '', '','setting');
                                           });
                                         } else {
                                           Get.to(() => const PasswordResetView(setting: 'true'));

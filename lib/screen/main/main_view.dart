@@ -17,7 +17,7 @@ class MainView extends StatelessWidget {
         child: Column(
           children: [
             // 상단 헤더
-            _buildHeader(Get.find<MainViewModel>()),
+            _buildHeader(context, Get.find<MainViewModel>()),
             // 스크롤 가능한 콘텐츠 (Pull-to-refresh 추가)
             Expanded(
               child: RefreshIndicator(
@@ -56,7 +56,7 @@ class MainView extends StatelessWidget {
   }
 
   /// 상단 헤더 위젯
-  Widget _buildHeader(MainViewModel viewModel) {
+  Widget _buildHeader(BuildContext context, MainViewModel viewModel) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: const BoxDecoration(
@@ -86,7 +86,7 @@ class MainView extends StatelessWidget {
           // 캘린더 아이콘
           IconButton(
             icon: const Icon(Icons.calendar_today),
-            onPressed: viewModel.onCalendarTap,
+            onPressed: () => viewModel.onCalendarTap(context),
           ),
         ],
       ),

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:mms/components/dialog.dart';
 import 'package:table_calendar/table_calendar.dart';
 import '../../provider/user_state.dart';
 import 'main_api_service.dart';
@@ -282,14 +283,14 @@ class MainViewModel extends GetxController {
   }
 
   /// 캘린더 아이콘 클릭
-  void onCalendarTap() {
+  void onCalendarTap(BuildContext context) {
     _loadScheduledWorkDates().then((_) {
-      _showCalendarDialog();
+      _showCalendarDialog(context);
     });
   }
 
   /// 달력 다이얼로그 표시 (근무 날짜 선택)
-  void _showCalendarDialog() {
+  void _showCalendarDialog(BuildContext context) {
     Get.dialog(
       Dialog(
         shape: RoundedRectangleBorder(
@@ -415,8 +416,8 @@ class MainViewModel extends GetxController {
                         onPressed:
                             (addDates.isNotEmpty || deleteDates.isNotEmpty)
                                 ? () {
-                                    _submitWorkDates();
-                                    Get.back();
+                                    // Get.back(); // 달력 다이얼로그 닫기
+                                    _showWorkDateConfirmDialog(context);
                                   }
                                 : null,
                         style: ElevatedButton.styleFrom(
@@ -468,12 +469,12 @@ class MainViewModel extends GetxController {
           message += '${deleteDates.length}개 날짜 삭제 완료. ';
         }
 
-        Get.snackbar(
-          '성공',
-          message.isNotEmpty ? message : '근무 날짜가 성공적으로 업데이트되었습니다.',
-          backgroundColor: Colors.green,
-          colorText: Colors.white,
-        );
+        // Get.snackbar(
+        //   '성공',
+        //   message.isNotEmpty ? message : '근무 날짜가 성공적으로 업데이트되었습니다.',
+        //   backgroundColor: Colors.green,
+        //   colorText: Colors.white,
+        // );
       } else {
         throw Exception('업데이트 실패: ${result['message']}');
       }
@@ -494,6 +495,106 @@ class MainViewModel extends GetxController {
         colorText: Colors.white,
       );
     }
+  }
+
+  /// 근무 날짜 수정 확인 다이얼로그
+  void _showWorkDateConfirmDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      barrierDismissible: true,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          backgroundColor: const Color(0xffF1F4F7),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(14),
+          ),
+          content: Container(
+            width: Get.width,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Padding(
+                  padding: EdgeInsets.symmetric(vertical: 12),
+                  child: Text(
+                    '근무일을 저장 하시겠습니까?',
+                    style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.w500,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            Row(
+              children: [
+                Expanded(
+                  child: GestureDetector(
+                    onTap: () {
+                      Get.back();
+                    },
+                    behavior: HitTestBehavior.opaque,
+                    child: Center(
+                      child: Container(
+                        width: Get.width,
+                        height: 42,
+                        decoration: BoxDecoration(
+                          color: Color(0xffD3D8DE),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Center(
+                          child: Text(
+                            '취소',
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+                SizedBox(width: 8),
+                Expanded(
+                  child: GestureDetector(
+                    onTap: () async {
+                      Get.back();
+                      Get.back();
+                      await _submitWorkDates();
+                    },
+                    behavior: HitTestBehavior.opaque,
+                    child: Center(
+                      child: Container(
+                        width: Get.width,
+                        height: 42,
+                        decoration: BoxDecoration(
+                          color: Color(0xff1955EE),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Center(
+                          child: Text(
+                            '확인',
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w700,
+                              color: Colors.white,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            )
+          ],
+        );
+      },
+    );
   }
 
   /// 날짜 선택/해제 처리
@@ -597,6 +698,7 @@ class MainViewModel extends GetxController {
                   Expanded(
                     child: ElevatedButton(
                       onPressed: () {
+
                         // 모달 닫기
                         Get.back();
                         
@@ -697,9 +799,28 @@ class MainViewModel extends GetxController {
   String _calculateElapsedTime(String? createDate, String? notiDate) {
     if (createDate == null || notiDate == null) return '0초';
 
+    print("create ? : ${createDate}");
+    print("noti ? : ${notiDate}");
+
     try {
+      // createDate 파싱 (UTC)
       final create = DateTime.parse(createDate);
-      final noti = DateTime.parse(notiDate);
+
+      // notiDate 형식 처리
+      String formattedNotiDate = notiDate;
+      if (notiDate.contains(' ') && !notiDate.contains('T')) {
+        formattedNotiDate = notiDate.replaceFirst(' ', 'T');
+      }
+
+      // Z가 없으면 로컬 시간으로 간주, UTC로 변환
+      if (!formattedNotiDate.endsWith('Z')) {
+        formattedNotiDate += 'Z';
+      }
+
+      final noti = DateTime.parse(formattedNotiDate);
+
+      print("create parsed : ${create}");
+      print("noti parsed : ${noti}");
 
       final difference = create.difference(noti).abs();
 
@@ -709,6 +830,7 @@ class MainViewModel extends GetxController {
       return '0초';
     }
   }
+
 }
 
 /// 이벤트 아이템 모델

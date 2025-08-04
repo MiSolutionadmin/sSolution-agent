@@ -80,16 +80,18 @@ class _FindIdResultState extends State<FindIdResult> {
             ],
           ),
         ),
-        bottomNavigationBar: GestureDetector(
-          onTap: () async {
-            Get.offAll(()=> LoginView());
-          },
-          child: Container(
-            width: Get.width,
-            height: 60,
-            color: const Color(0xff1955EE),
-            padding: const EdgeInsets.symmetric(vertical: 16),
-            child: Center(child: Text('로그인 페이지로',style: f18w700WhiteSize(),)),
+        bottomNavigationBar: SafeArea(
+          child: GestureDetector(
+            onTap: () async {
+              Get.offAll(()=> LoginView());
+            },
+            child: Container(
+              width: Get.width,
+              height: 60,
+              color: const Color(0xff1955EE),
+              padding: const EdgeInsets.symmetric(vertical: 16),
+              child: Center(child: Text('로그인 페이지로',style: f18w700WhiteSize(),)),
+            ),
           ),
         ),
       ),
