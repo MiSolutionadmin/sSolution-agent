@@ -1,27 +1,12 @@
-import 'dart:io';
-import 'dart:typed_data';
-import 'package:animated_splash_screen/animated_splash_screen.dart';
 import 'package:cupertino_will_pop_scope/cupertino_will_pop_scope.dart';
 import 'package:firebase_core/firebase_core.dart';
-import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:get/get.dart';
-import 'package:mms/notification/firebase_cloud_messaging.dart';
 import 'package:mms/provider/camera_state.dart';
 import 'package:mms/screen/splash/splash_screen.dart';
-import 'package:package_info_plus/package_info_plus.dart';
-import 'package:version/version.dart';
-import 'base_config/certificate.dart';
-import 'components/updateVersion.dart';
-import 'db/user_table.dart';
-import 'provider/user_state.dart';
 import 'routes/app_routes.dart';
-import 'screen/navigation/bottom_navigator_view.dart';
-import 'screen/login/login_view.dart';
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
 void main() async {

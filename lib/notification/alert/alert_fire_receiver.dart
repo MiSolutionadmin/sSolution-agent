@@ -9,7 +9,6 @@ import '../../provider/notification_state.dart';
 import 'package:http/http.dart' as http;
 import '../../components/color_radio.dart';
 import '../../db/get_monitoring_info.dart';
-import '../../screen/monitoring/fire/fire_setting_screen.dart';
 
 import '../../utils/font/font.dart';
 import '../../utils/loading.dart';
