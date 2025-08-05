@@ -6,13 +6,11 @@ import 'package:flutter/services.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:get/get.dart';
 import 'package:mms/components/dialogManager.dart';
-import 'package:mms/utils/device_manager.dart';
 
 import '../db/camera_table.dart';
 import '../provider/camera_state.dart';
 import '../provider/notification_state.dart';
 import '../provider/user_state.dart';
-import '../screen/alim/alim_main_page.dart';
 import '../utils/font/font.dart';
 import '../utils/loading.dart';
 

@@ -12,13 +12,23 @@ import 'package:vsdk/camera_device/camera_device.dart';
 import 'package:async/async.dart';
 
 import '../components/dialog.dart';
-import '../vstarcam/tf_play/tf_play_logic.dart';
 import 'package:http/http.dart' as http;
 
-class CameraState extends GetxController{
+class CameraState extends GetxController {
   /// ✅ 카메라 기능 Status(활성아이콘/비활성아이콘) 관련
-  final cameraIconL = [false,false,false,false,false,false,false,false,false].obs; // 불꽃감지 ~ 사이렌 On/Off 상태
-  final cameraFullIconL = [false,false,false,false,false,false,false].obs; // 불꽃감지 ~ 사이렌 On/Off 상태 (전체화면)
+  final cameraIconL = [
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false
+  ].obs; // 불꽃감지 ~ 사이렌 On/Off 상태
+  final cameraFullIconL = [false, false, false, false, false, false, false]
+      .obs; // 불꽃감지 ~ 사이렌 On/Off 상태 (전체화면)
 
   /// ✅ 전체화면 관련
   final fullScreen = false.obs;
@@ -50,10 +60,10 @@ class CameraState extends GetxController{
 
   final test = false.obs; // 화면 갱신용 더미
 
-
   /// ✅ 카메라 메모리카드 관련
   final timeFirst = false.obs; // 메모리화면 처음 실행될때
-  final cameraTfDate = '${DateFormat('y-MM-dd').format(DateTime.now())}'.obs; // 보고있는 메모리카드 날짜
+  final cameraTfDate =
+      '${DateFormat('y-MM-dd').format(DateTime.now())}'.obs; // 보고있는 메모리카드 날짜
   final timeCon = ScrollController().obs; // 모든시간 Controller ?
   final highlightedHours = <dynamic>[].obs; // 색칠할 메모리카드 구간 (메모리에 존재하는 시간)
   final hourList = [].obs; // 시간 리스트 ?
@@ -65,12 +75,16 @@ class CameraState extends GetxController{
   /// ✅ 카메라 메모리카드 영상 관련
   final tfcardIndex = 0.obs; // 정체불명
   final cameraPercentage = ''.obs; // 메모리카드 영상 다운로드 퍼센트
-  final lastCameraPercentage = ''.obs; /// 카메라 퍼센트
-  final cameraDownloadCnt = 0.obs; /// 카메라 다운로드 카운트
+  final lastCameraPercentage = ''.obs;
+
+  /// 카메라 퍼센트
+  final cameraDownloadCnt = 0.obs;
+
+  /// 카메라 다운로드 카운트
   final tfFullScreen = false.obs; // 메모리카드 전체화면
-  final tfCameraDetailScale = 1.0.obs;  // 메모리카드 detail 크기
+  final tfCameraDetailScale = 1.0.obs; // 메모리카드 detail 크기
   final tfCameraChangeMp4 = false.obs; // 메모리카드 영상 변환상태
-  
+
   /// ✅ 카메라 페이지 Icon 표시,크기,위치 여부
   final cameraIconVisible = true.obs;
   final cameraDetailScale = 1.0.obs;
@@ -83,19 +97,33 @@ class CameraState extends GetxController{
   final cancelableOperation = Rx<CancelableOperation?>(null); // 잘 모르겠음
 
   /// ✅ 펌웨어 버전업데이트 관련 함수
-  final cameraList = [].obs; /// 전체 카메라 리스트
+  final cameraList = [].obs;
+
+  /// 전체 카메라 리스트
   //final cameraListClick = [].obs; /// 카메라 업데이트 클릭 리스트
-  final cameraUpdateClick = false.obs; /// 확인버튼 눌를 때
-  final cameraDetailSelectList = [].obs;/// 디테일 리스트중에서 업데이트할 목록들
-  final cameraDetailTotalList = [].obs; /// 전체 디테일 리스트
-  final cameraAllCheck = false.obs; /// 카메라 한번 클릭
+  final cameraUpdateClick = false.obs;
+
+  /// 확인버튼 눌를 때
+  final cameraDetailSelectList = [].obs;
+
+  /// 디테일 리스트중에서 업데이트할 목록들
+  final cameraDetailTotalList = [].obs;
+
+  /// 전체 디테일 리스트
+  final cameraAllCheck = false.obs;
+
+  /// 카메라 한번 클릭
   //final cameraCopyList = [].obs; /// cameraList 카피
 
   /// ✅ 카메라 init 관련
-  final cameraInsert = false.obs; ///카메라에 들어가있나 없나
+  final cameraInsert = false.obs;
+
+  ///카메라에 들어가있나 없나
 
   /// ✅ 카메라 detail 관련 (안쓸 가능성 있음)
-  final cameraDetailInfo = [].obs; /// 카메라 디테일 리스트
+  final cameraDetailInfo = [].obs;
+
+  /// 카메라 디테일 리스트
 
   /// ✅ 카메라 알림소리 등록상태
   final cameraSuccess = false.obs;
@@ -104,17 +132,24 @@ class CameraState extends GetxController{
   final cameraBackgroundCheck = false.obs;
 
   /// ✅ 카메라 기본 경보음
-  final cameraTextList = [ /// 11-25 추가
+  final cameraTextList = [
+    /// 11-25 추가
     '화재 경보 벨소리',
     '화재가 감지되었습니다. 안전한 곳으로 대피하시기 바랍니다.',
     '이곳은 CCTV 녹화중입니다',
-    '쓰레기 분리배출을 잘 해주셔서 감사합니다'].obs;
-
+    '쓰레기 분리배출을 잘 해주셔서 감사합니다'
+  ].obs;
 
   /// ✅ 카메라 소방장치 관련
-  final fireFightingData = {}.obs; /// 소방장치 상태 데이터
-  Timer? _fireFightingApiTimer; /// 소방장치 데이터 2초주기 갱신 타이머
-  BuildContext? context; /// 작동완료 다이얼로그용 context
+  final fireFightingData = {}.obs;
+
+  /// 소방장치 상태 데이터
+  Timer? _fireFightingApiTimer;
+
+  /// 소방장치 데이터 2초주기 갱신 타이머
+  BuildContext? context;
+
+  /// 작동완료 다이얼로그용 context
 
   /// X✅X 사용되는곳 없음
   final zoom = 1.obs;
@@ -123,13 +158,23 @@ class CameraState extends GetxController{
   final needsRefresh = false.obs;
   final cameraBackgroundFirst = RxBool(false);
   final isNavigating = false.obs;
-  final timeLineValue = ''.obs; /// 내가 현재 가르키는 시간 (나중에 삭제) /// ✅ 값만 변경하고 사용하는곳 X
-  final hourCount = [].obs; /// 날짜 갯수 /// ✅ 클리어만 하고 사용하지 않음
-  final cameraLoading = true.obs; /// ✅ 변경만하고 사용하는곳 x
-  final cameraBack = false.obs; /// 카메라 메인으로 이동 변수  /// ✅ 변경만하고 사용하는곳 x
+  final timeLineValue = ''.obs;
+
+  /// 내가 현재 가르키는 시간 (나중에 삭제) /// ✅ 값만 변경하고 사용하는곳 X
+  final hourCount = [].obs;
+
+  /// 날짜 갯수 /// ✅ 클리어만 하고 사용하지 않음
+  final cameraLoading = true.obs;
+
+  /// ✅ 변경만하고 사용하는곳 x
+  final cameraBack = false.obs;
+
+  /// 카메라 메인으로 이동 변수  /// ✅ 변경만하고 사용하는곳 x
 
   /// ✅ agent
-  final agentNotiUrl = "".obs; /// 카메라 메인으로 이동 변수  /// ✅ 변경만하고 사용하는곳 x
+  final agentNotiUrl = "".obs;
+
+  /// 카메라 메인으로 이동 변수  /// ✅ 변경만하고 사용하는곳 x
 
   @override
   void onInit() {
@@ -142,7 +187,7 @@ class CameraState extends GetxController{
     super.dispose();
   }
 
-  void cameraReset(){
+  void cameraReset() {
     print("this?");
     cameraDetailTotalList.clear();
     // cameraListClick.clear();
@@ -157,84 +202,83 @@ class CameraState extends GetxController{
     required double totalSizeMB,
     required BuildContext context,
     required Timer timer,
-    required TFPlayLogic controller,
   }) async {
-      /// 파일이 존재하면 진행률 계산
-      if (await destFile.exists()) {
-        final fileSize = await destFile.length();
-        final downloadedSizeInMB = fileSize / (1024 * 1024);
-        final progress = (downloadedSizeInMB / totalSizeMB) * 100;
-        lastCameraPercentage.value = cameraPercentage.value;
-        cameraPercentage.value = progress.toStringAsFixed(2);
-        print('??다운로드 카메라 퍼센테이지? ${downloadedSizeInMB}');
-        if(lastCameraPercentage == cameraPercentage.value){
-          cameraDownloadCnt.value ++;
-          if(cameraDownloadCnt.value>=3){
-            tfCameraChangeMp4.value = true;
-            cameraDownloadCnt.value = 0;
-            timer.cancel();
-            final outputPath = destFile.path.replaceFirst('.mp4', '_.mp4');
-            // '-i "${destFile.path}" -c copy "${outputPath}" -y',
-            // await FFmpegKit.executeAsync(
-            //   Platform.isAndroid?'-i "${destFile.path}" -c copy "${outputPath}" -y':'-i "${destFile.path}" -c:v mpeg4 "${outputPath}"',
-            //       (session) async {
-            //     final returnCode = await session.getReturnCode();
-            //     if (returnCode != null && returnCode.isValueSuccess()) {
-            //       tfCameraChangeMp4.value = false;
-            //       print('종료???');
-            //       destFile.deleteSync();
-            //       bool? result2 = await controller.controller.stopDown();
-            //       Get.back();
-            //       showOnlyConfirmTapDialog(context, '다운이 완료되었습니다', () {
-            //         Get.back();
-            //       });
-            //     } else {
-            //       print("비디오 변환 실패: 코드 ${returnCode?.getValue()}");
-            //       final logs = await session.getLogs();
-            //       print("FFmpeg 로그: $logs");
-            //     }
-            //   }, (log) {
-            //   print('FFmpeg 로그: ${log.getMessage()}');
-            // }, (statistics) {
-            //   print('비디오 변환 진행률: ${statistics.getTime() / 1000} 초');
-            // },
-            // );
-          }
-        }else{
+    /// 파일이 존재하면 진행률 계산
+    if (await destFile.exists()) {
+      final fileSize = await destFile.length();
+      final downloadedSizeInMB = fileSize / (1024 * 1024);
+      final progress = (downloadedSizeInMB / totalSizeMB) * 100;
+      lastCameraPercentage.value = cameraPercentage.value;
+      cameraPercentage.value = progress.toStringAsFixed(2);
+      print('??다운로드 카메라 퍼센테이지? ${downloadedSizeInMB}');
+      if (lastCameraPercentage == cameraPercentage.value) {
+        cameraDownloadCnt.value++;
+        if (cameraDownloadCnt.value >= 3) {
+          tfCameraChangeMp4.value = true;
           cameraDownloadCnt.value = 0;
+          timer.cancel();
+          final outputPath = destFile.path.replaceFirst('.mp4', '_.mp4');
+          // '-i "${destFile.path}" -c copy "${outputPath}" -y',
+          // await FFmpegKit.executeAsync(
+          //   Platform.isAndroid?'-i "${destFile.path}" -c copy "${outputPath}" -y':'-i "${destFile.path}" -c:v mpeg4 "${outputPath}"',
+          //       (session) async {
+          //     final returnCode = await session.getReturnCode();
+          //     if (returnCode != null && returnCode.isValueSuccess()) {
+          //       tfCameraChangeMp4.value = false;
+          //       print('종료???');
+          //       destFile.deleteSync();
+          //       bool? result2 = await controller.controller.stopDown();
+          //       Get.back();
+          //       showOnlyConfirmTapDialog(context, '다운이 완료되었습니다', () {
+          //         Get.back();
+          //       });
+          //     } else {
+          //       print("비디오 변환 실패: 코드 ${returnCode?.getValue()}");
+          //       final logs = await session.getLogs();
+          //       print("FFmpeg 로그: $logs");
+          //     }
+          //   }, (log) {
+          //   print('FFmpeg 로그: ${log.getMessage()}');
+          // }, (statistics) {
+          //   print('비디오 변환 진행률: ${statistics.getTime() / 1000} 초');
+          // },
+          // );
         }
-        // 다운로드 완료 처리
-        // if (progress >= 99) {
-        //   tfCameraChangeMp4.value = true;
-        //   timer.cancel();
-        //   final outputPath = destFile.path.replaceFirst('.mp4', '_.mp4');
-        //   // '-i "${destFile.path}" -c copy "${outputPath}" -y',
-        //   await FFmpegKit.executeAsync(
-        //     Platform.isAndroid?'-i "${destFile.path}" -c copy "${outputPath}" -y':'-i "${destFile.path}" -c:v mpeg4 "${outputPath}"',
-        //         (session) async {
-        //       final returnCode = await session.getReturnCode();
-        //       if (returnCode != null && returnCode.isValueSuccess()) {
-        //         tfCameraChangeMp4.value = false;
-        //         print('종료???');
-        //         destFile.deleteSync();
-        //         bool? result2 = await controller.controller.stopDown();
-        //         Get.back();
-        //         showOnlyConfirmTapDialog(context, '다운이 완료되었습니다', () {
-        //           Get.back();
-        //         });
-        //       } else {
-        //         print("비디오 변환 실패: 코드 ${returnCode?.getValue()}");
-        //         final logs = await session.getLogs();
-        //         print("FFmpeg 로그: $logs");
-        //       }
-        //     }, (log) {
-        //       print('FFmpeg 로그: ${log.getMessage()}');
-        //     }, (statistics) {
-        //       print('비디오 변환 진행률: ${statistics.getTime() / 1000} 초');
-        //     },
-        //   );
-        // }
+      } else {
+        cameraDownloadCnt.value = 0;
       }
+      // 다운로드 완료 처리
+      // if (progress >= 99) {
+      //   tfCameraChangeMp4.value = true;
+      //   timer.cancel();
+      //   final outputPath = destFile.path.replaceFirst('.mp4', '_.mp4');
+      //   // '-i "${destFile.path}" -c copy "${outputPath}" -y',
+      //   await FFmpegKit.executeAsync(
+      //     Platform.isAndroid?'-i "${destFile.path}" -c copy "${outputPath}" -y':'-i "${destFile.path}" -c:v mpeg4 "${outputPath}"',
+      //         (session) async {
+      //       final returnCode = await session.getReturnCode();
+      //       if (returnCode != null && returnCode.isValueSuccess()) {
+      //         tfCameraChangeMp4.value = false;
+      //         print('종료???');
+      //         destFile.deleteSync();
+      //         bool? result2 = await controller.controller.stopDown();
+      //         Get.back();
+      //         showOnlyConfirmTapDialog(context, '다운이 완료되었습니다', () {
+      //           Get.back();
+      //         });
+      //       } else {
+      //         print("비디오 변환 실패: 코드 ${returnCode?.getValue()}");
+      //         final logs = await session.getLogs();
+      //         print("FFmpeg 로그: $logs");
+      //       }
+      //     }, (log) {
+      //       print('FFmpeg 로그: ${log.getMessage()}');
+      //     }, (statistics) {
+      //       print('비디오 변환 진행률: ${statistics.getTime() / 1000} 초');
+      //     },
+      //   );
+      // }
+    }
   }
 
   /// ✅ 소방장치 데이터 가져오기
@@ -243,9 +287,10 @@ class CameraState extends GetxController{
 
     try {
       // 1. api 요청
-      final response = await http.get(Uri.parse('${config.baseUrl}/getFireFightingData?cameraUid=$cameraUid'));
+      final response = await http.get(Uri.parse(
+          '${config.baseUrl}/getFireFightingData?cameraUid=$cameraUid'));
 
-      Map<dynamic,dynamic> data = jsonDecode(response.body);
+      Map<dynamic, dynamic> data = jsonDecode(response.body);
 
       // 2. GetX에 값 세팅
       fireFightingData.value = data;
@@ -265,7 +310,8 @@ class CameraState extends GetxController{
 
   /// 소방장치 타이머 관련
 
-  void startFireFightingFetchTimer() { // 타이머 시작
+  void startFireFightingFetchTimer() {
+    // 타이머 시작
     // if (_fireFightingApiTimer != null) return;
     //
     // _fireFightingApiTimer = Timer.periodic(Duration(seconds: 2), (timer) async {
@@ -279,8 +325,9 @@ class CameraState extends GetxController{
     // });
   }
 
-  void stopFireFightingFetchTimer() { // 타이머 종료
-    if(_fireFightingApiTimer != null) {
+  void stopFireFightingFetchTimer() {
+    // 타이머 종료
+    if (_fireFightingApiTimer != null) {
       _fireFightingApiTimer!.cancel();
       _fireFightingApiTimer = null;
       context = null; // context도 같이 초기화

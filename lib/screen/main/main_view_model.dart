@@ -38,8 +38,18 @@ class MainViewModel extends GetxController {
   final RxString totalAccuracy = '100% (15 / 15회)'.obs;
   final RxString eventPoints = '341,000 P'.obs;
 
+  // 관제 시간 데이터
+  final RxString dayStart = '08:00:00'.obs;
+  final RxString dayEnd = '18:00:00'.obs;
+  final RxString nightStart = '20:00:00'.obs;
+  final RxString nightEnd = '07:00:00'.obs;
+
   // 이벤트 목록
   final RxList<EventItem> eventList = <EventItem>[].obs;
+  
+  // 무한 스크롤 관련
+  String? lastEventId; // 마지막 이벤트 ID (cursor)
+  final RxBool hasMoreEvents = true.obs; // 더 가져올 데이터가 있는지
 
   @override
   void onInit() {
@@ -56,12 +66,76 @@ class MainViewModel extends GetxController {
   void _initializeData() {
     print('메인 데이터 초기화');
     loadMonthData();
+    _loadAgentDate();
+    _loadAgentInfo();
   }
 
   /// 새로고침
   void refresh() {
     _initializeData();
     _loadScheduledWorkDates();
+  }
+
+  /// 에이전트 관제 시간 데이터 로드
+  Future<void> _loadAgentDate() async {
+    try {
+      final result = await _apiService.getAgentDate();
+
+      if (result['success'] == true) {
+        final agentData = result['data']['result'];
+        print('에이전트 관제 시간 데이터: $agentData');
+
+        if (agentData != null) {
+          dayStart.value = agentData['dayStart']?.toString() ?? '08:00:00';
+          dayEnd.value = agentData['dayEnd']?.toString() ?? '18:00:00';
+          nightStart.value = agentData['nightStart']?.toString() ?? '20:00:00';
+          nightEnd.value = agentData['nightEnd']?.toString() ?? '07:00:00';
+
+          print('관제 시간 업데이트 - 주간: ${dayStart.value} ~ ${dayEnd.value}, 야간: ${nightStart.value} ~ ${nightEnd.value}');
+        }
+      } else {
+        print('에이전트 관제 시간 로드 실패: ${result['error']}');
+      }
+    } catch (e) {
+      print('에이전트 관제 시간 로드 오류: $e');
+    }
+  }
+
+  /// 에이전트 정보 로드 및 유저 상태 업데이트
+  Future<void> _loadAgentInfo() async {
+    try {
+      final agentId = _userState.userData['id']?.toString() ?? '';
+      if (agentId.isEmpty) {
+        print('에이전트 ID가 없습니다.');
+        return;
+      }
+
+      final result = await _apiService.getAgentInfo(agentId: agentId);
+
+      if (result['success'] == true) {
+        final agentData = result['data'];
+        print('에이전트 정보 데이터: $agentData');
+
+        if (agentData != null) {
+          // 필요한 필드들 업데이트
+          if (agentData['name'] != null) {
+            _userState.userData['name'] = agentData['name'];
+          }
+          if (agentData['grade'] != null) {
+            _userState.userData['grade'] = agentData['grade'];
+          }
+          if (agentData['control_type'] != null) {
+            _userState.userData['control_type'] = agentData['control_type'];
+          }
+          
+          print('에이전트 정보 업데이트 완료 - 이름: ${_userState.userData['name']}, 등급: ${_userState.userData['grade']}, 관제타입: ${_userState.userData['control_type']}');
+        }
+      } else {
+        print('에이전트 정보 로드 실패: ${result['error']}');
+      }
+    } catch (e) {
+      print('에이전트 정보 로드 오류: $e');
+    }
   }
 
   /// 등록된 근무 날짜 로드
@@ -137,6 +211,11 @@ class MainViewModel extends GetxController {
     final agentId = _userState.userData['id']?.toString() ?? '';
     final year = selectedMonth.value.year.toString();
     final month = selectedMonth.value.month.toString().padLeft(2, '0');
+
+    // 이벤트 목록 초기화
+    eventList.clear();
+    lastEventId = null;
+    hasMoreEvents.value = true;
 
     // 통계와 이벤트를 병렬로 로드
     await Future.wait([
@@ -224,15 +303,18 @@ class MainViewModel extends GetxController {
         agentId: agentId,
         year: year,
         month: month,
+        cursor: lastEventId, // cursor 추가
       );
 
       if (eventsResult['success'] == true) {
         final eventsData = eventsResult['data']['result'] as List?;
-        print('이벤트 데이터: $eventsData');
+        final apiHasMore = eventsResult['data']['hasMore']; // API에서 hasMore 필드가 있다면
+        print('이벤트 데이터: ${eventsData?.length}개, API hasMore: $apiHasMore');
 
         if (eventsData != null && eventsData.isNotEmpty) {
           final events = eventsData
               .map((event) => EventItem(
+                    id: event['id']?.toString() ?? '', // ID 추가
                     date: _formatEventDate(event['create_date']),
                     count: _getEventCount(event),
                     result: _getEventResult(event['false_positive']),
@@ -243,21 +325,70 @@ class MainViewModel extends GetxController {
                   ))
               .toList();
 
-          eventList.assignAll(events);
-          print('이벤트 목록 업데이트 완료: ${events.length}개');
+          if (lastEventId == null) {
+            // 첫 로드시 새로 할당
+            eventList.assignAll(events);
+          } else {
+            // 무한스크롤시 추가
+            eventList.addAll(events);
+          }
+
+          // 마지막 ID 업데이트
+          if (events.isNotEmpty) {
+            final previousCursor = lastEventId;
+            lastEventId = events.last.id;
+            print('📌 Cursor 업데이트: $previousCursor → $lastEventId');
+          }
+
+          // 더 가져올 데이터가 있는지 확인
+          if (apiHasMore != null) {
+            // API에서 hasMore 필드를 제공하는 경우
+            hasMoreEvents.value = apiHasMore == true;
+            print('📊 hasMoreEvents 업데이트: ${hasMoreEvents.value} (API hasMore 필드 사용)');
+          } else {
+            // API에서 hasMore 필드가 없는 경우 데이터 개수로 판단
+            hasMoreEvents.value = events.length >= 10; // 임계값 조정
+            print('📊 hasMoreEvents 업데이트: ${hasMoreEvents.value} (받은 데이터: ${events.length}개, 임계값: 10개)');
+          }
+
+          print('이벤트 목록 업데이트 완료: ${events.length}개, 총 ${eventList.length}개');
         } else {
-          // 빈 목록으로 초기화
-          eventList.clear();
-          print('이벤트 데이터가 없어서 목록을 초기화했습니다.');
+          // 빈 목록이면 더 이상 데이터 없음
+          hasMoreEvents.value = false;
+          print('🚫 더 이상 로드할 데이터 없음 (빈 응답)');
+          if (lastEventId == null) {
+            eventList.clear();
+            print('이벤트 데이터가 없어서 목록을 초기화했습니다.');
+          }
         }
       } else {
         print('이벤트 데이터 로드 실패: ${eventsResult['error']}');
+        hasMoreEvents.value = false;
       }
     } catch (e) {
       print('이벤트 데이터 로드 오류: $e');
+      hasMoreEvents.value = false;
     } finally {
       isEventsLoading.value = false;
     }
+  }
+
+  /// 더 많은 이벤트 로드 (무한 스크롤)
+  Future<void> loadMoreEvents() async {
+    if (!hasMoreEvents.value || isEventsLoading.value) {
+      print('무한스크롤 중단: hasMoreEvents=${hasMoreEvents.value}, isLoading=${isEventsLoading.value}');
+      return;
+    }
+
+    print('🔄 무한스크롤 시작 - cursor: $lastEventId, 현재 이벤트 수: ${eventList.length}');
+
+    final agentId = _userState.userData['id']?.toString() ?? '';
+    final year = selectedMonth.value.year.toString();
+    final month = selectedMonth.value.month.toString().padLeft(2, '0');
+
+    await _loadEvents(agentId, year, month);
+    
+    print('✅ 무한스크롤 완료 - 총 이벤트 수: ${eventList.length}, hasMoreEvents: ${hasMoreEvents.value}');
   }
 
   /// 월 표시 문자열
@@ -291,145 +422,180 @@ class MainViewModel extends GetxController {
 
   /// 달력 다이얼로그 표시 (근무 날짜 선택)
   void _showCalendarDialog(BuildContext context) {
-    Get.dialog(
-      Dialog(
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => Container(
+        padding: EdgeInsets.only(
+          left: 20,
+          right: 20,
+          top: 20,
+          bottom: MediaQuery.of(context).padding.bottom + 20,
         ),
-        child: Container(
-          padding: const EdgeInsets.all(20),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              // 다이얼로그 제목
-              const Text(
-                '근무 날짜 선택',
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              const SizedBox(height: 8),
-              const Text(
-                '여러 날짜를 선택할 수 있습니다',
-                style: TextStyle(
-                  fontSize: 12,
-                  color: Colors.grey,
-                ),
-              ),
-              const SizedBox(height: 16),
-              // 선택된 날짜 개수 표시
-              // Obx(() => Container(
-              //       padding:
-              //           const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-              //       decoration: BoxDecoration(
-              //         color: Colors.orange.withOpacity(0.1),
-              //         borderRadius: BorderRadius.circular(12),
-              //       ),
-              //       child: Text(
-              //         '선택된 날짜: ${selectedWorkDates.length}일',
-              //         style: const TextStyle(
-              //           fontSize: 12,
-              //           fontWeight: FontWeight.w500,
-              //           color: Colors.orange,
-              //         ),
-              //       ),
-              //     )),
-              // const SizedBox(height: 16),
-              // 달력
-              Obx(() => TableCalendar<DateTime>(
-                    firstDay: DateTime.now(),
-                    lastDay: DateTime.utc(2030, 12, 31),
-                    focusedDay: focusedDay.value,
-                    selectedDayPredicate: (day) {
-                      return selectedWorkDates
-                          .any((selected) => isSameDay(selected, day));
-                    },
-                    calendarFormat: CalendarFormat.month,
-                    headerStyle: const HeaderStyle(
-                      formatButtonVisible: false,
-                      titleCentered: true,
-                      leftChevronIcon: Icon(
-                        Icons.chevron_left,
-                        color: Colors.orange,
-                      ),
-                      rightChevronIcon: Icon(
-                        Icons.chevron_right,
-                        color: Colors.orange,
-                      ),
-                    ),
-                    calendarStyle: CalendarStyle(
-                      outsideDaysVisible: false,
-                      weekendTextStyle: const TextStyle(color: Colors.red),
-                      selectedDecoration: const BoxDecoration(
-                        color: Colors.orange,
-                        shape: BoxShape.circle,
-                      ),
-                      todayDecoration: BoxDecoration(
-                        color: Colors.orange.withOpacity(0.3),
-                        shape: BoxShape.circle,
-                      ),
-                      // 과거 날짜 비활성화
-                      disabledDecoration: BoxDecoration(
-                        color: Colors.grey.withOpacity(0.3),
-                        shape: BoxShape.circle,
-                      ),
-                      disabledTextStyle: TextStyle(
-                        color: Colors.grey.withOpacity(0.5),
-                      ),
-                    ),
-                    enabledDayPredicate: (day) {
-                      // 오늘 + 6일 후부터 선택 가능
-                      final minSelectableDate =
-                          DateTime.now().add(const Duration(days: 6));
-                      return day.isAfter(minSelectableDate
-                              .subtract(const Duration(days: 1))) ||
-                          isSameDay(day, minSelectableDate);
-                    },
-                    onDaySelected: (selectedDay, focusedDay) {
-                      _handleDateSelection(selectedDay);
-                      this.focusedDay.value = focusedDay;
-
-                      // UI 강제 업데이트를 위해 focusedDay를 살짝 변경했다가 다시 원래대로
-                      final temp = this.focusedDay.value;
-                      this.focusedDay.value =
-                          temp.add(const Duration(milliseconds: 1));
-                      this.focusedDay.value = temp;
-                    },
-                    onPageChanged: (focusedDay) {
-                      this.focusedDay.value = focusedDay;
-                    },
-                  )),
-              const SizedBox(height: 20),
-              // 버튼들
-              Obx(() => Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                    children: [
-                      TextButton(
-                        onPressed: () => Get.back(),
-                        child: const Text(
-                          '취소',
-                          style: TextStyle(color: Colors.grey),
-                        ),
-                      ),
-                      ElevatedButton(
-                        onPressed:
-                            (addDates.isNotEmpty || deleteDates.isNotEmpty)
-                                ? () {
-                                    // Get.back(); // 달력 다이얼로그 닫기
-                                    _showWorkDateConfirmDialog(context);
-                                  }
-                                : null,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.orange,
-                          foregroundColor: Colors.white,
-                        ),
-                        child: const Text('확인'),
-                      ),
-                    ],
-                  )),
-            ],
+        margin: const EdgeInsets.only(top: 50),
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.only(
+            topLeft: Radius.circular(20),
+            topRight: Radius.circular(20),
           ),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // 네비게이션 바 힌트 (작대기)
+            Center(
+              child: Container(
+                width: 40,
+                height: 4,
+                margin: const EdgeInsets.only(bottom: 16),
+                decoration: BoxDecoration(
+                  color: Colors.black,
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+            ),
+            // 다이얼로그 제목
+            const Text(
+              '근무일 선택',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(height: 8),
+            const Text(
+              '오늘로부터 5일 이내 날짜는 수정이 불가합니다.',
+              style: TextStyle(
+                fontSize: 12,
+                color: Colors.grey,
+              ),
+            ),
+            const SizedBox(height: 16),
+
+            // 달력
+            Obx(() => TableCalendar<DateTime>(
+                  firstDay: DateTime.now(),
+                  lastDay: DateTime.utc(2030, 12, 31),
+                  focusedDay: focusedDay.value,
+                  selectedDayPredicate: (day) {
+                    return selectedWorkDates
+                        .any((selected) => isSameDay(selected, day));
+                  },
+                  calendarFormat: CalendarFormat.month,
+                  headerStyle: const HeaderStyle(
+                    formatButtonVisible: false,
+                    titleCentered: true,
+                    leftChevronIcon: Icon(
+                      Icons.chevron_left,
+                      color: Colors.black,
+                    ),
+                    rightChevronIcon: Icon(
+                      Icons.chevron_right,
+                      color: Colors.black,
+                    ),
+                  ),
+                  calendarStyle: CalendarStyle(
+                    outsideDaysVisible: true,
+                    weekendTextStyle: const TextStyle(color: Colors.red),
+                    cellMargin: const EdgeInsets.all(0), // 날짜 사이 간격 제거
+                    selectedDecoration: const BoxDecoration(
+                      color: Color(0xFFD6E2FF),
+                      shape: BoxShape.rectangle,
+                    ),
+                    selectedTextStyle: const TextStyle(
+                      color: Color(0xFF1955EE),
+                      fontWeight: FontWeight.bold,
+                    ),
+                    todayDecoration: BoxDecoration(
+                      color: Color(0xFF1955EE),
+                      shape: BoxShape.rectangle,
+                    ),
+                    // 과거 날짜 비활성화
+                    disabledDecoration: const BoxDecoration(
+                      color: Colors.transparent,
+                      shape: BoxShape.rectangle,
+                    ),
+                    disabledTextStyle: TextStyle(
+                      color: Colors.grey.withAlpha(128),
+                    ),
+                  ),
+                  enabledDayPredicate: (day) {
+                    // 오늘 + 6일 후부터 선택 가능
+                    final minSelectableDate =
+                        DateTime.now().add(const Duration(days: 6));
+                    return day.isAfter(minSelectableDate
+                            .subtract(const Duration(days: 1))) ||
+                        isSameDay(day, minSelectableDate);
+                  },
+                  onDaySelected: (selectedDay, focusedDay) {
+                    _handleDateSelection(selectedDay);
+                    this.focusedDay.value = focusedDay;
+
+                    // UI 강제 업데이트를 위해 focusedDay를 살짝 변경했다가 다시 원래대로
+                    final temp = this.focusedDay.value;
+                    this.focusedDay.value =
+                        temp.add(const Duration(milliseconds: 1));
+                    this.focusedDay.value = temp;
+                  },
+                  onPageChanged: (focusedDay) {
+                    this.focusedDay.value = focusedDay;
+                  },
+                )),
+            const SizedBox(height: 20),
+            // 버튼들
+            Obx(() => Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [
+                    TextButton(
+                      onPressed: () => Navigator.pop(context),
+                      style: TextButton.styleFrom(
+                        backgroundColor: const Color(0xFFF6F6F7),
+                        minimumSize: const Size(164, 46),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                      ),
+                      child: const Text(
+                        '취소',
+                        style: TextStyle(
+                          color: Color(0xFF5C5E6B),
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                    TextButton(
+                      onPressed: (addDates.isNotEmpty || deleteDates.isNotEmpty)
+                          ? () {
+                              _showWorkDateConfirmDialog(context);
+                            }
+                          : null,
+                      style: TextButton.styleFrom(
+                        backgroundColor: (addDates.isNotEmpty || deleteDates.isNotEmpty)
+                            ? const Color(0xFFD6E2FF)
+                            : const Color(0xFFF6F6F7),
+                        foregroundColor: (addDates.isNotEmpty || deleteDates.isNotEmpty)
+                            ? const Color(0xFF1955EE)
+                            : const Color(0xFF5C5E6B),
+                        minimumSize: const Size(164, 46),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                      ),
+                      child: const Text(
+                        '저장',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ],
+                )),
+          ],
         ),
       ),
     );
@@ -550,7 +716,7 @@ class MainViewModel extends GetxController {
                             '취소',
                             style: TextStyle(
                               fontSize: 16,
-                              fontWeight: FontWeight.w700,
+                              fontWeight: FontWeight.bold,
                             ),
                           ),
                         ),
@@ -636,105 +802,113 @@ class MainViewModel extends GetxController {
 
   /// 날짜 삭제 확인 모달
   void _showDeleteConfirmDialog(DateTime selectedDay) {
-    Get.dialog(
-      Dialog(
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
-        ),
-        child: Container(
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              // 제목
-              const Text(
-                '결근 처리 확인',
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              const SizedBox(height: 16),
-              
-              // 내용
-              Text(
-                '${selectedDay.month}/${selectedDay.day}을 결근으로 처리하시겠습니까?\n\n결근으로 처리시 해당 날짜에는 알림을 받을 수 없습니다.',
-                style: const TextStyle(
-                  fontSize: 14,
-                  height: 1.5,
-                ),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 24),
-              
-              // 버튼들
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                children: [
-                  // 취소 버튼
-                  Expanded(
-                    child: TextButton(
-                      onPressed: () => Get.back(),
-                      style: TextButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(vertical: 12),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8),
-                          side: const BorderSide(color: Colors.grey),
-                        ),
-                      ),
-                      child: const Text(
-                        '취소',
-                        style: TextStyle(
-                          color: Colors.grey,
-                          fontSize: 14,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  
-                  // 확인 버튼
-                  Expanded(
-                    child: ElevatedButton(
-                      onPressed: () {
-
-                        // 모달 닫기
-                        Get.back();
-                        
-                        // 날짜 삭제 처리
-                        selectedWorkDates.removeWhere((date) => isSameDay(date, selectedDay));
-                        deleteDates.add(selectedDay);
-                        print('기존 날짜 삭제 예정: $selectedDay');
-                        
-                        // UI 강제 업데이트
-                        final temp = focusedDay.value;
-                        focusedDay.value = temp.add(const Duration(milliseconds: 1));
-                        focusedDay.value = temp;
-                      },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.red,
-                        foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(vertical: 12),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                      ),
-                      child: const Text(
-                        '확인',
-                        style: TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ],
+    showDialog(
+      context: Get.context!,
+      barrierDismissible: true,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          backgroundColor: const Color(0xffF1F4F7),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(14),
           ),
-        ),
-      ),
+          content: Container(
+            width: Get.width,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Padding(
+                  padding: EdgeInsets.symmetric(vertical: 12),
+                  child: Text(
+                    '${selectedDay.month}/${selectedDay.day}을 결근으로 처리하시겠습니까?\n\n결근으로 처리시 해당 날짜에는 알림을 받을 수 없습니다.',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w500,
+                      height: 1.5,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            Row(
+              children: [
+                Expanded(
+                  child: GestureDetector(
+                    onTap: () {
+                      Get.back();
+                    },
+                    behavior: HitTestBehavior.opaque,
+                    child: Center(
+                      child: Container(
+                        width: Get.width,
+                        height: 42,
+                        decoration: BoxDecoration(
+                          color: Color(0xffD3D8DE),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Center(
+                          child: Text(
+                            '취소',
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+                SizedBox(width: 8),
+                Expanded(
+                  child: GestureDetector(
+                    onTap: () {
+                      // 모달 닫기
+                      Get.back();
+
+                      // 날짜 삭제 처리
+                      selectedWorkDates.removeWhere(
+                          (date) => isSameDay(date, selectedDay));
+                      deleteDates.add(selectedDay);
+                      print('기존 날짜 삭제 예정: $selectedDay');
+
+                      // UI 강제 업데이트
+                      final temp = focusedDay.value;
+                      focusedDay.value =
+                          temp.add(const Duration(milliseconds: 1));
+                      focusedDay.value = temp;
+                    },
+                    behavior: HitTestBehavior.opaque,
+                    child: Center(
+                      child: Container(
+                        width: Get.width,
+                        height: 42,
+                        decoration: BoxDecoration(
+                          color: Color(0xff1955EE),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Center(
+                          child: Text(
+                            '확인',
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w700,
+                              color: Colors.white,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            )
+          ],
+        );
+      },
     );
   }
 
@@ -753,13 +927,22 @@ class MainViewModel extends GetxController {
   /// 관제 시간 (control_type 기준)
   String get controlTime {
     final controlType = _userState.userData['control_type'];
+    
+    // 시간에서 초 제거 (HH:MM:SS -> HH:MM)
+    String formatTime(String time) {
+      if (time.length >= 5) {
+        return time.substring(0, 5); // HH:MM만 추출
+      }
+      return time;
+    }
+    
     switch (controlType) {
       case 1:
-        return '주간';
+        return '주간 ${formatTime(dayStart.value)} ~ ${formatTime(dayEnd.value)}';
       case 2:
-        return '야간';
+        return '야간 ${formatTime(nightStart.value)} ~ ${formatTime(nightEnd.value)}';
       case 3:
-        return '주+야간';
+        return '주+야간 ${formatTime(dayStart.value)} ~ ${formatTime(dayEnd.value)}, ${formatTime(nightStart.value)} ~ ${formatTime(nightEnd.value)}';
       default:
         return '미정';
     }
@@ -830,11 +1013,11 @@ class MainViewModel extends GetxController {
       return '0초';
     }
   }
-
 }
 
 /// 이벤트 아이템 모델
 class EventItem {
+  final String id;
   final String date;
   final int count;
   final String result;
@@ -842,6 +1025,7 @@ class EventItem {
   final int points;
 
   EventItem({
+    required this.id,
     required this.date,
     required this.count,
     required this.result,

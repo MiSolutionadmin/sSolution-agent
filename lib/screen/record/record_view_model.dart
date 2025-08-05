@@ -29,10 +29,23 @@ class RecordViewModel extends GetxController {
 
   // 알림 내역 데이터
   final RxList<RecordItem> records = <RecordItem>[].obs;
+  
+  // 무한 스크롤 관련
+  String? lastRecordId; // 마지막 레코드 ID (cursor)
+  final RxBool hasMoreRecords = true.obs; // 더 가져올 데이터가 있는지
 
   @override
   void onInit() {
     super.onInit();
+    _loadRecords();
+  }
+
+  /// 새로고침
+  void refresh() {
+    // 리스트 초기화
+    records.clear();
+    lastRecordId = null;
+    hasMoreRecords.value = true;
     _loadRecords();
   }
 
@@ -52,6 +65,10 @@ class RecordViewModel extends GetxController {
       selectedMonth.value.year,
       selectedMonth.value.month - 1,
     );
+    // 리스트 초기화
+    records.clear();
+    lastRecordId = null;
+    hasMoreRecords.value = true;
     _loadRecords();
   }
 
@@ -61,6 +78,10 @@ class RecordViewModel extends GetxController {
       selectedMonth.value.year,
       selectedMonth.value.month + 1,
     );
+    // 리스트 초기화
+    records.clear();
+    lastRecordId = null;
+    hasMoreRecords.value = true;
     _loadRecords();
   }
 
@@ -82,11 +103,12 @@ class RecordViewModel extends GetxController {
         agentId: agentId,
         year: year,
         month: month,
+        cursor: lastRecordId,
       );
 
       if (result['success'] == true) {
         final notisData = result['data']['result'] as List?;
-        print('알림 내역 데이터: $notisData');
+        print('알림 내역 데이터: ${notisData?.length}개');
 
         if (notisData != null && notisData.isNotEmpty) {
           final recordItems = notisData
@@ -100,22 +122,59 @@ class RecordViewModel extends GetxController {
                   ))
               .toList();
 
-          records.assignAll(recordItems);
-          print('알림 내역 로드 완료: ${recordItems.length}개');
+          if (lastRecordId == null) {
+            // 첫 로드시 새로 할당
+            records.assignAll(recordItems);
+          } else {
+            // 무한스크롤시 추가
+            records.addAll(recordItems);
+          }
+
+          // 마지막 ID 업데이트
+          if (recordItems.isNotEmpty) {
+            final previousCursor = lastRecordId;
+            lastRecordId = recordItems.last.id;
+            print('📌 Record Cursor 업데이트: $previousCursor → $lastRecordId');
+          }
+
+          // 더 가져올 데이터가 있는지 확인
+          hasMoreRecords.value = recordItems.length >= 10;
+          print('📊 hasMoreRecords 업데이트: ${hasMoreRecords.value} (받은 데이터: ${recordItems.length}개)');
+
+          print('알림 내역 로드 완료: ${recordItems.length}개, 총 ${records.length}개');
         } else {
-          records.clear();
-          print('알림 내역 데이터가 없습니다.');
+          // 빈 목록이면 더 이상 데이터 없음
+          hasMoreRecords.value = false;
+          print('🚫 더 이상 로드할 알림 내역 없음 (빈 응답)');
+          if (lastRecordId == null) {
+            records.clear();
+            print('알림 내역 데이터가 없습니다.');
+          }
         }
       } else {
         print('알림 내역 로드 실패: ${result['error']}');
-        records.clear();
+        hasMoreRecords.value = false;
       }
     } catch (e) {
       print('알림 내역 로드 오류: $e');
-      records.clear();
+      hasMoreRecords.value = false;
     } finally {
       isLoading.value = false;
     }
+  }
+
+  /// 더 많은 알림 내역 로드 (무한 스크롤)
+  Future<void> loadMoreRecords() async {
+    if (!hasMoreRecords.value || isLoading.value) {
+      print('무한스크롤 중단: hasMoreRecords=${hasMoreRecords.value}, isLoading=${isLoading.value}');
+      return;
+    }
+
+    print('🔄 알림 내역 무한스크롤 시작 - cursor: $lastRecordId, 현재 레코드 수: ${records.length}');
+
+    await _loadRecords();
+
+    print('✅ 알림 내역 무한스크롤 완료 - 총 레코드 수: ${records.length}, hasMoreRecords: ${hasMoreRecords.value}');
   }
 
   /// 알림 내역 API 호출
@@ -123,6 +182,7 @@ class RecordViewModel extends GetxController {
     required String agentId,
     required String year,
     required String month,
+    String? cursor,
   }) async {
     try {
       final token = await _getToken();
@@ -130,9 +190,14 @@ class RecordViewModel extends GetxController {
         throw Exception('로그인이 필요합니다.');
       }
 
+      // URL에 cursor 파라미터 추가
+      String url = '${_config.baseUrl}/agents/$agentId/notis?targetMonth=$year-$month';
+      if (cursor != null && cursor.isNotEmpty) {
+        url += '&cursor=$cursor';
+      }
+
       final response = await http.get(
-        Uri.parse(
-            '${_config.baseUrl}/agents/$agentId/notis?targetMonth=$year-$month'),
+        Uri.parse(url),
         headers: {
           'Authorization': 'Bearer $token',
         },
@@ -236,17 +301,6 @@ class RecordViewModel extends GetxController {
     }
   }
 
-  /// 알림 타입을 type으로 변환
-  String _mapAlertTypeToType(String alertType) {
-    switch (alertType) {
-      case '불꽃 알림':
-        return '불꽃 감지';
-      case '연기 알림':
-        return '연기 감지';
-      default:
-        return '감지';
-    }
-  }
 
   /// videoUrl이 직접 주어진 경우의 agent 비디오 다시보기로 BottomNavigator 경보 탭으로 이동
   Future<void> openAgentVideoPageWithUrl(String videoUrl, String type) async {

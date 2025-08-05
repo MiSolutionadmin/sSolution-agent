@@ -58,10 +58,23 @@ class LoginView extends StatelessWidget {
   }
 
   Widget _buildLogo() {
-    return Image.asset(
-      'assets/icon/logo.png', 
-      width: Get.width * 0.5, 
-      fit: BoxFit.contain
+    return Column(
+      children: [
+        Image.asset(
+          'assets/icon/logo.png', 
+          width: Get.width * 0.5, 
+          fit: BoxFit.contain
+        ),
+        const SizedBox(height: 10),
+        const Text(
+          '에이전트',
+          style: TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.bold,
+            color: Colors.orange,
+          ),
+        ),
+      ],
     );
   }
 

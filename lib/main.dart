@@ -6,16 +6,19 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:get/get.dart';
 import 'package:mms/provider/camera_state.dart';
 import 'package:mms/screen/splash/splash_screen.dart';
-import 'routes/app_routes.dart';
+
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  await Firebase.initializeApp(); /// ✅ Firebase 초기화
+  await Firebase.initializeApp();
+
+  /// ✅ Firebase 초기화
 
   // HttpOverrides.global = NoCheckCertificateHttpOverrides(); /// ✅ 앱 전역 SSL인증 무시
-  await SystemChrome.setPreferredOrientations([ /// ✅ 앱 화면 세로모드로 고정
+  await SystemChrome.setPreferredOrientations([
+    /// ✅ 앱 화면 세로모드로 고정
     DeviceOrientation.portraitUp,
     DeviceOrientation.portraitDown,
   ]);
@@ -26,7 +29,7 @@ void main() async {
   // if (Platform.isAndroid) {
   //   WebView.platform = SurfaceAndroidWebView();
   // }
-  runApp( const MyApp());
+  runApp(const MyApp());
 }
 
 class MyApp extends StatelessWidget {
@@ -51,7 +54,8 @@ class MyApp extends StatelessWidget {
       title: 'mms',
       theme: ThemeData(
         scaffoldBackgroundColor: Colors.white,
-        appBarTheme: const AppBarTheme(color: Colors.white,surfaceTintColor: Colors.white),
+        appBarTheme: const AppBarTheme(
+            color: Colors.white, surfaceTintColor: Colors.white),
         useMaterial3: true,
         pageTransitionsTheme: PageTransitionsTheme(
           builders: {
@@ -61,7 +65,6 @@ class MyApp extends StatelessWidget {
         ),
       ),
       home: SplashPage(),
-      getPages: AppPages.pages,
     );
   }
 }

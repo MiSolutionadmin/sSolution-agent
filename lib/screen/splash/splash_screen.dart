@@ -6,16 +6,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:get/get.dart';
-import 'package:mms/utils/permission_handler/permission_handler.dart';
 import 'package:package_info_plus/package_info_plus.dart';
-import 'package:version/version.dart';
-
 import '../../components/dialog.dart';
-import '../../components/updateVersion.dart';
 import '../../db/user_table.dart';
 import '../../provider/term_state.dart';
 import '../../provider/user_state.dart';
-import '../alim/alim_main_page.dart';
 import '../navigation/bottom_navigator_view.dart';
 import '../login/login_view.dart';
 import '../login/login_view_model.dart';
@@ -32,12 +27,20 @@ class _SplashPageState extends State<SplashPage> {
   final ts = Get.put(TermState());
 
   String? fontSizes;
-  bool isLoading = true; /// ✅ splash 화면 로딩
+  bool isLoading = true;
 
-  final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin = FlutterLocalNotificationsPlugin(); /// ✅ fcm 푸시알림 instance 생성
-  AndroidNotificationChannel? androidNotificationChannel; /// ✅ android용 푸시알림 채널 객체
+  /// ✅ splash 화면 로딩
 
-  static final storage = new FlutterSecureStorage( /// ✅ 로컬스토리지 객체
+  final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
+      FlutterLocalNotificationsPlugin();
+
+  /// ✅ fcm 푸시알림 instance 생성
+  AndroidNotificationChannel? androidNotificationChannel;
+
+  /// ✅ android용 푸시알림 채널 객체
+
+  static final storage = new FlutterSecureStorage(
+    /// ✅ 로컬스토리지 객체
     aOptions: AndroidOptions(
       encryptedSharedPreferences: true,
     ),
@@ -45,25 +48,23 @@ class _SplashPageState extends State<SplashPage> {
 
   @override
   void initState() {
-    fetchInitWithVersionUpdate(); /// ✅ init + 버전업데이트
+    fetchInitWithVersionUpdate();
+
+    /// ✅ init + 버전업데이트
     super.initState();
   }
 
-
   /// ✅ init + 버전 업데이트 함수
-  void fetchInitWithVersionUpdate () async {
+  void fetchInitWithVersionUpdate() async {
     PackageInfo packageInfo = await PackageInfo.fromPlatform();
 
+    await requestPermissions();
 
-    await requestPermissions(); /// ✅ 알림권한 여부설정
+    /// ✅ 알림권한 여부설정
 
+    await autoLogin();
 
-    await autoLogin(); /// ✅ 자동로그인
-
-
-
-
-
+    /// ✅ 자동로그인
 
     //us.versionList.value = await getVersion(); /// ✅ 앱 버전 가져오기
 
@@ -88,17 +89,16 @@ class _SplashPageState extends State<SplashPage> {
     setState(() {});
   }
 
-
   /// ✅ 알림 권한 여부 설정
-  Future<void> requestPermissions() async{
+  Future<void> requestPermissions() async {
     Int64List vibrationPattern = Int64List(3);
 
-    vibrationPattern[0] = 0;      // 진동 시작 전 대기 시간 (0초)
+    vibrationPattern[0] = 0; // 진동 시작 전 대기 시간 (0초)
     vibrationPattern[1] = 5000;
     vibrationPattern[2] = 0;
 
     /// 안드로이드 일때
-    if (Platform.isAndroid){
+    if (Platform.isAndroid) {
       var channel = AndroidNotificationChannel(
         'sSolutionAlim2', 'sSolutionAlim2',
         description: 'this is sSolution channeld', // description
@@ -114,7 +114,8 @@ class _SplashPageState extends State<SplashPage> {
         sound: true,
       );
       flutterLocalNotificationsPlugin
-          .resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>()
+          .resolvePlatformSpecificImplementation<
+              AndroidFlutterLocalNotificationsPlugin>()
           ?.createNotificationChannel(channel);
     }
 
@@ -125,23 +126,23 @@ class _SplashPageState extends State<SplashPage> {
         alert: true,
         sound: true,
       );
-      flutterLocalNotificationsPlugin.resolvePlatformSpecificImplementation<IOSFlutterLocalNotificationsPlugin>()?.requestPermissions(
-        alert: true,
-        badge: true,
-        sound: true,
-      );
+      flutterLocalNotificationsPlugin
+          .resolvePlatformSpecificImplementation<
+              IOSFlutterLocalNotificationsPlugin>()
+          ?.requestPermissions(
+            alert: true,
+            badge: true,
+            sound: true,
+          );
     }
   }
 
-
-
   /// ✅ 저장된아이디 불러오기 함수
-  Future<void> autoLogin () async {
+  Future<void> autoLogin() async {
     String? username = (await storage.read(key: "ids"));
     String? password = (await storage.read(key: "pws"));
 
     try {
-
       final data = await getUser(username!, password!);
 
       if (data.isEmpty) {
@@ -152,10 +153,8 @@ class _SplashPageState extends State<SplashPage> {
 
       // 공통 로그인 성공 처리 함수 사용
       await LoginViewModel.handleLoginSuccess(data["user"]);
-
-    }catch(e){
-      if (e.toString().contains('로그인 실패'))
-      {
+    } catch (e) {
+      if (e.toString().contains('로그인 실패')) {
         showOnlyConfirmDialog(context, '아이디 또는 비밀번호가 틀립니다');
       } else {
         showOnlyConfirmDialog(context, "서버 오류로 로그인에 실패했습니다.\n잠시 후 다시 시도해주세요.");
@@ -167,31 +166,38 @@ class _SplashPageState extends State<SplashPage> {
   @override
   Widget build(BuildContext context) {
     return isLoading
-        ?
-    Container(color: Colors.white) /// ✅ 로딩
-        :
-    AnimatedSplashScreen.withScreenFunction(
-      splashIconSize: double.maxFinite,
-      // pageTransitionType: PageTransitionType.rightToLeft,
-      splash: Container(
-        height: Get.height,
-        child: Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              Image.asset('assets/icon/logo.png',width: Get.width*0.5,fit: BoxFit.contain,),
-            ],
-          ),
-        ),
-      ),
-      screenFunction: () async {
-        return us.userList.length == 1 ?
-        BottomNavigatorView() : /// ✅ 메인화면
-        LoginView(); /// ✅ 로그인화면
-      },
-    );
+        ? Container(color: Colors.white)
+
+        /// ✅ 로딩
+        : AnimatedSplashScreen.withScreenFunction(
+            splashIconSize: double.maxFinite,
+            // pageTransitionType: PageTransitionType.rightToLeft,
+            splash: Container(
+              height: Get.height,
+              child: Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    Image.asset(
+                      'assets/icon/logo.png',
+                      width: Get.width * 0.5,
+                      fit: BoxFit.contain,
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            screenFunction: () async {
+              return us.userList.length == 1
+                  ? BottomNavigatorView()
+                  :
+
+                  /// ✅ 메인화면
+                  LoginView();
+
+              /// ✅ 로그인화면
+            },
+          );
   }
-
-
 }

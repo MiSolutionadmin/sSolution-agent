@@ -222,9 +222,8 @@ class SavedVideoView extends StatelessWidget {
           ),
           
           // 컨트롤 오버레이
-          Obx(() => viewModel.showControls.value
-              ? _buildControlsOverlay(viewModel)
-              : const SizedBox()),
+          if (viewModel.showControls.value)
+            _buildControlsOverlay(viewModel),
         ],
       ),
     );
@@ -232,78 +231,78 @@ class SavedVideoView extends StatelessWidget {
 
   /// 컨트롤 오버레이
   Widget _buildControlsOverlay(SavedVideoViewModel viewModel) {
-    return Positioned(
-      bottom: 0,
-      left: 0,
-      right: 0,
-      child: Container(
-        color: Colors.black54,
-        child: Row(
-          children: [
-            // 시작/중지 버튼
-            IconButton(
-              icon: Obx(() => Icon(
-                viewModel.isPlaying.value ? Icons.stop : Icons.play_arrow,
-                color: Colors.white,
-              )),
-              onPressed: viewModel.togglePlayPause,
-            ),
-
-            // 소리 버튼
-            IconButton(
-              icon: Obx(() => Icon(
-                viewModel.isVolumeMuted.value ? Icons.volume_off : Icons.volume_up,
-                color: Colors.white,
-              )),
-              onPressed: viewModel.toggleVolume,
-            ),
-
-            Flexible(
-              flex: 1,
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  // 슬라이더
-                  Container(
-                    height: 30,
-                    child: Obx(() => Slider(
-                      min: 0,
-                      max: viewModel.duration.value,
-                      value: viewModel.currentPosition.value,
-                      activeColor: Colors.red,
-                      inactiveColor: Colors.white30,
-                      thumbColor: Colors.white,
-                      onChanged: viewModel.seekTo,
-                    )),
+    return Positioned.fill(
+      child: Column(
+        children: [
+          // 상단 재생바
+          Container(
+            color: Colors.black54,
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // 슬라이더 - GetX 없이 안전하게 처리
+                Container(
+                  height: 30,
+                  child: StreamBuilder<double>(
+                    stream: Stream.periodic(const Duration(milliseconds: 500), (_) => viewModel.currentPosition.value),
+                    builder: (context, snapshot) {
+                      final duration = viewModel.duration.value;
+                      final position = snapshot.data ?? 0.0;
+                      return Slider(
+                        min: 0,
+                        max: duration > 0 ? duration : 1.0,
+                        value: position.clamp(0.0, duration > 0 ? duration : 1.0),
+                        activeColor: Colors.red,
+                        inactiveColor: Colors.white30,
+                        thumbColor: Colors.white,
+                        onChanged: viewModel.seekTo,
+                      );
+                    },
                   ),
-                  // 시간 표시
-                  Padding(
-                    padding: const EdgeInsets.only(left: 16.0, right: 16.0, bottom: 4.0),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Obx(() => Text(
-                          viewModel.currentPositionText.value,
-                          style: const TextStyle(color: Colors.white, fontSize: 11),
-                        )),
-                        Obx(() => Text(
-                          viewModel.durationText.value,
-                          style: const TextStyle(color: Colors.white, fontSize: 11),
-                        )),
-                      ],
+                ),
+                // 시간 표시
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      viewModel.currentPositionText.value,
+                      style: const TextStyle(color: Colors.white, fontSize: 11),
                     ),
-                  ),
-                ],
-              ),
+                    Text(
+                      viewModel.durationText.value,
+                      style: const TextStyle(color: Colors.white, fontSize: 11),
+                    ),
+                  ],
+                ),
+              ],
             ),
-
-            // 전체화면 버튼
-            IconButton(
-              icon: const Icon(Icons.fullscreen, color: Colors.white),
-              onPressed: () => viewModel.goToFullscreen(),
-            )
-          ],
-        ),
+          ),
+          // 중간 공간 (영상 영역)
+          Expanded(child: Container()),
+          // 하단 컨트롤 버튼
+          Container(
+            color: Colors.black54,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                // 시작/중지 버튼
+                IconButton(
+                  icon: Icon(
+                    viewModel.isPlaying.value ? Icons.stop : Icons.play_arrow,
+                    color: Colors.white,
+                  ),
+                  onPressed: viewModel.togglePlayPause,
+                ),
+                // 전체화면 버튼
+                IconButton(
+                  icon: const Icon(Icons.fullscreen, color: Colors.white),
+                  onPressed: () => viewModel.goToFullscreen(),
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }

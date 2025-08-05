@@ -1,53 +1,120 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 
 import 'main_view_model.dart';
 import 'skeleton_widgets.dart';
 
-class MainView extends StatelessWidget {
+class MainView extends StatefulWidget {
   const MainView({super.key});
 
   @override
+  State<MainView> createState() => _MainViewState();
+}
+
+class _MainViewState extends State<MainView> with AutomaticKeepAliveClientMixin {
+  @override
+  bool get wantKeepAlive => true;
+
+  @override
   Widget build(BuildContext context) {
+    super.build(context);
     final MainViewModel viewModel = Get.put(MainViewModel());
 
+    // 페이지가 나타날 때마다 데이터 갱신
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      viewModel.refresh();
+    });
+
     return Scaffold(
-      backgroundColor: Colors.grey[100],
-      body: SafeArea(
+      backgroundColor: Colors.white,
+      body: Column(
+        children: [
+          // 상단 헤더 (사용자 정보 통합)
+          _buildCombinedHeader(context, Get.find<MainViewModel>()),
+          // 월별 현황 및 통계 정보 섹션 (통합)
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+            child: GetBuilder<MainViewModel>(
+              builder: (viewModel) {
+                return _buildMonthlyStatusAndStatistics(viewModel);
+              },
+            ),
+          ),
+          // 이벤트 목록 테이블 (무한 스크롤)
+          const SizedBox(height: 20),
+          Expanded(
+            child: RefreshIndicator(
+              onRefresh: () async {
+                await Get.find<MainViewModel>().loadMonthData();
+              },
+              child: GetBuilder<MainViewModel>(
+                builder: (viewModel) {
+                  return _buildEventTable(viewModel);
+                },
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// 상단 헤더 (사용자 정보 통합)
+  Widget _buildCombinedHeader(BuildContext context, MainViewModel viewModel) {
+    return AnnotatedRegion<SystemUiOverlayStyle>(
+      value: const SystemUiOverlayStyle(
+        statusBarColor: Colors.transparent,
+        statusBarIconBrightness: Brightness.light,
+        statusBarBrightness: Brightness.dark,
+      ),
+      child: Container(
+        padding: EdgeInsets.only(
+          top: MediaQuery.of(context).padding.top + 16,
+          left: 16,
+          right: 16,
+          bottom: 16,
+        ),
+        decoration: const BoxDecoration(
+          image: DecorationImage(
+            image: AssetImage('assets/main/background.png'),
+            fit: BoxFit.cover,
+          ),
+        ),
         child: Column(
           children: [
-            // 상단 헤더
-            _buildHeader(context, Get.find<MainViewModel>()),
-            // 스크롤 가능한 콘텐츠 (Pull-to-refresh 추가)
-            Expanded(
-              child: RefreshIndicator(
-                onRefresh: () async {
-                  await Get.find<MainViewModel>().loadMonthData();
-                },
-                child: SingleChildScrollView(
-                  physics: const AlwaysScrollableScrollPhysics(),
-                  padding: const EdgeInsets.all(16.0),
-                  child: GetBuilder<MainViewModel>(
-                    builder: (viewModel) {
-                      return Column(
-                        children: [
-                          // 사용자 정보 섹션
-                          _buildUserInfo(viewModel),
-                          const SizedBox(height: 20),
-                          // 월별 현황 섹션
-                          _buildMonthlyStatus(viewModel),
-                          const SizedBox(height: 20),
-                          // 통계 정보 섹션
-                          _buildStatistics(viewModel),
-                          const SizedBox(height: 20),
-                          // 이벤트 목록 테이블
-                          _buildEventTable(viewModel),
-                        ],
-                      );
-                    },
+            // 첫 번째 행: MMS 에이전트 타이틀과 캘린더 아이콘
+            Row(
+              children: [
+                const Text(
+                  'MMS 에이전트',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
                   ),
                 ),
-              ),
+                const Spacer(),
+                IconButton(
+                  icon: const Icon(Icons.calendar_today, color: Colors.white),
+                  onPressed: () => viewModel.onCalendarTap(context),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            // 두 번째 행: 사용자 정보 (세로 정렬)
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // 이름
+                _buildUserInfoItem('이름', viewModel.userName),
+                const SizedBox(height: 8),
+                // 등급
+                _buildUserInfoItem('등급', viewModel.userGrade),
+                const SizedBox(height: 8),
+                // 관제 시간
+                _buildUserInfoItem('관제 시간', viewModel.controlTime),
+              ],
             ),
           ],
         ),
@@ -55,134 +122,57 @@ class MainView extends StatelessWidget {
     );
   }
 
-  /// 상단 헤더 위젯
-  Widget _buildHeader(BuildContext context, MainViewModel viewModel) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      decoration: const BoxDecoration(
-        color: Colors.white,
-        border: Border(
-          bottom: BorderSide(color: Colors.grey, width: 0.5),
-        ),
-      ),
-      child: Row(
-        children: [
-          // MMS 에이전트 타이틀
-          const Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'MMS 에이전트',
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.orange,
-                ),
-              ),
-            ],
-          ),
-          const Spacer(),
-
-          // 캘린더 아이콘
-          IconButton(
-            icon: const Icon(Icons.calendar_today),
-            onPressed: () => viewModel.onCalendarTap(context),
-          ),
-        ],
-      ),
-    );
-  }
-
-  /// 사용자 정보 섹션
-  Widget _buildUserInfo(MainViewModel viewModel) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(8),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.grey.withOpacity(0.1),
-            spreadRadius: 1,
-            blurRadius: 3,
-            offset: const Offset(0, 1),
-          ),
-        ],
-      ),
-      child: Row(
-        children: [
-          // 이름
-          _buildUserInfoItem('이름', viewModel.userName),
-          const SizedBox(width: 20),
-          // 등급
-          _buildUserInfoItem('등급', viewModel.userGrade),
-          const SizedBox(width: 20),
-          // 관제 시간
-          _buildUserInfoItem('관제 시간', viewModel.controlTime),
-        ],
-      ),
-    );
-  }
-
   /// 사용자 정보 아이템
   Widget _buildUserInfoItem(String label, String value) {
-    return Expanded(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
+    return Row(
+      children: [
+        SizedBox(
+          width: 80,
+          child: Text(
             label,
             style: const TextStyle(
-              fontSize: 12,
-              color: Colors.grey,
+              fontSize: 14,
               fontWeight: FontWeight.w500,
+              color: Color(0xFFFFFF80),
             ),
           ),
-          const SizedBox(height: 4),
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
-            decoration: BoxDecoration(
-              color: Colors.grey[100],
-              borderRadius: BorderRadius.circular(4),
-            ),
-            child: Text(
-              value,
-              style: const TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
+        ),
+        Text(
+          value,
+          style: const TextStyle(
+            fontSize: 14,
+            color: Colors.white,
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 
-  /// 월별 현황 섹션
-  Widget _buildMonthlyStatus(MainViewModel viewModel) {
+  /// 월별 현황 및 통계 정보 섹션 (통합)
+  Widget _buildMonthlyStatusAndStatistics(MainViewModel viewModel) {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.orange[100],
-        borderRadius: BorderRadius.circular(8),
+        color: const Color(0xFF595B65),
+        borderRadius: BorderRadius.circular(12),
       ),
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const Text(
             '월별 현황',
             style: TextStyle(
               fontSize: 16,
               fontWeight: FontWeight.bold,
+              color: Colors.white,
             ),
           ),
-          const SizedBox(height: 8),
           const SizedBox(height: 16),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               IconButton(
-                icon: const Icon(Icons.chevron_left),
+                icon: const Icon(Icons.chevron_left, color: Colors.white),
                 onPressed: viewModel.goToPreviousMonth,
               ),
               Obx(() => Text(
@@ -190,62 +180,45 @@ class MainView extends StatelessWidget {
                     style: const TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
+                      color: Colors.white,
                     ),
                   )),
               IconButton(
-                icon: const Icon(Icons.chevron_right),
+                icon: const Icon(Icons.chevron_right, color: Colors.white),
                 onPressed: viewModel.goToNextMonth,
               ),
             ],
           ),
+          const SizedBox(height: 24),
+          Obx(() => Column(
+                children: [
+                  _buildStatRow(
+                      '응답 횟수',
+                      viewModel.isStatsLoading.value
+                          ? null
+                          : viewModel.totalCount.value.toString() + '회'),
+                  const SizedBox(height: 8),
+                  _buildStatRow(
+                      '응답 비율',
+                      viewModel.isStatsLoading.value
+                          ? null
+                          : viewModel.totalRatio.value),
+                  const SizedBox(height: 8),
+                  _buildStatRow(
+                      '응답 정확도',
+                      viewModel.isStatsLoading.value
+                          ? null
+                          : viewModel.totalAccuracy.value),
+                  const SizedBox(height: 8),
+                  _buildStatRow(
+                      '이달 포인트',
+                      viewModel.isStatsLoading.value
+                          ? null
+                          : viewModel.eventPoints.value),
+                ],
+              )),
         ],
       ),
-    );
-  }
-
-  /// 통계 정보 섹션
-  Widget _buildStatistics(MainViewModel viewModel) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(8),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.grey.withOpacity(0.1),
-            spreadRadius: 1,
-            blurRadius: 3,
-            offset: const Offset(0, 1),
-          ),
-        ],
-      ),
-      child: Obx(() => Column(
-            children: [
-              _buildStatRow(
-                  '응답 횟수',
-                  viewModel.isStatsLoading.value
-                      ? null
-                      : viewModel.totalCount.value.toString() + '회'),
-              const SizedBox(height: 12),
-              _buildStatRow(
-                  '응답 비율',
-                  viewModel.isStatsLoading.value
-                      ? null
-                      : viewModel.totalRatio.value),
-              const SizedBox(height: 12),
-              _buildStatRow(
-                  '응답 정확도',
-                  viewModel.isStatsLoading.value
-                      ? null
-                      : viewModel.totalAccuracy.value),
-              const SizedBox(height: 12),
-              _buildStatRow(
-                  '이달 포인트',
-                  viewModel.isStatsLoading.value
-                      ? null
-                      : viewModel.eventPoints.value),
-            ],
-          )),
     );
   }
 
@@ -260,29 +233,29 @@ class MainView extends StatelessWidget {
             style: const TextStyle(
               fontSize: 14,
               fontWeight: FontWeight.w500,
+              color: Color(0xFFADAFBC),
             ),
           ),
         ),
         Expanded(
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-            decoration: BoxDecoration(
-              color: Colors.grey[100],
-              borderRadius: BorderRadius.circular(4),
-            ),
-            child: value == null
-                ? SkeletonLoader(
-                    child: Text(
-                      '로딩중...',
-                      style: const TextStyle(
-                          fontSize: 14, color: Colors.transparent),
+          child: value == null
+              ? SkeletonLoader(
+                  child: Container(
+                    height: 14,
+                    width: 60,
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.2),
+                      borderRadius: BorderRadius.circular(4),
                     ),
-                  )
-                : Text(
-                    value,
-                    style: const TextStyle(fontSize: 14),
                   ),
-          ),
+                )
+              : Text(
+                  value,
+                  style: const TextStyle(
+                    fontSize: 14,
+                    color: Colors.white,
+                  ),
+                ),
         ),
       ],
     );
@@ -296,14 +269,6 @@ class MainView extends StatelessWidget {
           decoration: BoxDecoration(
             color: Colors.white,
             borderRadius: BorderRadius.circular(8),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.grey.withOpacity(0.1),
-                spreadRadius: 1,
-                blurRadius: 3,
-                offset: const Offset(0, 1),
-              ),
-            ],
           ),
           child: Column(
             children: [
@@ -311,20 +276,29 @@ class MainView extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.symmetric(vertical: 12),
                 decoration: BoxDecoration(
-                  color: Colors.grey[200],
+                  color: Colors.white,
                   borderRadius: const BorderRadius.only(
                     topLeft: Radius.circular(8),
                     topRight: Radius.circular(8),
                   ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.grey.withValues(alpha: 0.1),
+                      spreadRadius: 0,
+                      blurRadius: 2,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
                 ),
                 child: const Row(
                   children: [
                     Expanded(
                         flex: 3,
-                        child: Center(
-                            child: Text('날짜',
-                                style:
-                                    TextStyle(fontWeight: FontWeight.bold)))),
+                        child: Padding(
+                          padding: EdgeInsets.only(left: 16),
+                          child: Text('날짜',
+                              style: TextStyle(fontWeight: FontWeight.bold)),
+                        )),
                     Expanded(
                         flex: 2,
                         child: Center(
@@ -347,7 +321,23 @@ class MainView extends StatelessWidget {
                 ),
               ),
               // 스켈레톤 행들
-              ...List.generate(5, (index) => _buildSkeletonEventRow()),
+              Expanded(
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: Colors.grey[100],
+                    borderRadius: const BorderRadius.only(
+                      bottomLeft: Radius.circular(8),
+                      bottomRight: Radius.circular(8),
+                    ),
+                  ),
+                  child: SingleChildScrollView(
+                    child: Column(
+                      children:
+                          List.generate(5, (index) => _buildSkeletonEventRow()),
+                    ),
+                  ),
+                ),
+              ),
             ],
           ),
         );
@@ -357,14 +347,6 @@ class MainView extends StatelessWidget {
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(8),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.grey.withOpacity(0.1),
-              spreadRadius: 1,
-              blurRadius: 3,
-              offset: const Offset(0, 1),
-            ),
-          ],
         ),
         child: Column(
           children: [
@@ -372,19 +354,29 @@ class MainView extends StatelessWidget {
             Container(
               padding: const EdgeInsets.symmetric(vertical: 12),
               decoration: BoxDecoration(
-                color: Colors.grey[200],
+                color: Colors.white,
                 borderRadius: const BorderRadius.only(
                   topLeft: Radius.circular(8),
                   topRight: Radius.circular(8),
                 ),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.grey.withValues(alpha: 0.1),
+                    spreadRadius: 0,
+                    blurRadius: 2,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
               ),
               child: const Row(
                 children: [
                   Expanded(
                       flex: 3,
-                      child: Center(
-                          child: Text('날짜',
-                              style: TextStyle(fontWeight: FontWeight.bold)))),
+                      child: Padding(
+                        padding: EdgeInsets.only(left: 16),
+                        child: Text('날짜',
+                            style: TextStyle(fontWeight: FontWeight.bold)),
+                      )),
                   Expanded(
                       flex: 2,
                       child: Center(
@@ -403,20 +395,70 @@ class MainView extends StatelessWidget {
                 ],
               ),
             ),
-            // 테이블 바디
-            if (viewModel.eventList.isEmpty)
-              Container(
-                padding: const EdgeInsets.all(32),
-                child: const Text(
-                  '이벤트 데이터가 없습니다',
-                  style: TextStyle(
-                    color: Colors.grey,
-                    fontSize: 14,
+            // 테이블 바디 (무한 스크롤)
+            Expanded(
+              child: Container(
+                decoration: BoxDecoration(
+                  color: Colors.grey[100],
+                  borderRadius: const BorderRadius.only(
+                    bottomLeft: Radius.circular(8),
+                    bottomRight: Radius.circular(8),
                   ),
                 ),
-              )
-            else
-              ...viewModel.eventList.map((event) => _buildEventRow(event)),
+                child: viewModel.eventList.isEmpty
+                    ? Container(
+                        padding: const EdgeInsets.all(32),
+                        child: const Text(
+                          '이벤트 데이터가 없습니다',
+                          style: TextStyle(
+                            color: Colors.grey,
+                            fontSize: 14,
+                          ),
+                        ),
+                      )
+                    : NotificationListener<ScrollNotification>(
+                        onNotification: (ScrollNotification scrollInfo) {
+                          // 스크롤 정보 로깅 (디버깅용)
+                          if (scrollInfo is ScrollUpdateNotification) {
+                            final currentScroll = scrollInfo.metrics.pixels;
+                            final maxScroll = scrollInfo.metrics.maxScrollExtent;
+                            final threshold = maxScroll - 100; // 임계값을 100으로 줄임
+                            
+                            // print('📊 스크롤 상태: ${currentScroll.toInt()}/${maxScroll.toInt()} (임계값: ${threshold.toInt()}) hasMore: ${viewModel.hasMoreEvents.value} loading: ${viewModel.isEventsLoading.value}');
+                            
+                            // 스크롤이 끝에 도달했을 때 또는 거의 도달했을 때
+                            if ((currentScroll >= threshold || currentScroll >= maxScroll) &&
+                                viewModel.hasMoreEvents.value &&
+                                !viewModel.isEventsLoading.value) {
+                              print('🔥 무한스크롤 트리거! ${currentScroll.toInt()}/${maxScroll.toInt()}');
+                              viewModel.loadMoreEvents();
+                            }
+                          }
+                          return false;
+                        },
+                        child: ListView.builder(
+                          padding: EdgeInsets.zero,
+                          itemCount: viewModel.eventList.length + 
+                              (viewModel.hasMoreEvents.value ? 1 : 0), // 로딩 인디케이터용 +1
+                          itemBuilder: (context, index) {
+                            if (index < viewModel.eventList.length) {
+                              return _buildEventRow(viewModel.eventList[index]);
+                            } else {
+                              // 로딩 인디케이터
+                              return Container(
+                                padding: const EdgeInsets.all(16),
+                                child: const Center(
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                  ),
+                                ),
+                              );
+                            }
+                          },
+                        ),
+                      ),
+              ),
+            ),
           ],
         ),
       );
@@ -436,11 +478,12 @@ class MainView extends StatelessWidget {
         children: [
           Expanded(
             flex: 3,
-            child: Center(
+            child: Padding(
+              padding: const EdgeInsets.only(left: 16),
               child: Text(
                 event.date,
                 style: const TextStyle(fontSize: 12),
-                textAlign: TextAlign.center,
+                textAlign: TextAlign.left,
               ),
             ),
           ),
@@ -498,7 +541,8 @@ class MainView extends StatelessWidget {
               child: Center(
                 child: Text(
                   '2025-01-15\n10:30:45',
-                  style: const TextStyle(fontSize: 12, color: Colors.transparent),
+                  style:
+                      const TextStyle(fontSize: 12, color: Colors.transparent),
                   textAlign: TextAlign.center,
                 ),
               ),
@@ -509,7 +553,8 @@ class MainView extends StatelessWidget {
               child: Center(
                 child: Text(
                   '15초',
-                  style: const TextStyle(fontSize: 12, color: Colors.transparent),
+                  style:
+                      const TextStyle(fontSize: 12, color: Colors.transparent),
                 ),
               ),
             ),
@@ -519,7 +564,8 @@ class MainView extends StatelessWidget {
               child: Center(
                 child: Text(
                   '화재',
-                  style: const TextStyle(fontSize: 12, color: Colors.transparent),
+                  style:
+                      const TextStyle(fontSize: 12, color: Colors.transparent),
                 ),
               ),
             ),
@@ -529,7 +575,8 @@ class MainView extends StatelessWidget {
               child: Center(
                 child: Text(
                   '1000 P',
-                  style: const TextStyle(fontSize: 12, color: Colors.transparent),
+                  style:
+                      const TextStyle(fontSize: 12, color: Colors.transparent),
                 ),
               ),
             ),

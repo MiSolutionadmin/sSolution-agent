@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:mms/components/dialog.dart';
 import 'package:mms/components/dialogManager.dart';
-import 'package:mms/utils/font/font.dart';
 import 'package:video_player/video_player.dart';
 import 'package:http/http.dart' as http;
 import 'package:get/get.dart';
@@ -438,15 +436,6 @@ class _VideoPageState extends State<VideoPage> {
     }
   }
 
-  // 볼륨 토글
-  void _toggleVolume() {
-    if (_controller != null && mounted) {
-      setState(() {
-        _isVolumeMuted = !_isVolumeMuted;
-        _controller!.setVolume(_isVolumeMuted ? 0.0 : 1.0);
-      });
-    }
-  }
 
   // 컨트롤 표시/숨김 토글
   void _toggleControls() {
@@ -547,12 +536,7 @@ class _VideoPageState extends State<VideoPage> {
                       
                       // 하단 컨트롤 바와 seekbar (조건부 표시)
                       if (_showControls)
-                        Positioned(
-                          bottom: 0,
-                          left: 0,
-                          right: 0,
-                          child: _buildControlBar(durationSeconds.toDouble(), positionSeconds, duration, position),
-                        ),
+                        _buildControlBar(durationSeconds.toDouble(), positionSeconds, duration, position),
                     ],
                   )
                 : _hasError
@@ -651,12 +635,16 @@ class _VideoPageState extends State<VideoPage> {
           
           // 안내 텍스트
           if (_isReady && isControllerReady)
-            Padding(
+            Container(
+              width: double.infinity,
               padding: const EdgeInsets.symmetric(horizontal: 20),
               child: Text(
                 '이벤트가 발생한 화면을 보고\n\n화재 또는 비화재로 판단하여 주시기 바랍니다.\n\n판단의 결과가 포인트 지급에 영향을 미칩니다.',
-                style: f14w700,
-                textAlign: TextAlign.center,
+                style: const TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.bold,
+                ),
+                textAlign: TextAlign.left,
               ),
             ),
           
@@ -665,21 +653,19 @@ class _VideoPageState extends State<VideoPage> {
           
           // 액션 버튼들 (영상 아래)
           if (_isReady && isControllerReady)
-            Container(
-              width: Get.width * 0.8,
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20),
               child: Row(
-                spacing: 62,
-                mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Expanded(
-                    child: TextButton(
-                      onPressed: _isSubmissionCompleted ? null : () {
+                    child: GestureDetector(
+                      onTap: _isSubmissionCompleted ? null : () {
                         // 화재감지 버튼 클릭 시 처리
                         final buttonText = _getButtonText();
                         _showStyledConfirmDialog(
                           context,
                           buttonText,
-                          Colors.red,
+                          const Color(0xFFF61A1A),
                               () async {
                             DialogManager.showLoading(context);
                             try {
@@ -709,28 +695,35 @@ class _VideoPageState extends State<VideoPage> {
                           },
                         ); // ✅ 화재감지 버튼 함수
                       },
-                      style: TextButton.styleFrom(
-                        backgroundColor: _isSubmissionCompleted ? Colors.grey : Colors.red,
-                        foregroundColor: Colors.white,
-                        padding: EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8),
+                      behavior: HitTestBehavior.opaque,
+                      child: Container(
+                        width: 164,
+                        height: 46,
+                        decoration: BoxDecoration(
+                          color: _isSubmissionCompleted ? Colors.grey : const Color(0xFFF61A1A),
+                          borderRadius: BorderRadius.circular(4),
                         ),
-                      ),
-                      child: Text(
-                        _getButtonText(),
-                        style: f20w700White,
+                        child: Center(
+                          child: Text(
+                            _getButtonText(),
+                            style: const TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
                       ),
                     ),
                   ),
+                  const SizedBox(width: 8),
                   Expanded(
-                    child: TextButton(
-                      onPressed: _isSubmissionCompleted ? null : () {
+                    child: GestureDetector(
+                      onTap: _isSubmissionCompleted ? null : () {
                         // 오탐 버튼 클릭 시 처리
                         _showStyledConfirmDialog(
                           context,
                           "비화재",
-                          Colors.black,
+                          const Color(0xFF030303),
                               () async {
                                 DialogManager.showLoading(context);
                                 try {
@@ -760,15 +753,25 @@ class _VideoPageState extends State<VideoPage> {
                           },
                         );
                       },
-                      style: TextButton.styleFrom(
-                        backgroundColor: _isSubmissionCompleted ? Colors.grey : Colors.black,        // 배경색
-                        foregroundColor: Colors.white,       // 텍스트 색
-                        padding: EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8),
+                      behavior: HitTestBehavior.opaque,
+                      child: Container(
+                        width: 164,
+                        height: 46,
+                        decoration: BoxDecoration(
+                          color: _isSubmissionCompleted ? Colors.grey : const Color(0xFF030303),
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                        child: const Center(
+                          child: Text(
+                            '비화재',
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white,
+                            ),
+                          ),
                         ),
                       ),
-                      child: Text('비화재',  style: f20w700White),
                     ),
                   ),
                 ],
@@ -784,83 +787,85 @@ class _VideoPageState extends State<VideoPage> {
 
   // 컨트롤 바 위젯
   Widget _buildControlBar(double durationSeconds, double positionSeconds, Duration duration, Duration position) {
-    return Container(
-      color: Colors.black54,
-      child: Row(
+    return Positioned.fill(
+      child: Column(
         children: [
-          // 시작/중지 버튼
-          IconButton(
-            icon: Icon(
-              _controller!.value.isPlaying
-                  ? Icons.stop
-                  : Icons.play_arrow
-            ),
-            color: Colors.white,
-            onPressed: () {
-              if (mounted) {
-                setState(() {
-                  _controller!.value.isPlaying
-                      ? _controller!.pause()
-                      : _controller!.play();
-                });
-              }
-            },
-          ),
-
-          // 소리 버튼 (실제 작동)
-          IconButton(
-            icon: Icon(_isVolumeMuted ? Icons.volume_off : Icons.volume_up),
-            color: Colors.white,
-            onPressed: _toggleVolume,
-          ),
-
-          Flexible(
-            flex: 1,
+          // 상단 재생바
+          Container(
+            color: Colors.black54,
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                // 슬라이더 (높이 줄임)
+                // 슬라이더 - 안전하게 처리
                 Container(
-                  height: 30, // 슬라이더 높이 제한
+                  height: 30,
                   child: Slider(
                     min: 0,
-                    max: durationSeconds.toDouble(),
-                    value: positionSeconds,
+                    max: durationSeconds > 0 ? durationSeconds : 1.0,
+                    value: positionSeconds.clamp(0.0, durationSeconds > 0 ? durationSeconds : 1.0),
                     activeColor: Colors.red,
                     inactiveColor: Colors.white30,
                     thumbColor: Colors.white,
                     onChanged: (value) {
-                      _controller!.seekTo(Duration(seconds: value.toInt()));
+                      if (_controller != null && _controller!.value.isInitialized) {
+                        _controller!.seekTo(Duration(seconds: value.toInt()));
+                      }
                     },
                   ),
                 ),
-                // 시간 표시 (패딩 줄임)
-                Padding(
-                  padding: const EdgeInsets.only(left: 16.0, right: 16.0, bottom: 4.0),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        _formatDuration(position, duration),
-                        style: TextStyle(color: Colors.white, fontSize: 11),
-                      ),
-                      Text(
-                        _formatDuration(duration, duration),
-                        style: TextStyle(color: Colors.white, fontSize: 11),
-                      ),
-                    ],
-                  ),
+                // 시간 표시
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      _formatDuration(position, duration),
+                      style: const TextStyle(color: Colors.white, fontSize: 11),
+                    ),
+                    Text(
+                      _formatDuration(duration, duration),
+                      style: const TextStyle(color: Colors.white, fontSize: 11),
+                    ),
+                  ],
                 ),
               ],
             ),
           ),
-
-          // 전체화면 버튼
-          IconButton(
-            icon: Icon(Icons.fullscreen),
-            color: Colors.white,
-            onPressed: _goToFullscreen,
-          )
+          // 중간 공간 (영상 영역)
+          Expanded(child: Container()),
+          // 하단 컨트롤 버튼
+          Container(
+            color: Colors.black54,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                // 시작/중지 버튼
+                IconButton(
+                  icon: Icon(
+                    _controller!.value.isPlaying
+                        ? Icons.stop
+                        : Icons.play_arrow
+                  ),
+                  color: Colors.white,
+                  onPressed: () {
+                    if (mounted && _controller != null && _controller!.value.isInitialized) {
+                      setState(() {
+                        _controller!.value.isPlaying
+                            ? _controller!.pause()
+                            : _controller!.play();
+                      });
+                    }
+                  },
+                ),
+                // 전체화면 버튼
+                IconButton(
+                  icon: const Icon(Icons.fullscreen),
+                  color: Colors.white,
+                  onPressed: _goToFullscreen,
+                ),
+              ],
+            ),
+          ),
         ],
       ),
     );

@@ -130,6 +130,7 @@ class MainApiService {
     required String agentId,
     required String year,
     required String month,
+    String? cursor, // cursor 파라미터 추가
   }) async {
     try {
       final token = await _getToken();
@@ -137,8 +138,14 @@ class MainApiService {
         throw Exception('로그인이 필요합니다.');
       }
 
+      // URL에 cursor 파라미터 추가
+      String url = '${_config.baseUrl}/agents/$agentId/works?targetMonth=$year-$month';
+      if (cursor != null && cursor.isNotEmpty) {
+        url += '&cursor=$cursor';
+      }
+
       final response = await http.get(
-        Uri.parse('${_config.baseUrl}/agents/$agentId/works?targetMonth=$year-$month'),
+        Uri.parse(url),
         headers: {
           'Authorization': 'Bearer $token',
         },
@@ -200,6 +207,84 @@ class MainApiService {
       }
     } catch (e) {
       print('근무 날짜 조회 오류: $e');
+      return {
+        'success': false,
+        'error': e.toString(),
+      };
+    }
+  }
+
+  /// 에이전트 관제 시간 조회
+  Future<Map<String, dynamic>> getAgentDate() async {
+    try {
+      final token = await _getToken();
+      if (token == null) {
+        throw Exception('로그인이 필요합니다.');
+      }
+
+      final response = await http.get(
+        Uri.parse('${_config.baseUrl}/config/agent/date'),
+        headers: {
+          'Authorization': 'Bearer $token',
+        },
+      ).timeout(const Duration(seconds: 30));
+
+      print('에이전트 관제 시간 조회 응답 상태: ${response.statusCode}');
+      print('에이전트 관제 시간 조회 응답 내용: ${response.body}');
+
+      if (response.statusCode == 200) {
+        return {
+          'success': true,
+          'data': json.decode(response.body),
+        };
+      } else {
+        return {
+          'success': false,
+          'error': '서버 오류: ${response.statusCode}',
+        };
+      }
+    } catch (e) {
+      print('에이전트 관제 시간 조회 오류: $e');
+      return {
+        'success': false,
+        'error': e.toString(),
+      };
+    }
+  }
+
+  /// 에이전트 정보 조회
+  Future<Map<String, dynamic>> getAgentInfo({
+    required String agentId,
+  }) async {
+    try {
+      final token = await _getToken();
+      if (token == null) {
+        throw Exception('로그인이 필요합니다.');
+      }
+
+      final response = await http.get(
+        Uri.parse('${_config.baseUrl}/agents/$agentId'),
+        headers: {
+          'Authorization': 'Bearer $token',
+        },
+      ).timeout(const Duration(seconds: 30));
+
+      print('에이전트 정보 조회 응답 상태: ${response.statusCode}');
+      print('에이전트 정보 조회 응답 내용: ${response.body}');
+
+      if (response.statusCode == 200) {
+        return {
+          'success': true,
+          'data': json.decode(response.body),
+        };
+      } else {
+        return {
+          'success': false,
+          'error': '서버 오류: ${response.statusCode}',
+        };
+      }
+    } catch (e) {
+      print('에이전트 정보 조회 오류: $e');
       return {
         'success': false,
         'error': e.toString(),
