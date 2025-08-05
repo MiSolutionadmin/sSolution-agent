@@ -29,9 +29,9 @@ class RecordViewModel extends GetxController {
 
   // 알림 내역 데이터
   final RxList<RecordItem> records = <RecordItem>[].obs;
-  
+
   // 무한 스크롤 관련
-  String? lastRecordId; // 마지막 레코드 ID (cursor)
+  String? lastRecordCreateDate; // 마지막 레코드 createDate (cursor)
   final RxBool hasMoreRecords = true.obs; // 더 가져올 데이터가 있는지
 
   @override
@@ -44,7 +44,7 @@ class RecordViewModel extends GetxController {
   void refresh() {
     // 리스트 초기화
     records.clear();
-    lastRecordId = null;
+    lastRecordCreateDate = null;
     hasMoreRecords.value = true;
     _loadRecords();
   }
@@ -67,7 +67,7 @@ class RecordViewModel extends GetxController {
     );
     // 리스트 초기화
     records.clear();
-    lastRecordId = null;
+    lastRecordCreateDate = null;
     hasMoreRecords.value = true;
     _loadRecords();
   }
@@ -80,7 +80,7 @@ class RecordViewModel extends GetxController {
     );
     // 리스트 초기화
     records.clear();
-    lastRecordId = null;
+    lastRecordCreateDate = null;
     hasMoreRecords.value = true;
     _loadRecords();
   }
@@ -103,7 +103,8 @@ class RecordViewModel extends GetxController {
         agentId: agentId,
         year: year,
         month: month,
-        cursor: lastRecordId,
+        cursor: lastRecordCreateDate,
+        limit: 10,
       );
 
       if (result['success'] == true) {
@@ -122,7 +123,7 @@ class RecordViewModel extends GetxController {
                   ))
               .toList();
 
-          if (lastRecordId == null) {
+          if (lastRecordCreateDate == null) {
             // 첫 로드시 새로 할당
             records.assignAll(recordItems);
           } else {
@@ -130,23 +131,24 @@ class RecordViewModel extends GetxController {
             records.addAll(recordItems);
           }
 
-          // 마지막 ID 업데이트
+          // 마지막 createDate 업데이트
           if (recordItems.isNotEmpty) {
-            final previousCursor = lastRecordId;
-            lastRecordId = recordItems.last.id;
-            print('📌 Record Cursor 업데이트: $previousCursor → $lastRecordId');
+            final previousCursor = lastRecordCreateDate;
+            lastRecordCreateDate = recordItems.last.dateText.replaceAll('\n', ' '); // createDate를 cursor로 사용
+            print('📌 Record Cursor 업데이트: $previousCursor → $lastRecordCreateDate');
           }
 
           // 더 가져올 데이터가 있는지 확인
           hasMoreRecords.value = recordItems.length >= 10;
-          print('📊 hasMoreRecords 업데이트: ${hasMoreRecords.value} (받은 데이터: ${recordItems.length}개)');
+          print(
+              '📊 hasMoreRecords 업데이트: ${hasMoreRecords.value} (받은 데이터: ${recordItems.length}개)');
 
           print('알림 내역 로드 완료: ${recordItems.length}개, 총 ${records.length}개');
         } else {
           // 빈 목록이면 더 이상 데이터 없음
           hasMoreRecords.value = false;
           print('🚫 더 이상 로드할 알림 내역 없음 (빈 응답)');
-          if (lastRecordId == null) {
+          if (lastRecordCreateDate == null) {
             records.clear();
             print('알림 내역 데이터가 없습니다.');
           }
@@ -166,15 +168,18 @@ class RecordViewModel extends GetxController {
   /// 더 많은 알림 내역 로드 (무한 스크롤)
   Future<void> loadMoreRecords() async {
     if (!hasMoreRecords.value || isLoading.value) {
-      print('무한스크롤 중단: hasMoreRecords=${hasMoreRecords.value}, isLoading=${isLoading.value}');
+      print(
+          '무한스크롤 중단: hasMoreRecords=${hasMoreRecords.value}, isLoading=${isLoading.value}');
       return;
     }
 
-    print('🔄 알림 내역 무한스크롤 시작 - cursor: $lastRecordId, 현재 레코드 수: ${records.length}');
+    print(
+        '🔄 알림 내역 무한스크롤 시작 - cursor: $lastRecordCreateDate, 현재 레코드 수: ${records.length}');
 
     await _loadRecords();
 
-    print('✅ 알림 내역 무한스크롤 완료 - 총 레코드 수: ${records.length}, hasMoreRecords: ${hasMoreRecords.value}');
+    print(
+        '✅ 알림 내역 무한스크롤 완료 - 총 레코드 수: ${records.length}, hasMoreRecords: ${hasMoreRecords.value}');
   }
 
   /// 알림 내역 API 호출
@@ -183,6 +188,7 @@ class RecordViewModel extends GetxController {
     required String year,
     required String month,
     String? cursor,
+    int limit = 10,
   }) async {
     try {
       final token = await _getToken();
@@ -190,8 +196,9 @@ class RecordViewModel extends GetxController {
         throw Exception('로그인이 필요합니다.');
       }
 
-      // URL에 cursor 파라미터 추가
-      String url = '${_config.baseUrl}/agents/$agentId/notis?targetMonth=$year-$month';
+      // URL에 cursor, limit 파라미터 추가
+      String url =
+          '${_config.baseUrl}/agents/$agentId/notis?targetMonth=$year-$month&limit=$limit';
       if (cursor != null && cursor.isNotEmpty) {
         url += '&cursor=$cursor';
       }
@@ -276,13 +283,13 @@ class RecordViewModel extends GetxController {
 
     // 저장 영상 재생 페이지로 이동
     Get.to(() => SavedVideoView(
-      recordId: record.id,
-      date: record.dateText,
-      alertType: record.alertType,
-      eventType: record.eventType,
-      result: record.result,
-      videoUrl: videoUrl,
-    ));
+          recordId: record.id,
+          date: record.dateText,
+          alertType: record.alertType,
+          eventType: record.eventType,
+          result: record.result,
+          videoUrl: videoUrl,
+        ));
   }
 
   /// videoUrl을 생성하는 함수
@@ -291,16 +298,16 @@ class RecordViewModel extends GetxController {
       // dateText는 "2025-07-21\n10:29:24" 형식일 수 있으므로 변환
       String cleanedDate = dateText.replaceAll('\n', ' ');
       DateTime date = DateTime.parse(cleanedDate);
-      
-      String formattedDate = '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}-${date.hour.toString().padLeft(2, '0')}-${date.minute.toString().padLeft(2, '0')}-${date.second.toString().padLeft(2, '0')}';
-      
+
+      String formattedDate =
+          '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}-${date.hour.toString().padLeft(2, '0')}-${date.minute.toString().padLeft(2, '0')}-${date.second.toString().padLeft(2, '0')}';
+
       return 'http://misnetwork.iptime.org:9099/videos/record_$formattedDate.mp4';
     } catch (e) {
       print('날짜 변환 오류: $e');
       return 'http://misnetwork.iptime.org:9099/videos/record_2025-01-01-00-00-00.mp4';
     }
   }
-
 
   /// videoUrl이 직접 주어진 경우의 agent 비디오 다시보기로 BottomNavigator 경보 탭으로 이동
   Future<void> openAgentVideoPageWithUrl(String videoUrl, String type) async {
@@ -327,7 +334,7 @@ class RecordViewModel extends GetxController {
   }
 
   /// agent 비디오 다시보기로 BottomNavigator 경보 탭으로 이동
-  Future<void> openAgentVideoPage(String docId, String type) async{
+  Future<void> openAgentVideoPage(String docId, String type) async {
     final videoUrl = await getVideoUrl(docId);
 
     // BottomNavigator가 이미 열려있는지 확인
