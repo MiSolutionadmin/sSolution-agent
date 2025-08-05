@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
 /// 네비게이션 탭 아이템 모델
@@ -56,35 +55,65 @@ class NavigationConfig {
         NavigationTabItem(
           index: 0,
           label: '메인',
-          icon: const Icon(FontAwesomeIcons.home, size: 24, color: Colors.grey),
-          selectedIcon: const Icon(FontAwesomeIcons.home, size: 24, color: Colors.black),
+          icon: SvgPicture.asset(
+            'assets/bottom_icon/fi_home.svg',
+            width: 24,
+            height: 24,
+            colorFilter: const ColorFilter.mode(Colors.grey, BlendMode.srcIn),
+          ),
+          selectedIcon: SvgPicture.asset(
+            'assets/bottom_icon/fi_home.svg',
+            width: 24,
+            height: 24,
+            colorFilter: const ColorFilter.mode(Colors.black, BlendMode.srcIn),
+          ),
           routeName: '/main',
         ),
         NavigationTabItem(
           index: 1,
           label: '경보',
-          icon: const Icon(FontAwesomeIcons.exclamationTriangle, size: 24, color: Colors.grey),
-          selectedIcon: const Icon(FontAwesomeIcons.exclamationTriangle, size: 24, color: Colors.black),
+          icon: SvgPicture.asset(
+            'assets/bottom_icon/fi_alert-triangle.svg',
+            width: 24,
+            height: 24,
+            colorFilter: const ColorFilter.mode(Colors.grey, BlendMode.srcIn),
+          ),
+          selectedIcon: SvgPicture.asset(
+            'assets/bottom_icon/fi_alert-triangle.svg',
+            width: 24,
+            height: 24,
+            colorFilter: const ColorFilter.mode(Colors.black, BlendMode.srcIn),
+          ),
           routeName: '/alert',
         ),
         NavigationTabItem(
           index: 2,
           label: '기록',
-          icon: const Icon(FontAwesomeIcons.file, size: 24, color: Colors.grey),
-          selectedIcon: const Icon(FontAwesomeIcons.file, size: 24, color: Colors.black),
+          icon: SvgPicture.asset(
+            'assets/bottom_icon/u_history.svg',
+            width: 24,
+            height: 24,
+            colorFilter: const ColorFilter.mode(Colors.grey, BlendMode.srcIn),
+          ),
+          selectedIcon: SvgPicture.asset(
+            'assets/bottom_icon/u_history.svg',
+            width: 24,
+            height: 24,
+            colorFilter: const ColorFilter.mode(Colors.black, BlendMode.srcIn),
+          ),
           routeName: '/record',
         ),
         NavigationTabItem(
           index: 3,
           label: '설정',
           icon: SvgPicture.asset(
-            'assets/icon/setting.svg',
+            'assets/bottom_icon/fi_settings.svg',
             width: 24,
             height: 24,
             colorFilter: const ColorFilter.mode(Colors.grey, BlendMode.srcIn),
           ),
           selectedIcon: SvgPicture.asset(
-            'assets/icon/setting.svg',
+            'assets/bottom_icon/fi_settings.svg',
             width: 24,
             height: 24,
             colorFilter: const ColorFilter.mode(Colors.black, BlendMode.srcIn),

@@ -1,7 +1,6 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:get/get.dart';
 
 import '../../utils/font/font.dart';
@@ -11,17 +10,17 @@ import '../video/video_page.dart';
 
 class BottomNavigatorView extends StatelessWidget {
   static const String routeName = '/main';
-  
+
   const BottomNavigatorView({super.key});
 
   @override
   Widget build(BuildContext context) {
-    final BottomNavigatorViewModel viewModel = Get.put(BottomNavigatorViewModel());
-    
-    return Obx(() => viewModel.isLoading.value 
-      ? _buildLoadingScreen() 
-      : _buildMainScreen(viewModel)
-    );
+    final BottomNavigatorViewModel viewModel =
+        Get.put(BottomNavigatorViewModel());
+
+    return Obx(() => viewModel.isLoading.value
+        ? _buildLoadingScreen()
+        : _buildMainScreen(viewModel));
   }
 
   /// 로딩 화면
@@ -42,9 +41,7 @@ class BottomNavigatorView extends StatelessWidget {
         final shouldExit = await viewModel.handleBackPress();
         if (!shouldExit && Get.context != null) {
           viewModel.showCustomSnackbar(
-            Get.context!, 
-            '"뒤로" 버튼을 한 번 더 누르시면 종료됩니다'
-          );
+              Get.context!, '"뒤로" 버튼을 한 번 더 누르시면 종료됩니다');
         }
       },
       child: Scaffold(
@@ -64,7 +61,7 @@ class BottomNavigatorView extends StatelessWidget {
       builder: (context) {
         final mediaQuery = MediaQuery.of(context);
         final bottomPadding = mediaQuery.padding.bottom;
-        
+
         return Container(
           decoration: const BoxDecoration(
             border: Border(
@@ -74,8 +71,8 @@ class BottomNavigatorView extends StatelessWidget {
           ),
           padding: EdgeInsets.only(
             bottom: Platform.isAndroid
-              ? (bottomPadding > 0 ? bottomPadding + 0 : 0)
-              : (bottomPadding > 0 ? bottomPadding + 0 : 0),
+                ? (bottomPadding > 0 ? bottomPadding + 0 : 0)
+                : (bottomPadding > 0 ? bottomPadding + 0 : 0),
           ),
           child: _buildFallbackNavigationBar(viewModel),
         );
@@ -83,43 +80,46 @@ class BottomNavigatorView extends StatelessWidget {
     );
   }
 
-
   /// 탭 아이콘 생성
   Widget _buildTabIcon(NavigationTabItem tabItem, bool isSelected) {
     switch (tabItem.index) {
       case 0: // 메인
-        return ColorFiltered(
-          colorFilter: ColorFilter.mode(
-            isSelected ? Colors.black : Colors.grey,
-            BlendMode.srcIn,
-          ),
-          child: const Icon(FontAwesomeIcons.house, size: 24),
-        );
-      case 1: // 경보
-        return ColorFiltered(
-          colorFilter: ColorFilter.mode(
-            isSelected ? Colors.black : Colors.grey,
-            BlendMode.srcIn,
-          ),
-          child: const Icon(FontAwesomeIcons.triangleExclamation, size: 24),
-        );
-      case 2: // 기록
-        return ColorFiltered(
-          colorFilter: ColorFilter.mode(
-            isSelected ? Colors.black : Colors.grey,
-            BlendMode.srcIn,
-          ),
-          child: const Icon(FontAwesomeIcons.file, size: 24),
-        );
-      case 3: // 설정
         return SvgPicture.asset(
-          'assets/icon/setting.svg',
+          'assets/bottom_icon/fi_home.svg',
           width: 24,
           height: 24,
           colorFilter: ColorFilter.mode(
-            isSelected ? Colors.black : Colors.grey, 
-            BlendMode.srcIn
+            isSelected ? Colors.black : Colors.grey,
+            BlendMode.srcIn,
           ),
+        );
+      case 1: // 경보
+        return SvgPicture.asset(
+          'assets/bottom_icon/fi_alert-triangle.svg',
+          width: 24,
+          height: 24,
+          colorFilter: ColorFilter.mode(
+            isSelected ? Colors.black : Colors.grey,
+            BlendMode.srcIn,
+          ),
+        );
+      case 2: // 기록
+        return SvgPicture.asset(
+          'assets/bottom_icon/u_history.svg',
+          width: 24,
+          height: 24,
+          colorFilter: ColorFilter.mode(
+            isSelected ? Colors.black : Colors.grey,
+            BlendMode.srcIn,
+          ),
+        );
+      case 3: // 설정
+        return SvgPicture.asset(
+          'assets/bottom_icon/fi_settings.svg',
+          width: 24,
+          height: 24,
+          colorFilter: ColorFilter.mode(
+              isSelected ? Colors.black : Colors.grey, BlendMode.srcIn),
         );
       default:
         return const Icon(Icons.help, size: 24, color: Colors.grey);
@@ -129,33 +129,36 @@ class BottomNavigatorView extends StatelessWidget {
   /// 네비게이션 바
   Widget _buildFallbackNavigationBar(BottomNavigatorViewModel viewModel) {
     final navigationConfig = NavigationConfig.getDefault();
-    
+
     return Obx(() => Row(
-      children: navigationConfig.tabs.map((tabItem) => 
-        Expanded(
-          child: GestureDetector(
-            onTap: () => viewModel.onTabChanged(tabItem.index),
-            behavior: HitTestBehavior.opaque,
-            child: Container(
-              padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 8),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  _buildTabIcon(tabItem, viewModel.currentIndex.value == tabItem.index),
-                  const SizedBox(height: 6),
-                  Text(
-                    tabItem.label,
-                    style: viewModel.currentIndex.value == tabItem.index 
-                      ? f14w700 
-                      : hintf14w700,
-                  ),
-                ],
-              ),
-            ),
-          ),
-        )
-      ).toList(),
-    ));
+          children: navigationConfig.tabs
+              .map((tabItem) => Expanded(
+                    child: GestureDetector(
+                      onTap: () => viewModel.onTabChanged(tabItem.index),
+                      behavior: HitTestBehavior.opaque,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                            vertical: 16, horizontal: 8),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            _buildTabIcon(tabItem,
+                                viewModel.currentIndex.value == tabItem.index),
+                            const SizedBox(height: 6),
+                            Text(
+                              tabItem.label,
+                              style:
+                                  viewModel.currentIndex.value == tabItem.index
+                                      ? f12w700
+                                      : f12w700BlurGrey,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ))
+              .toList(),
+        ));
   }
 
   /// 탭 바 뷰
@@ -165,12 +168,12 @@ class BottomNavigatorView extends StatelessWidget {
       if (viewModel.currentIndex.value == 1) {
         return VideoPage(
           videoUrl: viewModel.alertVideoUrl.value,
-          type: viewModel.alertVideoType.value.isNotEmpty 
-            ? viewModel.alertVideoType.value 
-            : '경보',
+          type: viewModel.alertVideoType.value.isNotEmpty
+              ? viewModel.alertVideoType.value
+              : '경보',
         );
       }
-      
+
       // 다른 탭들은 기존 위젯 사용
       return IndexedStack(
         index: viewModel.currentIndex.value,

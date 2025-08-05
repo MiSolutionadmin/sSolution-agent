@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:video_player/video_player.dart';
+import 'package:mms/components/common_video_player.dart';
 import 'saved_video_view_model.dart';
 import '../video/video_fullscreen_page.dart';
 
@@ -31,7 +31,8 @@ class SavedVideoView extends StatelessWidget {
         alertType: alertType,
         eventType: eventType,
         result: result,
-        videoUrl: videoUrl ?? 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4', // 임시 URL
+        videoUrl: videoUrl ??
+            'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4', // 임시 URL
       ),
     );
 
@@ -52,19 +53,19 @@ class SavedVideoView extends StatelessWidget {
             fontWeight: FontWeight.bold,
           ),
         ),
-        centerTitle: true,
+        // ...existing code...
       ),
       body: Column(
         children: [
           // 상단 정보 섹션
           _buildInfoSection(viewModel),
-          
+
           // 비디오 플레이어 섹션
           _buildVideoSection(viewModel),
-          
+
           // 하단 결과 메시지 섹션
           _buildResultSection(viewModel),
-          
+
           // 나머지 공간
           const Spacer(),
         ],
@@ -92,8 +93,8 @@ class SavedVideoView extends StatelessWidget {
           const SizedBox(height: 8),
           _buildInfoRow('판단', viewModel.eventType),
           const SizedBox(height: 8),
-          _buildInfoRow('결과', viewModel.result, 
-            resultColor: viewModel.result == 'OK' ? Colors.blue : Colors.red),
+          _buildInfoRow('결과', viewModel.result,
+              resultColor: viewModel.result == 'OK' ? Colors.blue : Colors.red),
         ],
       ),
     );
@@ -121,7 +122,8 @@ class SavedVideoView extends StatelessWidget {
             style: TextStyle(
               fontSize: 14,
               color: resultColor ?? Colors.black,
-              fontWeight: resultColor != null ? FontWeight.bold : FontWeight.normal,
+              fontWeight:
+                  resultColor != null ? FontWeight.bold : FontWeight.normal,
             ),
           ),
         ),
@@ -136,15 +138,15 @@ class SavedVideoView extends StatelessWidget {
         if (viewModel.isLoading.value) {
           return _buildLoadingWidget();
         }
-        
+
         if (viewModel.hasError.value) {
           return _buildErrorWidget(viewModel);
         }
-        
+
         if (viewModel.isReady.value && viewModel.controller != null) {
           return _buildVideoPlayer(viewModel);
         }
-        
+
         return _buildLoadingWidget();
       }),
     );
@@ -185,13 +187,13 @@ class SavedVideoView extends StatelessWidget {
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 20),
               child: Obx(() => Text(
-                viewModel.errorMessage.value,
-                style: const TextStyle(
-                  fontSize: 14,
-                  color: Colors.grey,
-                ),
-                textAlign: TextAlign.center,
-              )),
+                    viewModel.errorMessage.value,
+                    style: const TextStyle(
+                      fontSize: 14,
+                      color: Colors.grey,
+                    ),
+                    textAlign: TextAlign.center,
+                  )),
             ),
             const SizedBox(height: 16),
             ElevatedButton.icon(
@@ -213,96 +215,20 @@ class SavedVideoView extends StatelessWidget {
   Widget _buildVideoPlayer(SavedVideoViewModel viewModel) {
     return GestureDetector(
       onTap: viewModel.toggleControls,
-      child: Stack(
-        children: [
-          // 비디오 화면
-          AspectRatio(
-            aspectRatio: viewModel.aspectRatio,
-            child: VideoPlayer(viewModel.controller!),
-          ),
-          
-          // 컨트롤 오버레이
-          if (viewModel.showControls.value)
-            _buildControlsOverlay(viewModel),
-        ],
-      ),
-    );
-  }
-
-  /// 컨트롤 오버레이
-  Widget _buildControlsOverlay(SavedVideoViewModel viewModel) {
-    return Positioned.fill(
-      child: Column(
-        children: [
-          // 상단 재생바
-          Container(
-            color: Colors.black54,
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                // 슬라이더 - GetX 없이 안전하게 처리
-                Container(
-                  height: 30,
-                  child: StreamBuilder<double>(
-                    stream: Stream.periodic(const Duration(milliseconds: 500), (_) => viewModel.currentPosition.value),
-                    builder: (context, snapshot) {
-                      final duration = viewModel.duration.value;
-                      final position = snapshot.data ?? 0.0;
-                      return Slider(
-                        min: 0,
-                        max: duration > 0 ? duration : 1.0,
-                        value: position.clamp(0.0, duration > 0 ? duration : 1.0),
-                        activeColor: Colors.red,
-                        inactiveColor: Colors.white30,
-                        thumbColor: Colors.white,
-                        onChanged: viewModel.seekTo,
-                      );
-                    },
-                  ),
-                ),
-                // 시간 표시
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      viewModel.currentPositionText.value,
-                      style: const TextStyle(color: Colors.white, fontSize: 11),
-                    ),
-                    Text(
-                      viewModel.durationText.value,
-                      style: const TextStyle(color: Colors.white, fontSize: 11),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-          // 중간 공간 (영상 영역)
-          Expanded(child: Container()),
-          // 하단 컨트롤 버튼
-          Container(
-            color: Colors.black54,
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: [
-                // 시작/중지 버튼
-                IconButton(
-                  icon: Icon(
-                    viewModel.isPlaying.value ? Icons.stop : Icons.play_arrow,
-                    color: Colors.white,
-                  ),
-                  onPressed: viewModel.togglePlayPause,
-                ),
-                // 전체화면 버튼
-                IconButton(
-                  icon: const Icon(Icons.fullscreen, color: Colors.white),
-                  onPressed: () => viewModel.goToFullscreen(),
-                ),
-              ],
-            ),
-          ),
-        ],
+      child: AspectRatio(
+        aspectRatio: viewModel.aspectRatio,
+        child: CommonVideoPlayer(
+          controller: viewModel.controller,
+          showControls: true,
+          onPlayPause: viewModel.togglePlayPause,
+          onFullscreen: () => viewModel.goToFullscreen(),
+          currentPosition:
+              Duration(seconds: viewModel.currentPosition.value.toInt()),
+          duration: Duration(seconds: viewModel.duration.value.toInt()),
+          currentPositionText: viewModel.currentPositionText.value,
+          durationText: viewModel.durationText.value,
+          onSeek: viewModel.seekTo,
+        ),
       ),
     );
   }

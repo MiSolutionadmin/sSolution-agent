@@ -10,7 +10,8 @@ class RecordView extends StatefulWidget {
   State<RecordView> createState() => _RecordViewState();
 }
 
-class _RecordViewState extends State<RecordView> with AutomaticKeepAliveClientMixin {
+class _RecordViewState extends State<RecordView>
+    with AutomaticKeepAliveClientMixin {
   @override
   bool get wantKeepAlive => true;
 
@@ -55,7 +56,7 @@ class _RecordViewState extends State<RecordView> with AutomaticKeepAliveClientMi
           Text(
             '알림 내역',
             style: TextStyle(
-              fontSize: 18,
+              fontSize: 20,
               fontWeight: FontWeight.bold,
               color: Colors.black,
             ),

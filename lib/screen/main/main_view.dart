@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
 
 import 'main_view_model.dart';
@@ -12,7 +13,8 @@ class MainView extends StatefulWidget {
   State<MainView> createState() => _MainViewState();
 }
 
-class _MainViewState extends State<MainView> with AutomaticKeepAliveClientMixin {
+class _MainViewState extends State<MainView>
+    with AutomaticKeepAliveClientMixin {
   @override
   bool get wantKeepAlive => true;
 
@@ -44,15 +46,10 @@ class _MainViewState extends State<MainView> with AutomaticKeepAliveClientMixin 
           // 이벤트 목록 테이블 (무한 스크롤)
           const SizedBox(height: 20),
           Expanded(
-            child: RefreshIndicator(
-              onRefresh: () async {
-                await Get.find<MainViewModel>().loadMonthData();
+            child: GetBuilder<MainViewModel>(
+              builder: (viewModel) {
+                return _buildEventTable(viewModel);
               },
-              child: GetBuilder<MainViewModel>(
-                builder: (viewModel) {
-                  return _buildEventTable(viewModel);
-                },
-              ),
             ),
           ),
         ],
@@ -96,7 +93,15 @@ class _MainViewState extends State<MainView> with AutomaticKeepAliveClientMixin 
                 ),
                 const Spacer(),
                 IconButton(
-                  icon: const Icon(Icons.calendar_today, color: Colors.white),
+                  icon: SvgPicture.asset(
+                    'assets/main/fi_calendar.svg',
+                    width: 24,
+                    height: 24,
+                    colorFilter: const ColorFilter.mode(
+                      Colors.white,
+                      BlendMode.srcIn,
+                    ),
+                  ),
                   onPressed: () => viewModel.onCalendarTap(context),
                 ),
               ],
@@ -421,16 +426,19 @@ class _MainViewState extends State<MainView> with AutomaticKeepAliveClientMixin 
                           // 스크롤 정보 로깅 (디버깅용)
                           if (scrollInfo is ScrollUpdateNotification) {
                             final currentScroll = scrollInfo.metrics.pixels;
-                            final maxScroll = scrollInfo.metrics.maxScrollExtent;
+                            final maxScroll =
+                                scrollInfo.metrics.maxScrollExtent;
                             final threshold = maxScroll - 100; // 임계값을 100으로 줄임
-                            
+
                             // print('📊 스크롤 상태: ${currentScroll.toInt()}/${maxScroll.toInt()} (임계값: ${threshold.toInt()}) hasMore: ${viewModel.hasMoreEvents.value} loading: ${viewModel.isEventsLoading.value}');
-                            
+
                             // 스크롤이 끝에 도달했을 때 또는 거의 도달했을 때
-                            if ((currentScroll >= threshold || currentScroll >= maxScroll) &&
+                            if ((currentScroll >= threshold ||
+                                    currentScroll >= maxScroll) &&
                                 viewModel.hasMoreEvents.value &&
                                 !viewModel.isEventsLoading.value) {
-                              print('🔥 무한스크롤 트리거! ${currentScroll.toInt()}/${maxScroll.toInt()}');
+                              print(
+                                  '🔥 무한스크롤 트리거! ${currentScroll.toInt()}/${maxScroll.toInt()}');
                               viewModel.loadMoreEvents();
                             }
                           }
@@ -438,8 +446,10 @@ class _MainViewState extends State<MainView> with AutomaticKeepAliveClientMixin 
                         },
                         child: ListView.builder(
                           padding: EdgeInsets.zero,
-                          itemCount: viewModel.eventList.length + 
-                              (viewModel.hasMoreEvents.value ? 1 : 0), // 로딩 인디케이터용 +1
+                          itemCount: viewModel.eventList.length +
+                              (viewModel.hasMoreEvents.value
+                                  ? 1
+                                  : 0), // 로딩 인디케이터용 +1
                           itemBuilder: (context, index) {
                             if (index < viewModel.eventList.length) {
                               return _buildEventRow(viewModel.eventList[index]);
