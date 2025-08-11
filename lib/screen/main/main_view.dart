@@ -23,11 +23,6 @@ class _MainViewState extends State<MainView>
     super.build(context);
     final MainViewModel viewModel = Get.put(MainViewModel());
 
-    // 페이지가 나타날 때마다 데이터 갱신
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      viewModel.refresh();
-    });
-
     return Scaffold(
       backgroundColor: Colors.white,
       body: SafeArea(
