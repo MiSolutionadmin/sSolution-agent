@@ -77,7 +77,7 @@ class _VideoPageState extends State<VideoPage> {
     }
   }
 
-  Future<bool> _checkVideoUrlWithRetry(String url, {int retries = 10}) async {
+  Future<bool> _checkVideoUrlWithRetry(String url, {int retries = 30}) async {
     for (int i = 0; i < retries; i++) {
       try {
         final response = await http.head(Uri.parse(url));
@@ -111,7 +111,7 @@ class _VideoPageState extends State<VideoPage> {
         print("영상 검사 실패 [시도 ${i + 1}] - 에러: $e");
       }
 
-      await Future.delayed(Duration(seconds: 3));
+      await Future.delayed(Duration(seconds: 1));
     }
 
     print("❌ ${retries}회 시도 후에도 영상 접근 실패");
@@ -530,7 +530,8 @@ class _VideoPageState extends State<VideoPage> {
         actions: [
           Padding(
             padding: const EdgeInsets.only(right: 20),
-            child: IconButton(icon: Icon(Icons.refresh), onPressed: _refreshVideo),
+            child:
+                IconButton(icon: Icon(Icons.refresh), onPressed: _refreshVideo),
           )
         ],
       ),

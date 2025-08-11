@@ -104,7 +104,7 @@ class RecordViewModel extends GetxController {
         year: year,
         month: month,
         cursor: lastRecordCreateDate,
-        limit: 10,
+        limit: 20,
       );
 
       if (result['success'] == true) {
@@ -119,7 +119,11 @@ class RecordViewModel extends GetxController {
                     dateText: _formatDateText(item['createDate']),
                     alertType: _getAlertType(item['type']),
                     eventType: _getEventType(item['false_positive']),
-                    result: item['admin_false_positive'] == null ? "" : item['false_positive'] == item['admin_false_positive'] ? "OK" : "NG",
+                    result: item['admin_false_positive'] == null
+                        ? ""
+                        : item['false_positive'] == item['admin_false_positive']
+                            ? "OK"
+                            : "NG",
                   ))
               .toList();
 
@@ -134,8 +138,10 @@ class RecordViewModel extends GetxController {
           // 마지막 createDate 업데이트
           if (recordItems.isNotEmpty) {
             final previousCursor = lastRecordCreateDate;
-            lastRecordCreateDate = recordItems.last.dateText.replaceAll('\n', ' '); // createDate를 cursor로 사용
-            print('📌 Record Cursor 업데이트: $previousCursor → $lastRecordCreateDate');
+            lastRecordCreateDate = recordItems.last.dateText
+                .replaceAll('\n', ' '); // createDate를 cursor로 사용
+            print(
+                '📌 Record Cursor 업데이트: $previousCursor → $lastRecordCreateDate');
           }
 
           // 더 가져올 데이터가 있는지 확인
@@ -188,7 +194,7 @@ class RecordViewModel extends GetxController {
     required String year,
     required String month,
     String? cursor,
-    int limit = 10,
+    int limit = 20,
   }) async {
     try {
       final token = await _getToken();
