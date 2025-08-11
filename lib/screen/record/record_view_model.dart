@@ -119,9 +119,9 @@ class RecordViewModel extends GetxController {
                     dateText: _formatDateText(item['createDate']),
                     alertType: _getAlertType(item['type']),
                     eventType: _getEventType(item['false_positive']),
-                    result: item['admin_false_positive'] == null
+                    result: item['control_complete'] == null
                         ? ""
-                        : item['false_positive'] == item['admin_false_positive']
+                        : item['control_complete'] == 1
                             ? "OK"
                             : "NG",
                   ))
