@@ -1,8 +1,13 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
+import 'package:http/http.dart' as http;
+import 'package:intl/intl.dart';
 import 'package:mms/components/dialog.dart';
 import 'package:table_calendar/table_calendar.dart';
 import '../../provider/user_state.dart';
+import '../../base_config/config.dart';
 import 'main_api_service.dart';
 
 class MainViewModel extends GetxController {
@@ -66,7 +71,7 @@ class MainViewModel extends GetxController {
   void _initializeData() {
     print('메인 데이터 초기화');
     loadMonthData();
-    _loadAgentDate();
+    fetchWorkTimeFromAPI();  // API에서 작업 시간 가져오기
     _loadAgentInfo();
   }
 
@@ -76,7 +81,41 @@ class MainViewModel extends GetxController {
     _loadScheduledWorkDates();
   }
 
-  /// 에이전트 관제 시간 데이터 로드
+  /// private_change_screen의 _getWorkTime 엔드포인트를 사용하여 작업 시간 가져오기
+  Future<void> fetchWorkTimeFromAPI() async {
+    try {
+      final config = AppConfig();
+      final url = '${config.baseUrl}/config/agent/date';
+      print("작업 시간 API 호출: $url");
+      
+      final response = await http.get(Uri.parse(url));
+      print("작업 시간 API 응답 상태: ${response.statusCode}");
+      
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        print("작업 시간 API 응답 데이터: $data");
+        
+        if (data != null) {
+          final result = data['result'];
+          
+          if (result != null) {
+            dayStart.value = result['dayStart']?.toString() ?? '08:00:00';
+            dayEnd.value = result['dayEnd']?.toString() ?? '18:00:00';
+            nightStart.value = result['nightStart']?.toString() ?? '20:00:00';
+            nightEnd.value = result['nightEnd']?.toString() ?? '07:00:00';
+            
+            print('작업 시간 업데이트 완료 - 주간: ${dayStart.value} ~ ${dayEnd.value}, 야간: ${nightStart.value} ~ ${nightEnd.value}');
+          }
+        }
+      } else {
+        print('작업 시간 API 호출 실패: ${response.statusCode}');
+      }
+    } catch (e) {
+      print('작업 시간 API 호출 오류: $e');
+    }
+  }
+
+  /// 에이전트 관제 시간 데이터 로드 (기존 메서드 - 더 이상 사용하지 않음)
   Future<void> _loadAgentDate() async {
     try {
       final result = await _apiService.getAgentDate();
@@ -190,19 +229,43 @@ class MainViewModel extends GetxController {
 
   /// 이전 달로 이동
   void goToPreviousMonth() {
-    selectedMonth.value = DateTime(
+    final now = DateTime.now();
+    final threeYearsAgo = DateTime(now.year - 3, now.month);
+    
+    final newMonth = DateTime(
       selectedMonth.value.year,
       selectedMonth.value.month - 1,
     );
-    loadMonthData();
+    
+    // 3년 전까지만 이동 가능
+    if (newMonth.isAfter(threeYearsAgo) || 
+        (newMonth.year == threeYearsAgo.year && newMonth.month == threeYearsAgo.month)) {
+      selectedMonth.value = newMonth;
+      loadMonthData();
+    }
   }
 
   /// 다음 달로 이동
   void goToNextMonth() {
-    selectedMonth.value = DateTime(
+    final now = DateTime.now();
+    final twoMonthsLater = DateTime(now.year, now.month + 2);
+    
+    final newMonth = DateTime(
       selectedMonth.value.year,
       selectedMonth.value.month + 1,
     );
+    
+    // 2달 후까지만 이동 가능
+    if (newMonth.isBefore(twoMonthsLater) || 
+        (newMonth.year == twoMonthsLater.year && newMonth.month == twoMonthsLater.month)) {
+      selectedMonth.value = newMonth;
+      loadMonthData();
+    }
+  }
+  
+  /// 현재 달로 리셋
+  void resetToCurrentMonth() {
+    selectedMonth.value = DateTime.now();
     loadMonthData();
   }
 
@@ -241,12 +304,12 @@ class MainViewModel extends GetxController {
 
         // 통계 데이터 업데이트 - null 체크 강화
         if (statsData != null) {
-          // 총 횟수 업데이트
+          // 총 횟수 업데이트 (응답횟수 사용)
           if (statsData['responseRate'] != null) {
             final responseRate = statsData['responseRate'].toString();
             final parts = responseRate.split('/');
             if (parts.length >= 2) {
-              totalCount.value = int.tryParse(parts.last) ?? totalCount.value;
+              totalCount.value = int.tryParse(parts.first) ?? totalCount.value;
             }
           }
 
@@ -257,9 +320,11 @@ class MainViewModel extends GetxController {
             if (parts.length >= 2) {
               final num = int.tryParse(parts.first) ?? 0;
               final den = int.tryParse(parts.last) ?? 1;
-              final percent =
-                  den > 0 ? ((num / den) * 100).toStringAsFixed(1) : '0.0';
-              totalRatio.value = '$percent% ($raw)';
+              final percentValue = den > 0 ? (num / den) * 100 : 0.0;
+              final percent = percentValue % 1 == 0 
+                  ? percentValue.toInt().toString() 
+                  : percentValue.toStringAsFixed(1);
+              totalRatio.value = '$percent% (${parts.first} / ${parts.last}회)';
             }
           }
 
@@ -270,15 +335,19 @@ class MainViewModel extends GetxController {
             if (parts.length >= 2) {
               final num = int.tryParse(parts.first) ?? 0;
               final den = int.tryParse(parts.last) ?? 1;
-              final percent =
-                  den > 0 ? ((num / den) * 100).toStringAsFixed(1) : '0.0';
-              totalAccuracy.value = '$percent% ($raw)';
+              final percentValue = den > 0 ? (num / den) * 100 : 0.0;
+              final percent = percentValue % 1 == 0 
+                  ? percentValue.toInt().toString() 
+                  : percentValue.toStringAsFixed(1);
+              totalAccuracy.value = '$percent% (${parts.first} / ${parts.last}회)';
             }
           }
 
           // 포인트 업데이트
           if (statsData['monthPoint'] != null) {
-            eventPoints.value = statsData['monthPoint'].toString();
+            final point = int.tryParse(statsData['monthPoint'].toString()) ?? 0;
+            final formatter = NumberFormat('#,###');
+            eventPoints.value = '${formatter.format(point)}P';
           }
 
           print(
@@ -393,7 +462,7 @@ class MainViewModel extends GetxController {
 
   /// 월 표시 문자열
   String get monthDisplayText {
-    return '${selectedMonth.value.year}년 ${selectedMonth.value.month}월';
+    return '${selectedMonth.value.year}.${selectedMonth.value.month.toString().padLeft(2, '0')}';
   }
 
   /// 선택된 근무 날짜들 표시 문자열
@@ -426,19 +495,20 @@ class MainViewModel extends GetxController {
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
+      isDismissible: true,
       builder: (context) => Container(
         padding: EdgeInsets.only(
           left: 20,
           right: 20,
-          top: 20,
+          top: 10,
           bottom: MediaQuery.of(context).padding.bottom + 20,
         ),
         margin: const EdgeInsets.only(top: 50),
         decoration: const BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.only(
-            topLeft: Radius.circular(20),
-            topRight: Radius.circular(20),
+            topLeft: Radius.circular(10),
+            topRight: Radius.circular(10),
           ),
         ),
         child: Column(
@@ -448,35 +518,41 @@ class MainViewModel extends GetxController {
             // 네비게이션 바 힌트 (작대기)
             Center(
               child: Container(
-                width: 40,
+                width: 46,
                 height: 4,
-                margin: const EdgeInsets.only(bottom: 16),
+                margin: const EdgeInsets.only(bottom: 10),
                 decoration: BoxDecoration(
                   color: Colors.black,
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),
             ),
+            const SizedBox(height: 30),
             // 다이얼로그 제목
             const Text(
               '근무일 선택',
               style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
+                fontSize: 16,
+                fontWeight: FontWeight.w700,
+                fontFamily: 'Noto Sans KR',
               ),
             ),
             const SizedBox(height: 8),
             const Text(
               '오늘로부터 5일 이내 날짜는 수정이 불가합니다.',
               style: TextStyle(
-                fontSize: 12,
-                color: Colors.grey,
+                fontSize: 15,
+                color: Color(0xff9C9FB0),
+                fontWeight: FontWeight.w400,
+                fontFamily: 'Noto Sans KR',
               ),
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 36),
 
             // 달력
-            Obx(() => TableCalendar<DateTime>(
+            SizedBox(
+              height: 450, // 달력 최대 높이 고정
+              child: Obx(() => TableCalendar<DateTime>(
                   firstDay: DateTime.now(),
                   lastDay: DateTime.utc(2030, 12, 31),
                   focusedDay: focusedDay.value,
@@ -485,31 +561,84 @@ class MainViewModel extends GetxController {
                         .any((selected) => isSameDay(selected, day));
                   },
                   calendarFormat: CalendarFormat.month,
-                  headerStyle: const HeaderStyle(
+                  daysOfWeekHeight: 48,
+                  rowHeight: 56,
+                  headerStyle: HeaderStyle(
                     formatButtonVisible: false,
                     titleCentered: true,
-                    leftChevronIcon: Icon(
-                      Icons.chevron_left,
-                      color: Colors.black,
+                    leftChevronPadding: const EdgeInsets.only(left: 0),
+                    rightChevronPadding: const EdgeInsets.only(right: 0),
+                    headerMargin: const EdgeInsets.only(bottom: 20),
+                    leftChevronIcon: SvgPicture.asset(
+                      'assets/main/calendar_arrow_left.svg',
+                      width: 24,
+                      height: 24,
                     ),
-                    rightChevronIcon: Icon(
-                      Icons.chevron_right,
-                      color: Colors.black,
+                    rightChevronIcon: SvgPicture.asset(
+                      'assets/main/calendar_arrow_right.svg',
+                      width: 24,
+                      height: 24,
                     ),
+                  ),
+                  calendarBuilders: CalendarBuilders(
+                    dowBuilder: (context, day) {
+                      final text = ['일', '월', '화', '수', '목', '금', '토'][day.weekday % 7];
+                      return Container(
+                        margin: const EdgeInsets.only(bottom: 8),
+                        height: 40,
+                        child: Center(
+                          child: Text(
+                            text,
+                            style: const TextStyle(
+                              fontSize: 15,
+                              fontWeight: FontWeight.w400,
+                              color: Color(0xff989BA9),
+                              fontFamily: "Pretendard",
+                              height: 1.0,
+                            ),
+                          ),
+                        ),
+                      );
+                    },
+                    headerTitleBuilder: (context, day) {
+                      return Center(
+                        child: Text(
+                          '${day.year}.${day.month.toString().padLeft(2, '0')}',
+                          style: const TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.black,
+                          ),
+                        ),
+                      );
+                    },
                   ),
                   calendarStyle: CalendarStyle(
                     outsideDaysVisible: true,
-                    weekendTextStyle: const TextStyle(color: Colors.red),
-                    cellMargin: const EdgeInsets.all(0), // 날짜 사이 간격 제거
+                    weekendTextStyle: const TextStyle(
+                      color: Color(0xFF4D505E),
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                      fontFamily: "Pretendard",
+                    ),
+                    defaultTextStyle: const TextStyle(
+                      color: Color(0xFF4D505E),
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                      fontFamily: "Pretendard",
+                    ),
+                    cellMargin: const EdgeInsets.only(bottom: 12), // 날짜 아래 12px 간격
                     selectedDecoration: const BoxDecoration(
                       color: Color(0xFFD6E2FF),
                       shape: BoxShape.rectangle,
                     ),
                     selectedTextStyle: const TextStyle(
                       color: Color(0xFF1955EE),
-                      fontWeight: FontWeight.bold,
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                      fontFamily: "Pretendard",
                     ),
-                    todayDecoration: BoxDecoration(
+                    todayDecoration: const BoxDecoration(
                       color: Color(0xFF1955EE),
                       shape: BoxShape.rectangle,
                     ),
@@ -519,7 +648,16 @@ class MainViewModel extends GetxController {
                       shape: BoxShape.rectangle,
                     ),
                     disabledTextStyle: TextStyle(
-                      color: Colors.grey.withAlpha(128),
+                      color: Color(0xFFCACAD7),
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                      fontFamily: "Pretendard",
+                    ),
+                    outsideTextStyle: TextStyle(
+                      color: Color(0xFFCACAD7),
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                      fontFamily: "Pretendard",
                     ),
                   ),
                   enabledDayPredicate: (day) {
@@ -544,7 +682,8 @@ class MainViewModel extends GetxController {
                     this.focusedDay.value = focusedDay;
                   },
                 )),
-            const SizedBox(height: 20),
+            ),
+            const SizedBox(height: 70),
             // 버튼들
             Obx(() => Row(
                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -564,6 +703,7 @@ class MainViewModel extends GetxController {
                           color: Color(0xFF5C5E6B),
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
+                          fontFamily: 'Noto Sans KR',
                         ),
                       ),
                     ),
@@ -590,6 +730,7 @@ class MainViewModel extends GetxController {
                         style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
+                          fontFamily: 'Noto Sans KR',
                         ),
                       ),
                     ),
@@ -717,6 +858,7 @@ class MainViewModel extends GetxController {
                             style: TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.bold,
+                              fontFamily: 'Noto Sans KR',
                             ),
                           ),
                         ),
@@ -748,6 +890,7 @@ class MainViewModel extends GetxController {
                               fontSize: 16,
                               fontWeight: FontWeight.w700,
                               color: Colors.white,
+                              fontFamily: 'Noto Sans KR',
                             ),
                           ),
                         ),
@@ -1039,7 +1182,7 @@ class EventItem {
       case '화재':
         return Colors.red;
       case '비화재':
-        return Colors.orange;
+        return Colors.black;
       case '미정':
         return Colors.grey;
       default:

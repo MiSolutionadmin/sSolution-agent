@@ -464,12 +464,16 @@ class _VideoPageState extends State<VideoPage> {
     if (_isSubmissionCompleted || _currentVideoUrl.isEmpty || _isVideoExpired) {
       return Scaffold(
         appBar: AppBar(
-          title: Text(
-            "실시간 경보 영상",
-            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
+          title: Padding(
+            padding: const EdgeInsets.all(20),
+            child: Text(
+              "실시간 경보 영상",
+              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
+            ),
           ),
           centerTitle: false,
           backgroundColor: Colors.white,
+          titleSpacing: 0,
         ),
         backgroundColor: Colors.white,
         body: Center(
@@ -510,17 +514,24 @@ class _VideoPageState extends State<VideoPage> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(
-          "실시간 경보 영상",
-          style: TextStyle(
-            fontWeight: FontWeight.bold,
-            fontSize: 20,
+        title: Padding(
+          padding: const EdgeInsets.all(20),
+          child: Text(
+            "실시간 경보 영상",
+            style: TextStyle(
+              fontWeight: FontWeight.bold,
+              fontSize: 20,
+            ),
           ),
         ),
         centerTitle: false,
         backgroundColor: Colors.white,
+        titleSpacing: 0,
         actions: [
-          IconButton(icon: Icon(Icons.refresh), onPressed: _refreshVideo)
+          Padding(
+            padding: const EdgeInsets.only(right: 20),
+            child: IconButton(icon: Icon(Icons.refresh), onPressed: _refreshVideo),
+          )
         ],
       ),
       backgroundColor: Colors.white,
@@ -528,6 +539,8 @@ class _VideoPageState extends State<VideoPage> {
         children: [
           // 비디오 플레이어 영역 (상단)
           Container(
+            height: 283,
+            width: double.infinity,
             child: _isReady && isControllerReady
                 ? GestureDetector(
                     onTap: _toggleControls,
@@ -560,7 +573,6 @@ class _VideoPageState extends State<VideoPage> {
                   )
                 : _hasError
                     ? Container(
-                        height: 250,
                         child: Column(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
@@ -643,7 +655,6 @@ class _VideoPageState extends State<VideoPage> {
                         ),
                       )
                     : Container(
-                        height: 250,
                         child: Center(
                           child: CircularProgressIndicator(),
                         ),

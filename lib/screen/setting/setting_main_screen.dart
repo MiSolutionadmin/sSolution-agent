@@ -64,18 +64,18 @@ class _SettingMainState extends State<SettingMain> {
   }
   
   /// ✅ 로그아웃 버튼 눌렀을때
-  // void pressedLogOut() {
-  //   showConfirmTapDialog(context, '로그아웃 하시겠습니까?', () async{
-  //     firstClick++;
-  //     if(firstClick==1){
-  //       /// usertable에서 토큰 제거
-  //       await tokenDelete();
-  //       await storage.delete(key: 'pws');
-  //       us.userList.clear();
-  //       Get.offAll(()=>LoginView());
-  //     }
-  //   });
-  // }
+  void pressedLogOut() {
+    showConfirmTapDialog(context, '로그아웃 하시겠습니까?', () async{
+      firstClick++;
+      if(firstClick==1){
+        /// usertable에서 토큰 제거
+        await tokenDelete(context);
+        await storage.delete(key: 'pws');
+        us.userList.clear();
+        Get.offAll(()=>LoginView());
+      }
+    });
+  }
 
   @override
   Widget build(BuildContext context) {

@@ -71,7 +71,7 @@ Future<void> getUserWithOutToken(String id) async {
 }
 /// 로그아웃했을 시 토큰 업데이트
 Future<void> tokenDelete(context) async {
-  final url = '${config.baseUrl}/agent/${us.userData["id"]}/token';
+  final url = '${config.baseUrl}/agents/${us.userData["id"]}/token';
   try {
     final response = await http.delete(Uri.parse(url));
     if (response.statusCode != 200) {

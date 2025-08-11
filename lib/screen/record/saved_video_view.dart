@@ -91,7 +91,8 @@ class SavedVideoView extends StatelessWidget {
           const SizedBox(height: 8),
           _buildInfoRow('알림', viewModel.alertType),
           const SizedBox(height: 8),
-          _buildInfoRow('판단', viewModel.eventType),
+          _buildInfoRow('판단', viewModel.eventType,
+              resultColor: _getEventTypeColor(viewModel.eventType)),
           const SizedBox(height: 8),
           _buildInfoRow('결과', viewModel.result,
               resultColor: viewModel.result == 'OK' ? Colors.blue : Colors.red),
@@ -129,6 +130,20 @@ class SavedVideoView extends StatelessWidget {
         ),
       ],
     );
+  }
+
+  /// 판단 결과에 따른 색상 반환
+  Color _getEventTypeColor(String eventType) {
+    switch (eventType) {
+      case '화재':
+        return Colors.red;
+      case '비화재':
+        return Colors.black;
+      case '미정':
+        return Colors.grey;
+      default:
+        return Colors.grey;
+    }
   }
 
   /// 비디오 플레이어 섹션
@@ -217,7 +232,7 @@ class SavedVideoView extends StatelessWidget {
       onTap: viewModel.toggleControls,
       child: AspectRatio(
         aspectRatio: viewModel.aspectRatio,
-        child: CommonVideoPlayer(
+        child: Obx(() => CommonVideoPlayer(
           controller: viewModel.controller,
           showControls: true,
           onPlayPause: viewModel.togglePlayPause,
@@ -228,7 +243,8 @@ class SavedVideoView extends StatelessWidget {
           currentPositionText: viewModel.currentPositionText.value,
           durationText: viewModel.durationText.value,
           onSeek: viewModel.seekTo,
-        ),
+          isPlaying: viewModel.isPlaying.value,
+        )),
       ),
     );
   }

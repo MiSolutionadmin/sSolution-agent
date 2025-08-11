@@ -241,7 +241,7 @@ class _PrivateChangeState extends State<PrivateChange> {
                               Row(
                                 children: [
                                   Obx(() => Text(
-                                    us.userInfoList.length > index ? us.userInfoList[index] : '로딩중...',
+                                    us.userInfoList.length > index ? us.userInfoList[index] : '...',
                                     style: f16w800GreySize(),
                                   )),
                                   if (index == 4 || index == 5)

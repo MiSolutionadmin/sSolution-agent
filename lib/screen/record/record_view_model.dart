@@ -109,7 +109,7 @@ class RecordViewModel extends GetxController {
 
       if (result['success'] == true) {
         final notisData = result['data']['result'] as List?;
-        print('알림 내역 데이터: ${notisData?.length}개');
+        print('알림 내역 데이터: ${notisData}개');
 
         if (notisData != null && notisData.isNotEmpty) {
           final recordItems = notisData
@@ -119,7 +119,7 @@ class RecordViewModel extends GetxController {
                     dateText: _formatDateText(item['createDate']),
                     alertType: _getAlertType(item['type']),
                     eventType: _getEventType(item['false_positive']),
-                    result: _getResult(item['status']),
+                    result: item['admin_false_positive'] == null ? "" : item['false_positive'] == item['admin_false_positive'] ? "OK" : "NG",
                   ))
               .toList();
 
@@ -383,9 +383,21 @@ class RecordItem {
       case '화재':
         return Colors.red;
       case '비화재':
-        return Colors.orange;
+        return Colors.black;
       case '미정':
         return Colors.grey;
+      default:
+        return Colors.grey;
+    }
+  }
+
+  // 결과 유형에 따른 색상 변경
+  Color get resultColor {
+    switch (result) {
+      case 'NG':
+        return Colors.red;
+      case 'OK':
+        return Colors.black;
       default:
         return Colors.grey;
     }

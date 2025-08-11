@@ -55,6 +55,25 @@ class _SettingViewState extends State<SettingView> {
     setState(() {});
   }
 
+  /// 로그아웃 버튼 눌렀을때
+  void pressedLogOut() {
+    showConfirmTapDialog(context, '로그아웃 하시겠습니까?', () async{
+      firstClick++;
+      if(firstClick==1){
+        /// usertable에서 토큰 제거
+        await tokenDelete(context);
+        await storage.delete(key: 'pws');
+        
+        // LoginService의 storage와 동일한 방식으로 jwt 토큰 삭제
+        final serviceStorage = const FlutterSecureStorage();
+        await serviceStorage.delete(key: "jwt_token");
+        
+        us.userList.clear();
+        Get.offAll(()=>LoginView());
+      }
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -65,25 +84,7 @@ class _SettingViewState extends State<SettingView> {
           Padding(
             padding: const EdgeInsets.only(right: 20),
             child: GestureDetector(
-              onTap: () async {
-                final loginService = LoginService();
-
-                final savedToken = await loginService.getToken();
-                print("LoginService에서 가져온 토큰: ${savedToken}");
-
-                // 다른 storage 인스턴스로도 확인
-                final directToken = await storage.read(key: "jwt_token");
-                print("직접 storage에서 가져온 토큰: ${directToken}");
-
-                // LoginService의 storage와 동일한 방식으로 확인
-                final serviceStorage = const FlutterSecureStorage();
-                final serviceToken = await serviceStorage.read(key: "jwt_token");
-                print("LoginService와 동일한 storage로 가져온 토큰: ${serviceToken}");
-
-
-                Get.offAll(()=> LoginView());
-                //pressedLogOut();
-              },
+              onTap: pressedLogOut,
               child: Text(
                 '로그아웃',
                 style: f16w700Blue(),

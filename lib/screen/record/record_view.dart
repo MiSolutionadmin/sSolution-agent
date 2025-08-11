@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
 
 import 'record_view_model.dart';
@@ -47,7 +48,7 @@ class _RecordViewState extends State<RecordView>
   /// 상단 헤더
   Widget _buildHeader() {
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(20),
       decoration: const BoxDecoration(
         color: Colors.white,
       ),
@@ -69,25 +70,34 @@ class _RecordViewState extends State<RecordView>
   /// 월별 네비게이션
   Widget _buildMonthNavigation(RecordViewModel viewModel) {
     return Container(
-      padding: const EdgeInsets.symmetric(vertical: 16),
+      padding: const EdgeInsets.only(top: 15,bottom: 23,left: 20,right: 20),
       color: Colors.white,
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          IconButton(
-            icon: const Icon(Icons.chevron_left),
-            onPressed: viewModel.goToPreviousMonth,
+          GestureDetector(
+            onTap: viewModel.goToPreviousMonth,
+            child: SvgPicture.asset(
+              'assets/main/calendar_arrow_left.svg',
+              width: 24,
+              height: 24,
+            ),
           ),
           Obx(() => Text(
                 viewModel.monthDisplayText,
                 style: const TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
+                  fontSize: 18,
+                  fontWeight: FontWeight.w600,
+                  fontFamily: "Pretendard",
                 ),
               )),
-          IconButton(
-            icon: const Icon(Icons.chevron_right),
-            onPressed: viewModel.goToNextMonth,
+          GestureDetector(
+            onTap: viewModel.goToNextMonth,
+            child: SvgPicture.asset(
+              'assets/main/calendar_arrow_right.svg',
+              width: 24,
+              height: 24,
+            ),
           ),
         ],
       ),
@@ -107,7 +117,7 @@ class _RecordViewState extends State<RecordView>
             children: [
               // 테이블 헤더
               Container(
-                padding: const EdgeInsets.symmetric(vertical: 12),
+                padding: const EdgeInsets.symmetric(vertical: 9),
                 decoration: BoxDecoration(
                   color: Colors.white,
                   borderRadius: const BorderRadius.only(
@@ -122,6 +132,9 @@ class _RecordViewState extends State<RecordView>
                       offset: const Offset(0, 2),
                     ),
                   ],
+                  border: Border(
+                    bottom: BorderSide(color: Color(0xffd5d5d5), width: 1),
+                  ),
                 ),
                 child: const Row(
                   children: [
@@ -130,32 +143,55 @@ class _RecordViewState extends State<RecordView>
                         child: Padding(
                           padding: EdgeInsets.only(left: 16),
                           child: Text('날짜',
-                              style: TextStyle(fontWeight: FontWeight.bold)),
+                              style: TextStyle(
+                                  fontWeight: FontWeight.w500,
+                                  fontFamily: 'Noto Sans KR',
+                                  color: Color(0xff9C9FB0),
+                                  fontSize: 14
+                              )
+                          ),
                         )),
                     Expanded(
                         flex: 2,
-                        child: Center(
+                        child: Align(
+                            alignment: Alignment.centerLeft,
                             child: Text('알림',
-                                style:
-                                    TextStyle(fontWeight: FontWeight.bold)))),
+                                style: TextStyle(
+                                    fontWeight: FontWeight.w500,
+                                    fontFamily: 'Noto Sans KR',
+                                    color: Color(0xff9C9FB0),
+                                    fontSize: 14
+                                )))),
                     Expanded(
                         flex: 2,
                         child: Center(
                             child: Text('에이전트',
-                                style:
-                                    TextStyle(fontWeight: FontWeight.bold)))),
+                                style: TextStyle(
+                                    fontWeight: FontWeight.w500,
+                                    fontFamily: 'Noto Sans KR',
+                                    color: Color(0xff9C9FB0),
+                                    fontSize: 14
+                                )))),
                     Expanded(
                         flex: 2,
                         child: Center(
                             child: Text('결과',
-                                style:
-                                    TextStyle(fontWeight: FontWeight.bold)))),
+                                style: TextStyle(
+                                    fontWeight: FontWeight.w500,
+                                    fontFamily: 'Noto Sans KR',
+                                    color: Color(0xff9C9FB0),
+                                    fontSize: 14
+                                )))),
                     Expanded(
                         flex: 2,
                         child: Center(
                             child: Text('영상',
-                                style:
-                                    TextStyle(fontWeight: FontWeight.bold)))),
+                                style: TextStyle(
+                                    fontWeight: FontWeight.w500,
+                                    fontFamily: 'Noto Sans KR',
+                                    color: Color(0xff9C9FB0),
+                                    fontSize: 14
+                                )))),
                   ],
                 ),
               ),
@@ -188,7 +224,7 @@ class _RecordViewState extends State<RecordView>
           children: [
             // 테이블 헤더
             Container(
-              padding: const EdgeInsets.symmetric(vertical: 12),
+              padding: const EdgeInsets.symmetric(vertical: 9),
               decoration: BoxDecoration(
                 color: Colors.white,
                 borderRadius: const BorderRadius.only(
@@ -203,6 +239,9 @@ class _RecordViewState extends State<RecordView>
                     offset: const Offset(0, 2),
                   ),
                 ],
+                border: Border(
+                  bottom: BorderSide(color: Color(0xffd5d5d5), width: 1),
+                ),
               ),
               child: const Row(
                 children: [
@@ -211,28 +250,55 @@ class _RecordViewState extends State<RecordView>
                       child: Padding(
                         padding: EdgeInsets.only(left: 16),
                         child: Text('날짜',
-                            style: TextStyle(fontWeight: FontWeight.bold)),
+                            style: TextStyle(
+                                fontWeight: FontWeight.w500,
+                                fontFamily: 'Noto Sans KR',
+                                color: Color(0xff9C9FB0),
+                                fontSize: 14
+                            )
+                            ),
                       )),
                   Expanded(
                       flex: 2,
-                      child: Center(
+                      child: Align(
+                          alignment: Alignment.centerLeft,
                           child: Text('알림',
-                              style: TextStyle(fontWeight: FontWeight.bold)))),
+                              style: TextStyle(
+                                  fontWeight: FontWeight.w500,
+                                  fontFamily: 'Noto Sans KR',
+                                  color: Color(0xff9C9FB0),
+                                  fontSize: 14
+                              )))),
                   Expanded(
                       flex: 2,
                       child: Center(
                           child: Text('에이전트',
-                              style: TextStyle(fontWeight: FontWeight.bold)))),
+                              style: TextStyle(
+                                  fontWeight: FontWeight.w500,
+                                  fontFamily: 'Noto Sans KR',
+                                  color: Color(0xff9C9FB0),
+                                  fontSize: 14
+                              )))),
                   Expanded(
                       flex: 2,
                       child: Center(
                           child: Text('결과',
-                              style: TextStyle(fontWeight: FontWeight.bold)))),
+                              style: TextStyle(
+                                  fontWeight: FontWeight.w500,
+                                  fontFamily: 'Noto Sans KR',
+                                  color: Color(0xff9C9FB0),
+                                  fontSize: 14
+                              )))),
                   Expanded(
                       flex: 2,
                       child: Center(
                           child: Text('영상',
-                              style: TextStyle(fontWeight: FontWeight.bold)))),
+                              style: TextStyle(
+                                  fontWeight: FontWeight.w500,
+                                  fontFamily: 'Noto Sans KR',
+                                  color: Color(0xff9C9FB0),
+                                  fontSize: 14
+                              )))),
                 ],
               ),
             ),
@@ -248,12 +314,14 @@ class _RecordViewState extends State<RecordView>
                 ),
                 child: viewModel.records.isEmpty
                     ? Container(
-                        padding: const EdgeInsets.all(32),
-                        child: const Text(
-                          '알림 내역이 없습니다',
-                          style: TextStyle(
-                            color: Colors.grey,
-                            fontSize: 14,
+                        width: Get.width,
+                        child: Center(
+                          child: const Text(
+                            '알림 내역이 없습니다',
+                            style: TextStyle(
+                              color: Colors.grey,
+                              fontSize: 14,
+                            ),
                           ),
                         ),
                       )
@@ -309,11 +377,11 @@ class _RecordViewState extends State<RecordView>
   /// 테이블 행
   Widget _buildTableRow(RecordItem record, RecordViewModel viewModel) {
     return Container(
-      padding: const EdgeInsets.symmetric(vertical: 8),
+      padding: const EdgeInsets.symmetric(vertical: 2),
       decoration: const BoxDecoration(
-        border: Border(
-          bottom: BorderSide(color: Colors.grey, width: 0.2),
-        ),
+        // border: Border(
+        //   bottom: BorderSide(color: Colors.grey, width: 0.2),
+        // ),
       ),
       child: Row(
         children: [
@@ -324,7 +392,11 @@ class _RecordViewState extends State<RecordView>
               padding: const EdgeInsets.only(left: 16),
               child: Text(
                 record.dateText,
-                style: const TextStyle(fontSize: 12),
+                style: const TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w400,
+                  fontFamily: "Noto Sans KR",
+                ),
                 textAlign: TextAlign.left,
               ),
             ),
@@ -332,23 +404,33 @@ class _RecordViewState extends State<RecordView>
           // 알림 (불꽃 알림, 연기 알림 등)
           Expanded(
             flex: 2,
-            child: Center(
+            child: Align(
+              alignment: Alignment.centerLeft,
               child: Text(
                 record.alertType,
-                style: const TextStyle(fontSize: 12),
+                style: const TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w400,
+                  fontFamily: "Noto Sans KR",
+                ),
               ),
             ),
           ),
           // 에이전트 (화재, 비화재)
           Expanded(
             flex: 2,
-            child: Center(
-              child: Text(
-                record.eventType,
-                style: TextStyle(
-                  fontSize: 12,
-                  color: record.eventColor,
-                  fontWeight: FontWeight.w500,
+            child: Padding(
+              padding: const EdgeInsets.only(left: 12),
+              child: Align(
+                alignment: Alignment.centerLeft,
+                child: Text(
+                  record.eventType,
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w400,
+                    fontFamily: "Noto Sans KR",
+                    color: record.eventColor,
+                  ),
                 ),
               ),
             ),
@@ -356,24 +438,41 @@ class _RecordViewState extends State<RecordView>
           // 결과 (NG 고정값)
           Expanded(
             flex: 2,
-            child: Center(
-              child: Text(
-                'NG',
-                style: const TextStyle(fontSize: 12),
+            child: Padding(
+              padding: const EdgeInsets.only(left: 26),
+              child: Align(
+                alignment: Alignment.centerLeft,
+                child: Text(
+                  record.result,
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w400,
+                    fontFamily: "Noto Sans KR",
+                    color: record.resultColor,
+                  ),
+                ),
               ),
             ),
           ),
           // 영상 (재생 버튼)
           Expanded(
             flex: 2,
-            child: Center(
-              child: IconButton(
-                icon: const Icon(
-                  Icons.play_arrow,
-                  color: Colors.blue,
-                  size: 20,
+            child: Padding(
+              padding: const EdgeInsets.only(left: 12),
+              child: Align(
+                alignment: Alignment.centerLeft,
+                child: IconButton(
+                  icon: SvgPicture.asset(
+                    'assets/main/play.svg',
+                    width: 34,
+                    height: 34,
+                    colorFilter: ColorFilter.mode(
+                      Colors.blue,
+                      BlendMode.srcIn,
+                    ),
+                  ),
+                  onPressed: () => viewModel.playVideo(record),
                 ),
-                onPressed: () => viewModel.playVideo(record),
               ),
             ),
           ),

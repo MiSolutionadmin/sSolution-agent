@@ -30,29 +30,32 @@ class _MainViewState extends State<MainView>
 
     return Scaffold(
       backgroundColor: Colors.white,
-      body: Column(
-        children: [
-          // 상단 헤더 (사용자 정보 통합)
-          _buildCombinedHeader(context, Get.find<MainViewModel>()),
-          // 월별 현황 및 통계 정보 섹션 (통합)
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
-            child: GetBuilder<MainViewModel>(
-              builder: (viewModel) {
-                return _buildMonthlyStatusAndStatistics(viewModel);
-              },
+      body: SafeArea(
+        top: true,
+        child: Column(
+          children: [
+            // 상단 헤더 (사용자 정보 통합)
+            _buildCombinedHeader(context, Get.find<MainViewModel>()),
+            // 월별 현황 및 통계 정보 섹션 (통합)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+              child: GetBuilder<MainViewModel>(
+                builder: (viewModel) {
+                  return _buildMonthlyStatusAndStatistics(viewModel);
+                },
+              ),
             ),
-          ),
-          // 이벤트 목록 테이블 (무한 스크롤)
-          const SizedBox(height: 20),
-          Expanded(
-            child: GetBuilder<MainViewModel>(
-              builder: (viewModel) {
-                return _buildEventTable(viewModel);
-              },
+            // 이벤트 목록 테이블 (무한 스크롤)
+            const SizedBox(height: 6),
+            Expanded(
+              child: GetBuilder<MainViewModel>(
+                builder: (viewModel) {
+                  return _buildEventTable(viewModel);
+                },
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -67,10 +70,10 @@ class _MainViewState extends State<MainView>
       ),
       child: Container(
         padding: EdgeInsets.only(
-          top: MediaQuery.of(context).padding.top + 16,
-          left: 16,
-          right: 16,
-          bottom: 16,
+          top: 19,
+          left: 20,
+          right: 20,
+          bottom: 30,
         ),
         decoration: const BoxDecoration(
           image: DecorationImage(
@@ -86,14 +89,16 @@ class _MainViewState extends State<MainView>
                 const Text(
                   'MMS 에이전트',
                   style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
+                    fontSize: 19,
+                    fontWeight: FontWeight.w900,
                     color: Colors.white,
+                    fontFamily: 'Noto Sans KR',
                   ),
                 ),
                 const Spacer(),
-                IconButton(
-                  icon: SvgPicture.asset(
+                GestureDetector(
+                  onTap: () => viewModel.onCalendarTap(context),
+                  child: SvgPicture.asset(
                     'assets/main/fi_calendar.svg',
                     width: 24,
                     height: 24,
@@ -102,11 +107,10 @@ class _MainViewState extends State<MainView>
                       BlendMode.srcIn,
                     ),
                   ),
-                  onPressed: () => viewModel.onCalendarTap(context),
                 ),
               ],
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 20),
             // 두 번째 행: 사용자 정보 (세로 정렬)
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -118,7 +122,9 @@ class _MainViewState extends State<MainView>
                 _buildUserInfoItem('등급', viewModel.userGrade),
                 const SizedBox(height: 8),
                 // 관제 시간
-                _buildUserInfoItem('관제 시간', viewModel.controlTime),
+                Obx(() =>
+                  _buildUserInfoItem('관제 시간', viewModel.controlTime),
+                )
               ],
             ),
           ],
@@ -132,21 +138,24 @@ class _MainViewState extends State<MainView>
     return Row(
       children: [
         SizedBox(
-          width: 80,
+          width: 90,
           child: Text(
             label,
-            style: const TextStyle(
-              fontSize: 14,
+            style: TextStyle(
+              fontSize: 15,
               fontWeight: FontWeight.w500,
-              color: Color(0xFFFFFF80),
+              color: Colors.white.withOpacity(0.5),
+              fontFamily: 'Noto Sans KR',
             ),
           ),
         ),
         Text(
           value,
           style: const TextStyle(
-            fontSize: 14,
+            fontSize: 15,
             color: Colors.white,
+            fontWeight: FontWeight.w500,
+            fontFamily: 'Noto Sans KR',
           ),
         ),
       ],
@@ -170,27 +179,45 @@ class _MainViewState extends State<MainView>
               fontSize: 16,
               fontWeight: FontWeight.bold,
               color: Colors.white,
+              fontFamily: 'Noto Sans KR',
             ),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 21),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              IconButton(
-                icon: const Icon(Icons.chevron_left, color: Colors.white),
-                onPressed: viewModel.goToPreviousMonth,
+              GestureDetector(
+                onTap: viewModel.goToPreviousMonth,
+                child: SvgPicture.asset(
+                  'assets/main/arrow_left.svg',
+                  width: 24,
+                  height: 24,
+                  colorFilter: const ColorFilter.mode(
+                    Colors.white,
+                    BlendMode.srcIn,
+                  ),
+                ),
               ),
               Obx(() => Text(
                     viewModel.monthDisplayText,
                     style: const TextStyle(
                       fontSize: 18,
-                      fontWeight: FontWeight.bold,
+                      fontWeight: FontWeight.w600,
                       color: Colors.white,
+                      fontFamily: "Pretendard"
                     ),
                   )),
-              IconButton(
-                icon: const Icon(Icons.chevron_right, color: Colors.white),
-                onPressed: viewModel.goToNextMonth,
+              GestureDetector(
+                onTap: viewModel.goToNextMonth,
+                child: SvgPicture.asset(
+                  'assets/main/arrow_right.svg',
+                  width: 24,
+                  height: 24,
+                  colorFilter: const ColorFilter.mode(
+                    Colors.white,
+                    BlendMode.srcIn,
+                  ),
+                ),
               ),
             ],
           ),
@@ -232,13 +259,14 @@ class _MainViewState extends State<MainView>
     return Row(
       children: [
         SizedBox(
-          width: 100,
+          width: 90,
           child: Text(
             label,
             style: const TextStyle(
-              fontSize: 14,
+              fontSize: 15,
               fontWeight: FontWeight.w500,
               color: Color(0xFFADAFBC),
+              fontFamily: 'Noto Sans KR',
             ),
           ),
         ),
@@ -247,18 +275,19 @@ class _MainViewState extends State<MainView>
               ? SkeletonLoader(
                   child: Container(
                     height: 14,
-                    width: 60,
+                    width: 10,
                     decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.2),
-                      borderRadius: BorderRadius.circular(4),
+                      color: Color(0xFF595B65).withValues(alpha: 0.95),
                     ),
                   ),
                 )
               : Text(
                   value,
                   style: const TextStyle(
-                    fontSize: 14,
+                    fontSize: 15,
                     color: Colors.white,
+                    fontWeight: FontWeight.w500,
+                    fontFamily: 'Noto Sans KR',
                   ),
                 ),
         ),
@@ -294,6 +323,9 @@ class _MainViewState extends State<MainView>
                       offset: const Offset(0, 2),
                     ),
                   ],
+                  border: Border(
+                    bottom: BorderSide(color: Color(0xffd5d5d5), width: 1),
+                  ),
                 ),
                 child: const Row(
                   children: [
@@ -302,26 +334,23 @@ class _MainViewState extends State<MainView>
                         child: Padding(
                           padding: EdgeInsets.only(left: 16),
                           child: Text('날짜',
-                              style: TextStyle(fontWeight: FontWeight.bold)),
+                              style: TextStyle(fontWeight: FontWeight.bold,color: Color(0xFF9C9FB0),fontFamily: 'Noto Sans KR',)),
                         )),
                     Expanded(
                         flex: 2,
                         child: Center(
                             child: Text('경과',
-                                style:
-                                    TextStyle(fontWeight: FontWeight.bold)))),
+                                style: TextStyle(fontWeight: FontWeight.bold,color: Color(0xFF9C9FB0),fontFamily: 'Noto Sans KR',)))),
                     Expanded(
                         flex: 2,
                         child: Center(
                             child: Text('판단',
-                                style:
-                                    TextStyle(fontWeight: FontWeight.bold)))),
+                                style: TextStyle(fontWeight: FontWeight.bold,color: Color(0xFF9C9FB0),fontFamily: 'Noto Sans KR',)))),
                     Expanded(
                         flex: 2,
                         child: Center(
                             child: Text('포인트',
-                                style:
-                                    TextStyle(fontWeight: FontWeight.bold)))),
+                                style: TextStyle(fontWeight: FontWeight.bold,color: Color(0xFF9C9FB0),fontFamily: 'Noto Sans KR',)))),
                   ],
                 ),
               ),
@@ -372,6 +401,9 @@ class _MainViewState extends State<MainView>
                     offset: const Offset(0, 2),
                   ),
                 ],
+                border: Border(
+                  bottom: BorderSide(color: Color(0xffd5d5d5), width: 1),
+                ),
               ),
               child: const Row(
                 children: [
@@ -380,23 +412,23 @@ class _MainViewState extends State<MainView>
                       child: Padding(
                         padding: EdgeInsets.only(left: 16),
                         child: Text('날짜',
-                            style: TextStyle(fontWeight: FontWeight.bold)),
+                            style: TextStyle(fontWeight: FontWeight.bold,color: Color(0xFF9C9FB0),fontFamily: 'Noto Sans KR',)),
                       )),
                   Expanded(
                       flex: 2,
                       child: Center(
                           child: Text('경과',
-                              style: TextStyle(fontWeight: FontWeight.bold)))),
+                              style: TextStyle(fontWeight: FontWeight.bold,color: Color(0xFF9C9FB0),fontFamily: 'Noto Sans KR',)))),
                   Expanded(
                       flex: 2,
                       child: Center(
                           child: Text('판단',
-                              style: TextStyle(fontWeight: FontWeight.bold)))),
+                              style: TextStyle(fontWeight: FontWeight.bold,color: Color(0xFF9C9FB0),fontFamily: 'Noto Sans KR',)))),
                   Expanded(
                       flex: 2,
                       child: Center(
                           child: Text('포인트',
-                              style: TextStyle(fontWeight: FontWeight.bold)))),
+                              style: TextStyle(fontWeight: FontWeight.bold,color: Color(0xFF9C9FB0),fontFamily: 'Noto Sans KR',)))),
                 ],
               ),
             ),
@@ -412,12 +444,15 @@ class _MainViewState extends State<MainView>
                 ),
                 child: viewModel.eventList.isEmpty
                     ? Container(
-                        padding: const EdgeInsets.all(32),
-                        child: const Text(
-                          '이벤트 데이터가 없습니다',
-                          style: TextStyle(
-                            color: Colors.grey,
-                            fontSize: 14,
+                        width: Get.width,
+                        child: Center(
+                          child: const Text(
+                            '이벤트 데이터가 없습니다',
+                            style: TextStyle(
+                              color: Colors.grey,
+                              fontSize: 14,
+                              fontFamily: 'Noto Sans KR',
+                            ),
                           ),
                         ),
                       )
@@ -481,7 +516,7 @@ class _MainViewState extends State<MainView>
       padding: const EdgeInsets.symmetric(vertical: 8),
       decoration: const BoxDecoration(
         border: Border(
-          bottom: BorderSide(color: Colors.grey, width: 0.2),
+          // bottom: BorderSide(color: Colors.grey, width: 0.2),
         ),
       ),
       child: Row(
@@ -492,7 +527,7 @@ class _MainViewState extends State<MainView>
               padding: const EdgeInsets.only(left: 16),
               child: Text(
                 event.date,
-                style: const TextStyle(fontSize: 12),
+                style: const TextStyle(fontSize: 14,fontWeight: FontWeight.w400,fontFamily: 'Noto Sans KR'),
                 textAlign: TextAlign.left,
               ),
             ),
@@ -502,7 +537,7 @@ class _MainViewState extends State<MainView>
             child: Center(
               child: Text(
                 event.elapsedTime,
-                style: const TextStyle(fontSize: 12),
+                style: const TextStyle(fontSize: 14,fontWeight: FontWeight.w400,fontFamily: 'Noto Sans KR'),
               ),
             ),
           ),
@@ -512,9 +547,10 @@ class _MainViewState extends State<MainView>
               child: Text(
                 event.result,
                 style: TextStyle(
-                  fontSize: 12,
+                  fontSize: 14,
                   color: event.resultColor,
-                  fontWeight: FontWeight.w500,
+                  fontWeight: FontWeight.w400,
+                    fontFamily: 'Noto Sans KR'
                 ),
               ),
             ),
@@ -524,7 +560,7 @@ class _MainViewState extends State<MainView>
             child: Center(
               child: Text(
                 event.pointsText,
-                style: const TextStyle(fontSize: 12),
+                style: const TextStyle(fontSize: 14,fontWeight: FontWeight.w400,fontFamily: 'Noto Sans KR'),
               ),
             ),
           ),

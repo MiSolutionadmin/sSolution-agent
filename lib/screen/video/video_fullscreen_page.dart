@@ -156,11 +156,11 @@ class _VideoFullscreenPageState extends State<VideoFullscreenPage> {
       color: Colors.black54,
       child: Row(
         children: [
-          // 시작/중지 버튼
+          // 재생/일시정지 버튼
           IconButton(
             icon: Icon(
               widget.controller.value.isPlaying
-                  ? Icons.stop
+                  ? Icons.pause
                   : Icons.play_arrow
             ),
             color: Colors.white,
@@ -171,13 +171,6 @@ class _VideoFullscreenPageState extends State<VideoFullscreenPage> {
                     : widget.controller.play();
               });
             },
-          ),
-
-          // 소리 버튼
-          IconButton(
-            icon: Icon(_isVolumeMuted ? Icons.volume_off : Icons.volume_up),
-            color: Colors.white,
-            onPressed: _toggleVolume,
           ),
 
           Flexible(
@@ -192,7 +185,7 @@ class _VideoFullscreenPageState extends State<VideoFullscreenPage> {
                     min: 0,
                     max: durationSeconds > 0 ? durationSeconds.toDouble() : 1.0,
                     value: positionSeconds.clamp(0.0, durationSeconds > 0 ? durationSeconds.toDouble() : 1.0),
-                    activeColor: Colors.red,
+                    activeColor: Color(0xFF1955EE),
                     inactiveColor: Colors.white30,
                     thumbColor: Colors.white,
                     onChanged: (value) {

@@ -10,6 +10,7 @@ import '../../notification/local_notification_setting.dart';
 import '../../provider/camera_state.dart';
 import '../../provider/user_state.dart';
 import '../main/main_view.dart';
+import '../main/main_view_model.dart';
 import '../video/video_page.dart';
 import '../record/record_view.dart';
 import '../setting/setting_view.dart';
@@ -137,9 +138,16 @@ class BottomNavigatorViewModel extends GetxController {
   }
 
   /// 탭 변경 처리
-  void onTabChanged(int index) {
+  void onTabChanged(int index) async {
     navigationService.changeTab(index);
     currentIndex.value = index;
+    
+    // main 탭(index 0)으로 이동할 때 작업 시간 API 호출 및 현재 달로 리셋
+    if (index == 0) {
+      final mainViewModel = Get.find<MainViewModel>();
+      await mainViewModel.fetchWorkTimeFromAPI();
+      mainViewModel.resetToCurrentMonth();
+    }
     
     // 탭 변경 시에는 VideoPage를 재생성하지 않음 (완료 상태 유지)
     // VideoPage 재생성은 새로운 FCM 알림이 올 때만 수행

@@ -130,35 +130,57 @@ class BottomNavigatorView extends StatelessWidget {
   Widget _buildFallbackNavigationBar(BottomNavigatorViewModel viewModel) {
     final navigationConfig = NavigationConfig.getDefault();
 
-    return Obx(() => Row(
-          children: navigationConfig.tabs
-              .map((tabItem) => Expanded(
-                    child: GestureDetector(
-                      onTap: () => viewModel.onTabChanged(tabItem.index),
-                      behavior: HitTestBehavior.opaque,
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                            vertical: 16, horizontal: 8),
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            _buildTabIcon(tabItem,
-                                viewModel.currentIndex.value == tabItem.index),
-                            const SizedBox(height: 6),
-                            Text(
-                              tabItem.label,
-                              style:
-                                  viewModel.currentIndex.value == tabItem.index
-                                      ? f12w700
-                                      : f12w700BlurGrey,
-                            ),
-                          ],
+    return Obx(() => Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 20),
+      child: Stack(
+        children: [
+          Row(
+            children: navigationConfig.tabs
+                .map((tabItem) => Expanded(
+                      child: GestureDetector(
+                        onTap: () => viewModel.onTabChanged(tabItem.index),
+                        behavior: HitTestBehavior.opaque,
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                              vertical: 5, horizontal: 8),
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              _buildTabIcon(tabItem,
+                                  viewModel.currentIndex.value == tabItem.index),
+                              const SizedBox(height: 6),
+                              Text(
+                                tabItem.label,
+                                style:
+                                    viewModel.currentIndex.value == tabItem.index
+                                        ? f12w700
+                                        : f12w700BlurGrey,
+                              ),
+                            ],
+                          ),
                         ),
                       ),
-                    ),
-                  ))
-              .toList(),
-        ));
+                    ))
+                .toList(),
+          ),
+          // 선택된 탭 위의 바
+          Positioned(
+            top: 0,
+            left: ((MediaQuery.of(Get.context!).size.width - 40) / navigationConfig.tabs.length) * 
+                  viewModel.currentIndex.value + 
+                  (((MediaQuery.of(Get.context!).size.width - 40) / navigationConfig.tabs.length) - 24) / 2,
+            child: Container(
+              width: 24,
+              height: 3,
+              decoration: BoxDecoration(
+                color: Color(0xFF1955EE),
+                borderRadius: BorderRadius.circular(999),
+              ),
+            ),
+          ),
+        ],
+      ),
+    ));
   }
 
   /// 탭 바 뷰
