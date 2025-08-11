@@ -1,5 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:permission_handler/permission_handler.dart';
+import 'dart:io';
+import 'package:android_intent/android_intent.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:flutter/services.dart';
 
 class SettingViewModel extends GetxController {
   // 로딩 상태
@@ -16,6 +21,16 @@ class SettingViewModel extends GetxController {
   void onInit() {
     super.onInit();
     _initializeSettings();
+    _checkNotificationPermission();
+    
+    // 앱 라이프사이클 변경 감지
+    SystemChannels.lifecycle.setMessageHandler((message) async {
+      if (message == AppLifecycleState.resumed.toString()) {
+        // 앱이 포어그라운드로 돌아올 때 권한 상태 재확인
+        await _checkNotificationPermission();
+      }
+      return null;
+    });
   }
   
   @override
@@ -148,10 +163,52 @@ class SettingViewModel extends GetxController {
     item.onTap?.call();
   }
   
-  /// 알림 설정 토글
-  void toggleNotification() {
-    notificationEnabled.value = !notificationEnabled.value;
-    // 여기에 실제 알림 설정 업데이트 로직 추가 가능
+  /// 알림 권한 상태 확인
+  Future<void> _checkNotificationPermission() async {
+    if (Platform.isAndroid) {
+      try {
+        // Firebase Messaging을 통한 권한 상태 확인
+        final settings = await FirebaseMessaging.instance.getNotificationSettings();
+        notificationEnabled.value = settings.authorizationStatus == AuthorizationStatus.authorized;
+      } catch (e) {
+        // Firebase 실패 시 permission_handler 사용
+        final permission = await Permission.notification.status;
+        notificationEnabled.value = permission.isGranted;
+      }
+    } else {
+      // iOS는 permission_handler 사용
+      final permission = await Permission.notification.status;
+      notificationEnabled.value = permission.isGranted;
+    }
+  }
+
+  /// 알림 설정 토글 - 둘 다 시스템 설정으로 이동
+  void toggleNotification() async {
+    // OFF든 ON이든 관계없이 바로 알림 설정 페이지로 이동
+    _openNotificationSettings();
+    // 앱이 다시 포어그라운드로 돌아올 때 자동으로 갱신됨 (onInit에서 설정)
+  }
+
+  /// 알림 설정 페이지로 직접 이동
+  void _openNotificationSettings() async {
+    if (Platform.isAndroid) {
+      try {
+        // Android의 경우 앱별 알림 설정으로 직접 이동
+        final AndroidIntent intent = AndroidIntent(
+          action: 'android.settings.APP_NOTIFICATION_SETTINGS',
+          arguments: <String, dynamic>{
+            'android.provider.extra.APP_PACKAGE': 'com.Ssolutions.sSolutionAgent',
+          },
+        );
+        await intent.launch();
+      } catch (e) {
+        // 실패 시 일반 앱 설정으로 이동
+        await openAppSettings();
+      }
+    } else if (Platform.isIOS) {
+      // iOS의 경우 앱 설정으로 이동
+      await openAppSettings();
+    }
   }
 }
 

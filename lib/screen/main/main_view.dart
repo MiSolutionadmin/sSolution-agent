@@ -96,15 +96,22 @@ class _MainViewState extends State<MainView>
                   ),
                 ),
                 const Spacer(),
-                GestureDetector(
+                InkWell(
                   onTap: () => viewModel.onCalendarTap(context),
-                  child: SvgPicture.asset(
-                    'assets/main/fi_calendar.svg',
-                    width: 24,
-                    height: 24,
-                    colorFilter: const ColorFilter.mode(
-                      Colors.white,
-                      BlendMode.srcIn,
+                  child: Container(
+                    width: 60,
+                    height: 40,
+                    child: Align(
+                      alignment: Alignment.centerRight,
+                      child: SvgPicture.asset(
+                        'assets/main/fi_calendar.svg',
+                        width: 24,
+                        height: 24,
+                        colorFilter: const ColorFilter.mode(
+                          Colors.white,
+                          BlendMode.srcIn,
+                        ),
+                      ),
                     ),
                   ),
                 ),
@@ -122,8 +129,8 @@ class _MainViewState extends State<MainView>
                 _buildUserInfoItem('등급', viewModel.userGrade),
                 const SizedBox(height: 8),
                 // 관제 시간
-                Obx(() =>
-                  _buildUserInfoItem('관제 시간', viewModel.controlTime),
+                Obx(
+                  () => _buildUserInfoItem('관제 시간', viewModel.controlTime),
                 )
               ],
             ),
@@ -201,11 +208,10 @@ class _MainViewState extends State<MainView>
               Obx(() => Text(
                     viewModel.monthDisplayText,
                     style: const TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.w600,
-                      color: Colors.white,
-                      fontFamily: "Pretendard"
-                    ),
+                        fontSize: 18,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.white,
+                        fontFamily: "Pretendard"),
                   )),
               GestureDetector(
                 onTap: viewModel.goToNextMonth,
@@ -334,23 +340,39 @@ class _MainViewState extends State<MainView>
                         child: Padding(
                           padding: EdgeInsets.only(left: 16),
                           child: Text('날짜',
-                              style: TextStyle(fontWeight: FontWeight.bold,color: Color(0xFF9C9FB0),fontFamily: 'Noto Sans KR',)),
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                color: Color(0xFF9C9FB0),
+                                fontFamily: 'Noto Sans KR',
+                              )),
                         )),
                     Expanded(
                         flex: 2,
                         child: Center(
                             child: Text('경과',
-                                style: TextStyle(fontWeight: FontWeight.bold,color: Color(0xFF9C9FB0),fontFamily: 'Noto Sans KR',)))),
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  color: Color(0xFF9C9FB0),
+                                  fontFamily: 'Noto Sans KR',
+                                )))),
                     Expanded(
                         flex: 2,
                         child: Center(
                             child: Text('판단',
-                                style: TextStyle(fontWeight: FontWeight.bold,color: Color(0xFF9C9FB0),fontFamily: 'Noto Sans KR',)))),
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  color: Color(0xFF9C9FB0),
+                                  fontFamily: 'Noto Sans KR',
+                                )))),
                     Expanded(
                         flex: 2,
                         child: Center(
                             child: Text('포인트',
-                                style: TextStyle(fontWeight: FontWeight.bold,color: Color(0xFF9C9FB0),fontFamily: 'Noto Sans KR',)))),
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  color: Color(0xFF9C9FB0),
+                                  fontFamily: 'Noto Sans KR',
+                                )))),
                   ],
                 ),
               ),
@@ -412,23 +434,39 @@ class _MainViewState extends State<MainView>
                       child: Padding(
                         padding: EdgeInsets.only(left: 16),
                         child: Text('날짜',
-                            style: TextStyle(fontWeight: FontWeight.bold,color: Color(0xFF9C9FB0),fontFamily: 'Noto Sans KR',)),
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              color: Color(0xFF9C9FB0),
+                              fontFamily: 'Noto Sans KR',
+                            )),
                       )),
                   Expanded(
                       flex: 2,
                       child: Center(
                           child: Text('경과',
-                              style: TextStyle(fontWeight: FontWeight.bold,color: Color(0xFF9C9FB0),fontFamily: 'Noto Sans KR',)))),
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                color: Color(0xFF9C9FB0),
+                                fontFamily: 'Noto Sans KR',
+                              )))),
                   Expanded(
                       flex: 2,
                       child: Center(
                           child: Text('판단',
-                              style: TextStyle(fontWeight: FontWeight.bold,color: Color(0xFF9C9FB0),fontFamily: 'Noto Sans KR',)))),
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                color: Color(0xFF9C9FB0),
+                                fontFamily: 'Noto Sans KR',
+                              )))),
                   Expanded(
                       flex: 2,
                       child: Center(
                           child: Text('포인트',
-                              style: TextStyle(fontWeight: FontWeight.bold,color: Color(0xFF9C9FB0),fontFamily: 'Noto Sans KR',)))),
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                color: Color(0xFF9C9FB0),
+                                fontFamily: 'Noto Sans KR',
+                              )))),
                 ],
               ),
             ),
@@ -516,8 +554,8 @@ class _MainViewState extends State<MainView>
       padding: const EdgeInsets.symmetric(vertical: 8),
       decoration: const BoxDecoration(
         border: Border(
-          // bottom: BorderSide(color: Colors.grey, width: 0.2),
-        ),
+            // bottom: BorderSide(color: Colors.grey, width: 0.2),
+            ),
       ),
       child: Row(
         children: [
@@ -527,7 +565,10 @@ class _MainViewState extends State<MainView>
               padding: const EdgeInsets.only(left: 16),
               child: Text(
                 event.date,
-                style: const TextStyle(fontSize: 14,fontWeight: FontWeight.w400,fontFamily: 'Noto Sans KR'),
+                style: const TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w400,
+                    fontFamily: 'Noto Sans KR'),
                 textAlign: TextAlign.left,
               ),
             ),
@@ -537,7 +578,10 @@ class _MainViewState extends State<MainView>
             child: Center(
               child: Text(
                 event.elapsedTime,
-                style: const TextStyle(fontSize: 14,fontWeight: FontWeight.w400,fontFamily: 'Noto Sans KR'),
+                style: const TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w400,
+                    fontFamily: 'Noto Sans KR'),
               ),
             ),
           ),
@@ -547,11 +591,10 @@ class _MainViewState extends State<MainView>
               child: Text(
                 event.result,
                 style: TextStyle(
-                  fontSize: 14,
-                  color: event.resultColor,
-                  fontWeight: FontWeight.w400,
-                    fontFamily: 'Noto Sans KR'
-                ),
+                    fontSize: 14,
+                    color: event.resultColor,
+                    fontWeight: FontWeight.w400,
+                    fontFamily: 'Noto Sans KR'),
               ),
             ),
           ),
@@ -560,7 +603,10 @@ class _MainViewState extends State<MainView>
             child: Center(
               child: Text(
                 event.pointsText,
-                style: const TextStyle(fontSize: 14,fontWeight: FontWeight.w400,fontFamily: 'Noto Sans KR'),
+                style: const TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w400,
+                    fontFamily: 'Noto Sans KR'),
               ),
             ),
           ),
