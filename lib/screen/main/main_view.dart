@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
 
+import '../../utils/font/font.dart';
 import 'main_view_model.dart';
 import 'skeleton_widgets.dart';
 
@@ -30,7 +31,7 @@ class _MainViewState extends State<MainView>
         child: Column(
           children: [
             // 상단 헤더 (사용자 정보 통합)
-            _buildCombinedHeader(context, Get.find<MainViewModel>()),
+            _buildCombinedHeader(context, viewModel),
             // 월별 현황 및 통계 정보 섹션 (통합)
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
@@ -81,13 +82,12 @@ class _MainViewState extends State<MainView>
             // 첫 번째 행: MMS 에이전트 타이틀과 캘린더 아이콘
             Row(
               children: [
-                const Text(
+                Text(
                   'MMS 에이전트',
-                  style: TextStyle(
-                    fontSize: 19,
-                    fontWeight: FontWeight.w900,
+                  style: f20w700Size().copyWith(
                     color: Colors.white,
                     fontFamily: 'Noto Sans KR',
+                    fontWeight: FontWeight.w900,
                   ),
                 ),
                 const Spacer(),
@@ -118,10 +118,18 @@ class _MainViewState extends State<MainView>
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 // 이름
-                _buildUserInfoItem('이름', viewModel.userName),
+                Obx(
+                  () => viewModel.isUserInfoLoading.value
+                      ? _buildUserInfoSkeleton('이름')
+                      : _buildUserInfoItem('이름', viewModel.userName),
+                ),
                 const SizedBox(height: 8),
                 // 등급
-                _buildUserInfoItem('등급', viewModel.userGrade),
+                Obx(
+                  () => viewModel.isUserInfoLoading.value
+                      ? _buildUserInfoSkeleton('등급')
+                      : _buildUserInfoItem('등급', viewModel.userGrade),
+                ),
                 const SizedBox(height: 8),
                 // 관제 시간
                 Obx(
@@ -143,9 +151,7 @@ class _MainViewState extends State<MainView>
           width: 90,
           child: Text(
             label,
-            style: TextStyle(
-              fontSize: 15,
-              fontWeight: FontWeight.w500,
+            style: f14w500Size().copyWith(
               color: Colors.white.withOpacity(0.5),
               fontFamily: 'Noto Sans KR',
             ),
@@ -153,11 +159,36 @@ class _MainViewState extends State<MainView>
         ),
         Text(
           value,
-          style: const TextStyle(
-            fontSize: 15,
+          style: f14w500Size().copyWith(
             color: Colors.white,
-            fontWeight: FontWeight.w500,
             fontFamily: 'Noto Sans KR',
+          ),
+        ),
+      ],
+    );
+  }
+
+  /// 사용자 정보 스켈레톤
+  Widget _buildUserInfoSkeleton(String label) {
+    return Row(
+      children: [
+        SizedBox(
+          width: 90,
+          child: Text(
+            label,
+            style: f14w500Size().copyWith(
+              color: Colors.white.withOpacity(0.5),
+              fontFamily: 'Noto Sans KR',
+            ),
+          ),
+        ),
+        SkeletonLoader(
+          child: Container(
+            height: 14,
+            width: 60,
+            decoration: BoxDecoration(
+              color: Colors.blue,
+            ),
           ),
         ),
       ],
@@ -175,11 +206,9 @@ class _MainViewState extends State<MainView>
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
+          Text(
             '월별 현황',
-            style: TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.bold,
+            style: f16w700Size().copyWith(
               color: Colors.white,
               fontFamily: 'Noto Sans KR',
             ),
@@ -202,11 +231,8 @@ class _MainViewState extends State<MainView>
               ),
               Obx(() => Text(
                     viewModel.monthDisplayText,
-                    style: const TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w600,
-                        color: Colors.white,
-                        fontFamily: "Pretendard"),
+                    style: f18w500Size().copyWith(
+                        color: Colors.white, fontFamily: "Pretendard"),
                   )),
               GestureDetector(
                 onTap: viewModel.goToNextMonth,
@@ -263,9 +289,7 @@ class _MainViewState extends State<MainView>
           width: 90,
           child: Text(
             label,
-            style: const TextStyle(
-              fontSize: 15,
-              fontWeight: FontWeight.w500,
+            style: f14w500Size().copyWith(
               color: Color(0xFFADAFBC),
               fontFamily: 'Noto Sans KR',
             ),
@@ -284,10 +308,8 @@ class _MainViewState extends State<MainView>
                 )
               : Text(
                   value,
-                  style: const TextStyle(
-                    fontSize: 15,
+                  style: f14w500Size().copyWith(
                     color: Colors.white,
-                    fontWeight: FontWeight.w500,
                     fontFamily: 'Noto Sans KR',
                   ),
                 ),
@@ -328,15 +350,14 @@ class _MainViewState extends State<MainView>
                     bottom: BorderSide(color: Color(0xffd5d5d5), width: 1),
                   ),
                 ),
-                child: const Row(
+                child: Row(
                   children: [
                     Expanded(
                         flex: 3,
                         child: Padding(
                           padding: EdgeInsets.only(left: 16),
                           child: Text('날짜',
-                              style: TextStyle(
-                                fontWeight: FontWeight.bold,
+                              style: f14w700Size().copyWith(
                                 color: Color(0xFF9C9FB0),
                                 fontFamily: 'Noto Sans KR',
                               )),
@@ -345,8 +366,7 @@ class _MainViewState extends State<MainView>
                         flex: 2,
                         child: Center(
                             child: Text('경과',
-                                style: TextStyle(
-                                  fontWeight: FontWeight.bold,
+                                style: f14w700Size().copyWith(
                                   color: Color(0xFF9C9FB0),
                                   fontFamily: 'Noto Sans KR',
                                 )))),
@@ -354,8 +374,7 @@ class _MainViewState extends State<MainView>
                         flex: 2,
                         child: Center(
                             child: Text('판단',
-                                style: TextStyle(
-                                  fontWeight: FontWeight.bold,
+                                style: f14w700Size().copyWith(
                                   color: Color(0xFF9C9FB0),
                                   fontFamily: 'Noto Sans KR',
                                 )))),
@@ -363,8 +382,7 @@ class _MainViewState extends State<MainView>
                         flex: 2,
                         child: Center(
                             child: Text('포인트',
-                                style: TextStyle(
-                                  fontWeight: FontWeight.bold,
+                                style: f14w700Size().copyWith(
                                   color: Color(0xFF9C9FB0),
                                   fontFamily: 'Noto Sans KR',
                                 )))),
@@ -422,15 +440,14 @@ class _MainViewState extends State<MainView>
                   bottom: BorderSide(color: Color(0xffd5d5d5), width: 1),
                 ),
               ),
-              child: const Row(
+              child: Row(
                 children: [
                   Expanded(
                       flex: 3,
                       child: Padding(
                         padding: EdgeInsets.only(left: 16),
                         child: Text('날짜',
-                            style: TextStyle(
-                              fontWeight: FontWeight.bold,
+                            style: f14w700Size().copyWith(
                               color: Color(0xFF9C9FB0),
                               fontFamily: 'Noto Sans KR',
                             )),
@@ -439,8 +456,7 @@ class _MainViewState extends State<MainView>
                       flex: 2,
                       child: Center(
                           child: Text('경과',
-                              style: TextStyle(
-                                fontWeight: FontWeight.bold,
+                              style: f14w700Size().copyWith(
                                 color: Color(0xFF9C9FB0),
                                 fontFamily: 'Noto Sans KR',
                               )))),
@@ -448,8 +464,7 @@ class _MainViewState extends State<MainView>
                       flex: 2,
                       child: Center(
                           child: Text('판단',
-                              style: TextStyle(
-                                fontWeight: FontWeight.bold,
+                              style: f14w700Size().copyWith(
                                 color: Color(0xFF9C9FB0),
                                 fontFamily: 'Noto Sans KR',
                               )))),
@@ -457,8 +472,7 @@ class _MainViewState extends State<MainView>
                       flex: 2,
                       child: Center(
                           child: Text('포인트',
-                              style: TextStyle(
-                                fontWeight: FontWeight.bold,
+                              style: f14w700Size().copyWith(
                                 color: Color(0xFF9C9FB0),
                                 fontFamily: 'Noto Sans KR',
                               )))),
@@ -479,11 +493,10 @@ class _MainViewState extends State<MainView>
                     ? Container(
                         width: Get.width,
                         child: Center(
-                          child: const Text(
+                          child: Text(
                             '이벤트 데이터가 없습니다',
-                            style: TextStyle(
+                            style: f14w400Size().copyWith(
                               color: Colors.grey,
-                              fontSize: 14,
                               fontFamily: 'Noto Sans KR',
                             ),
                           ),
@@ -560,10 +573,7 @@ class _MainViewState extends State<MainView>
               padding: const EdgeInsets.only(left: 16),
               child: Text(
                 event.date,
-                style: const TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w400,
-                    fontFamily: 'Noto Sans KR'),
+                style: f14w400Size().copyWith(fontFamily: 'Noto Sans KR'),
                 textAlign: TextAlign.left,
               ),
             ),
@@ -573,10 +583,7 @@ class _MainViewState extends State<MainView>
             child: Center(
               child: Text(
                 event.elapsedTime,
-                style: const TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w400,
-                    fontFamily: 'Noto Sans KR'),
+                style: f14w400Size().copyWith(fontFamily: 'Noto Sans KR'),
               ),
             ),
           ),
@@ -585,11 +592,8 @@ class _MainViewState extends State<MainView>
             child: Center(
               child: Text(
                 event.result,
-                style: TextStyle(
-                    fontSize: 14,
-                    color: event.resultColor,
-                    fontWeight: FontWeight.w400,
-                    fontFamily: 'Noto Sans KR'),
+                style: f14w400Size().copyWith(
+                    color: event.resultColor, fontFamily: 'Noto Sans KR'),
               ),
             ),
           ),
@@ -598,10 +602,7 @@ class _MainViewState extends State<MainView>
             child: Center(
               child: Text(
                 event.pointsText,
-                style: const TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w400,
-                    fontFamily: 'Noto Sans KR'),
+                style: f14w400Size().copyWith(fontFamily: 'Noto Sans KR'),
               ),
             ),
           ),
@@ -628,8 +629,7 @@ class _MainViewState extends State<MainView>
               child: Center(
                 child: Text(
                   '2025-01-15\n10:30:45',
-                  style:
-                      const TextStyle(fontSize: 12, color: Colors.transparent),
+                  style: f12w400Size().copyWith(color: Colors.transparent),
                   textAlign: TextAlign.center,
                 ),
               ),
@@ -640,8 +640,7 @@ class _MainViewState extends State<MainView>
               child: Center(
                 child: Text(
                   '15초',
-                  style:
-                      const TextStyle(fontSize: 12, color: Colors.transparent),
+                  style: f12w400Size().copyWith(color: Colors.transparent),
                 ),
               ),
             ),
@@ -651,8 +650,7 @@ class _MainViewState extends State<MainView>
               child: Center(
                 child: Text(
                   '화재',
-                  style:
-                      const TextStyle(fontSize: 12, color: Colors.transparent),
+                  style: f12w400Size().copyWith(color: Colors.transparent),
                 ),
               ),
             ),
@@ -662,8 +660,7 @@ class _MainViewState extends State<MainView>
               child: Center(
                 child: Text(
                   '1000 P',
-                  style:
-                      const TextStyle(fontSize: 12, color: Colors.transparent),
+                  style: f12w400Size().copyWith(color: Colors.transparent),
                 ),
               ),
             ),

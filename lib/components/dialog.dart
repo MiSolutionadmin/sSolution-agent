@@ -8,10 +8,10 @@ import 'package:get/get.dart';
 import 'package:mms/components/dialogManager.dart';
 
 import '../db/camera_table.dart';
+import '../utils/font/font.dart';
 import '../provider/camera_state.dart';
 import '../provider/notification_state.dart';
 import '../provider/user_state.dart';
-import '../utils/font/font.dart';
 import '../utils/loading.dart';
 
 import 'package:http/http.dart' as http;
@@ -266,9 +266,9 @@ showOnlyFireStationConfirmDialog(BuildContext context) {
                   ),
                 ),
                 const SizedBox(height: 16),
-                const Text(
+                Text(
                   "무엇보다 인명피해가 발생하지 않도록 대비하시기 바랍니다.",
-                  style: TextStyle(fontSize: 16),
+                  style: f16w400Size(),
                 ),
               ],
             ),

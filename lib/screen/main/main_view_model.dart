@@ -8,6 +8,7 @@ import 'package:mms/components/dialog.dart';
 import 'package:table_calendar/table_calendar.dart';
 import '../../provider/user_state.dart';
 import '../../base_config/config.dart';
+import '../../utils/font/font.dart';
 import 'main_api_service.dart';
 
 class MainViewModel extends GetxController {
@@ -18,6 +19,7 @@ class MainViewModel extends GetxController {
   // 로딩 상태들
   final RxBool isStatsLoading = false.obs;
   final RxBool isEventsLoading = false.obs;
+  final RxBool isUserInfoLoading = false.obs;
 
   // 현재 선택된 월
   final Rx<DateTime> selectedMonth = DateTime.now().obs;
@@ -79,6 +81,11 @@ class MainViewModel extends GetxController {
   void refresh() {
     _initializeData();
     _loadScheduledWorkDates();
+  }
+
+  /// 유저 정보만 새로고침
+  void refreshUserInfo() {
+    _loadAgentInfo();
   }
 
   /// private_change_screen의 _getWorkTime 엔드포인트를 사용하여 작업 시간 가져오기
@@ -143,6 +150,8 @@ class MainViewModel extends GetxController {
   /// 에이전트 정보 로드 및 유저 상태 업데이트
   Future<void> _loadAgentInfo() async {
     try {
+      isUserInfoLoading.value = true;
+      
       final agentId = _userState.userData['id']?.toString() ?? '';
       if (agentId.isEmpty) {
         print('에이전트 ID가 없습니다.');
@@ -155,16 +164,19 @@ class MainViewModel extends GetxController {
         final agentData = result['data'];
         print('에이전트 정보 데이터: $agentData');
 
-        if (agentData != null) {
+        if (agentData != null && agentData['result'] != null) {
+          final resultData = agentData['result'];
+          print('에이전트 result 데이터: $resultData');
+          
           // 필요한 필드들 업데이트
-          if (agentData['name'] != null) {
-            _userState.userData['name'] = agentData['name'];
+          if (resultData['name'] != null) {
+            _userState.userData['name'] = resultData['name'];
           }
-          if (agentData['grade'] != null) {
-            _userState.userData['grade'] = agentData['grade'];
+          if (resultData['grade'] != null) {
+            _userState.userData['grade'] = resultData['grade'];
           }
-          if (agentData['control_type'] != null) {
-            _userState.userData['control_type'] = agentData['control_type'];
+          if (resultData['control_type'] != null) {
+            _userState.userData['control_type'] = resultData['control_type'];
           }
           
           print('에이전트 정보 업데이트 완료 - 이름: ${_userState.userData['name']}, 등급: ${_userState.userData['grade']}, 관제타입: ${_userState.userData['control_type']}');
@@ -174,6 +186,8 @@ class MainViewModel extends GetxController {
       }
     } catch (e) {
       print('에이전트 정보 로드 오류: $e');
+    } finally {
+      isUserInfoLoading.value = false;
     }
   }
 
@@ -529,21 +543,17 @@ class MainViewModel extends GetxController {
             ),
             const SizedBox(height: 30),
             // 다이얼로그 제목
-            const Text(
+            Text(
               '근무일 선택',
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w700,
+              style: f16w700Size().copyWith(
                 fontFamily: 'Noto Sans KR',
               ),
             ),
             const SizedBox(height: 8),
-            const Text(
+            Text(
               '오늘로부터 5일 이내 날짜는 수정이 불가합니다.',
-              style: TextStyle(
-                fontSize: 15,
+              style: f14w400Size().copyWith(
                 color: Color(0xff9C9FB0),
-                fontWeight: FontWeight.w400,
                 fontFamily: 'Noto Sans KR',
               ),
             ),
@@ -589,9 +599,7 @@ class MainViewModel extends GetxController {
                         child: Center(
                           child: Text(
                             text,
-                            style: const TextStyle(
-                              fontSize: 15,
-                              fontWeight: FontWeight.w400,
+                            style: f14w400Size().copyWith(
                               color: Color(0xff989BA9),
                               fontFamily: "Pretendard",
                               height: 1.0,
@@ -604,9 +612,7 @@ class MainViewModel extends GetxController {
                       return Center(
                         child: Text(
                           '${day.year}.${day.month.toString().padLeft(2, '0')}',
-                          style: const TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
+                          style: f18w700Size().copyWith(
                             color: Colors.black,
                           ),
                         ),
@@ -615,16 +621,12 @@ class MainViewModel extends GetxController {
                   ),
                   calendarStyle: CalendarStyle(
                     outsideDaysVisible: true,
-                    weekendTextStyle: const TextStyle(
+                    weekendTextStyle: f16w600Size().copyWith(
                       color: Color(0xFF4D505E),
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
                       fontFamily: "Pretendard",
                     ),
-                    defaultTextStyle: const TextStyle(
+                    defaultTextStyle: f16w600Size().copyWith(
                       color: Color(0xFF4D505E),
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
                       fontFamily: "Pretendard",
                     ),
                     cellMargin: const EdgeInsets.only(bottom: 12), // 날짜 아래 12px 간격
@@ -632,10 +634,8 @@ class MainViewModel extends GetxController {
                       color: Color(0xFFD6E2FF),
                       shape: BoxShape.rectangle,
                     ),
-                    selectedTextStyle: const TextStyle(
+                    selectedTextStyle: f16w600Size().copyWith(
                       color: Color(0xFF1955EE),
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
                       fontFamily: "Pretendard",
                     ),
                     todayDecoration: const BoxDecoration(
@@ -647,16 +647,12 @@ class MainViewModel extends GetxController {
                       color: Colors.transparent,
                       shape: BoxShape.rectangle,
                     ),
-                    disabledTextStyle: TextStyle(
+                    disabledTextStyle: f16w600Size().copyWith(
                       color: Color(0xFFCACAD7),
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
                       fontFamily: "Pretendard",
                     ),
-                    outsideTextStyle: TextStyle(
+                    outsideTextStyle: f16w600Size().copyWith(
                       color: Color(0xFFCACAD7),
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
                       fontFamily: "Pretendard",
                     ),
                   ),
@@ -697,12 +693,10 @@ class MainViewModel extends GetxController {
                           borderRadius: BorderRadius.circular(4),
                         ),
                       ),
-                      child: const Text(
+                      child: Text(
                         '취소',
-                        style: TextStyle(
+                        style: f16w700Size().copyWith(
                           color: Color(0xFF5C5E6B),
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
                           fontFamily: 'Noto Sans KR',
                         ),
                       ),
@@ -725,11 +719,9 @@ class MainViewModel extends GetxController {
                           borderRadius: BorderRadius.circular(4),
                         ),
                       ),
-                      child: const Text(
+                      child: Text(
                         '저장',
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
+                        style: f16w700Size().copyWith(
                           fontFamily: 'Noto Sans KR',
                         ),
                       ),
@@ -825,10 +817,7 @@ class MainViewModel extends GetxController {
                   padding: EdgeInsets.symmetric(vertical: 12),
                   child: Text(
                     '근무일을 저장 하시겠습니까?',
-                    style: TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.w500,
-                    ),
+                    style: f20w500Size(),
                     textAlign: TextAlign.center,
                   ),
                 ),
@@ -855,9 +844,7 @@ class MainViewModel extends GetxController {
                         child: Center(
                           child: Text(
                             '취소',
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
+                            style: f16w700Size().copyWith(
                               fontFamily: 'Noto Sans KR',
                             ),
                           ),
@@ -886,9 +873,7 @@ class MainViewModel extends GetxController {
                         child: Center(
                           child: Text(
                             '확인',
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w700,
+                            style: f16w700Size().copyWith(
                               color: Colors.white,
                               fontFamily: 'Noto Sans KR',
                             ),
@@ -964,9 +949,7 @@ class MainViewModel extends GetxController {
                   padding: EdgeInsets.symmetric(vertical: 12),
                   child: Text(
                     '${selectedDay.month}/${selectedDay.day}을 결근으로 처리하시겠습니까?\n\n결근으로 처리시 해당 날짜에는 알림을 받을 수 없습니다.',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w500,
+                    style: f16w500Size().copyWith(
                       height: 1.5,
                     ),
                     textAlign: TextAlign.center,
@@ -995,10 +978,7 @@ class MainViewModel extends GetxController {
                         child: Center(
                           child: Text(
                             '취소',
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
-                            ),
+                            style: f16w700Size(),
                           ),
                         ),
                       ),
@@ -1036,9 +1016,7 @@ class MainViewModel extends GetxController {
                         child: Center(
                           child: Text(
                             '확인',
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w700,
+                            style: f16w700Size().copyWith(
                               color: Colors.white,
                             ),
                           ),
@@ -1149,8 +1127,21 @@ class MainViewModel extends GetxController {
       print("noti parsed : ${noti}");
 
       final difference = create.difference(noti).abs();
-
-      return '${difference.inSeconds}초';
+      
+      // 60초 이상이면 시분초 형식으로 표시
+      if (difference.inSeconds >= 60) {
+        final hours = difference.inHours;
+        final minutes = difference.inMinutes.remainder(60);
+        final seconds = difference.inSeconds.remainder(60);
+        
+        if (hours > 0) {
+          return '${hours}시 ${minutes}분 ${seconds}초';
+        } else {
+          return '${minutes}분 ${seconds}초';
+        }
+      } else {
+        return '${difference.inSeconds}초';
+      }
     } catch (e) {
       print('시간차 계산 오류: $e');
       return '0초';

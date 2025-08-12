@@ -167,7 +167,9 @@ class LoginViewModel extends GetxController {
   /// 로그인 처리
   Future<void> loginAction() async {
     if (idController.text.isEmpty || passwordController.text.isEmpty) {
-      Get.snackbar('오류', '아이디와 비밀번호를 입력해주세요.');
+      if (Get.context != null) {
+        showOnlyConfirmDialog(Get.context!, '아이디와 비밀번호를 입력해주세요');
+      }
       return;
     }
     

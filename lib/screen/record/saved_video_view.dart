@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:mms/components/common_video_player.dart';
+import '../../utils/font/font.dart';
 import 'saved_video_view_model.dart';
 import '../video/video_fullscreen_page.dart';
 
@@ -45,13 +46,9 @@ class SavedVideoView extends StatelessWidget {
           icon: const Icon(Icons.arrow_back, color: Colors.black),
           onPressed: () => Get.back(),
         ),
-        title: const Text(
+        title: Text(
           '저장 영상 재생',
-          style: TextStyle(
-            color: Colors.black,
-            fontSize: 18,
-            fontWeight: FontWeight.bold,
-          ),
+          style: f18w700Size(),
         ),
         // ...existing code...
       ),
@@ -110,18 +107,15 @@ class SavedVideoView extends StatelessWidget {
           width: 60,
           child: Text(
             '$label: ',
-            style: const TextStyle(
-              fontSize: 14,
+            style: f14w500Size().copyWith(
               color: Colors.grey,
-              fontWeight: FontWeight.w500,
             ),
           ),
         ),
         Expanded(
           child: Text(
             value,
-            style: TextStyle(
-              fontSize: 14,
+            style: f14w500Size().copyWith(
               color: resultColor ?? Colors.black,
               fontWeight:
                   resultColor != null ? FontWeight.bold : FontWeight.normal,
@@ -203,8 +197,7 @@ class SavedVideoView extends StatelessWidget {
               padding: const EdgeInsets.symmetric(horizontal: 20),
               child: Obx(() => Text(
                     viewModel.errorMessage.value,
-                    style: const TextStyle(
-                      fontSize: 14,
+                    style: f14w400Size().copyWith(
                       color: Colors.grey,
                     ),
                     textAlign: TextAlign.center,
@@ -233,18 +226,18 @@ class SavedVideoView extends StatelessWidget {
       child: AspectRatio(
         aspectRatio: viewModel.aspectRatio,
         child: Obx(() => CommonVideoPlayer(
-          controller: viewModel.controller,
-          showControls: true,
-          onPlayPause: viewModel.togglePlayPause,
-          onFullscreen: () => viewModel.goToFullscreen(),
-          currentPosition:
-              Duration(seconds: viewModel.currentPosition.value.toInt()),
-          duration: Duration(seconds: viewModel.duration.value.toInt()),
-          currentPositionText: viewModel.currentPositionText.value,
-          durationText: viewModel.durationText.value,
-          onSeek: viewModel.seekTo,
-          isPlaying: viewModel.isPlaying.value,
-        )),
+              controller: viewModel.controller,
+              showControls: true,
+              onPlayPause: viewModel.togglePlayPause,
+              onFullscreen: () => viewModel.goToFullscreen(),
+              currentPosition:
+                  Duration(seconds: viewModel.currentPosition.value.toInt()),
+              duration: Duration(seconds: viewModel.duration.value.toInt()),
+              currentPositionText: viewModel.currentPositionText.value,
+              durationText: viewModel.durationText.value,
+              onSeek: viewModel.seekTo,
+              isPlaying: viewModel.isPlaying.value,
+            )),
       ),
     );
   }
@@ -262,12 +255,10 @@ class SavedVideoView extends StatelessWidget {
             size: 24,
           ),
           const SizedBox(height: 8),
-          const Text(
+          Text(
             '위 영상은 이벤트 발생 후 녹화된 1분 영상입니다.',
-            style: TextStyle(
+            style: f14w500Size().copyWith(
               color: Colors.blue,
-              fontSize: 14,
-              fontWeight: FontWeight.w500,
             ),
             textAlign: TextAlign.center,
           ),

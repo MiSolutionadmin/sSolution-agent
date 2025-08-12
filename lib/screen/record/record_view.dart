@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
 
+import '../../utils/font/font.dart';
 import 'record_view_model.dart';
 
 class RecordView extends StatefulWidget {
@@ -52,15 +53,11 @@ class _RecordViewState extends State<RecordView>
       decoration: const BoxDecoration(
         color: Colors.white,
       ),
-      child: const Row(
+      child: Row(
         children: [
           Text(
             '알림 내역',
-            style: TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
-              color: Colors.black,
-            ),
+            style: f20w700Size(),
           ),
         ],
       ),
@@ -85,11 +82,7 @@ class _RecordViewState extends State<RecordView>
           ),
           Obx(() => Text(
                 viewModel.monthDisplayText,
-                style: const TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w600,
-                  fontFamily: "Pretendard",
-                ),
+                style: f18w500Size(),
               )),
           GestureDetector(
             onTap: viewModel.goToNextMonth,
@@ -136,18 +129,16 @@ class _RecordViewState extends State<RecordView>
                     bottom: BorderSide(color: Color(0xffd5d5d5), width: 1),
                   ),
                 ),
-                child: const Row(
+                child: Row(
                   children: [
                     Expanded(
                         flex: 3,
                         child: Padding(
                           padding: EdgeInsets.only(left: 16),
                           child: Text('날짜',
-                              style: TextStyle(
-                                  fontWeight: FontWeight.w500,
+                              style: f14w500Size().copyWith(
                                   fontFamily: 'Noto Sans KR',
-                                  color: Color(0xff9C9FB0),
-                                  fontSize: 14
+                                  color: Color(0xff9C9FB0)
                               )
                           ),
                         )),
@@ -156,41 +147,33 @@ class _RecordViewState extends State<RecordView>
                         child: Align(
                             alignment: Alignment.centerLeft,
                             child: Text('알림',
-                                style: TextStyle(
-                                    fontWeight: FontWeight.w500,
+                                style: f14w500Size().copyWith(
                                     fontFamily: 'Noto Sans KR',
-                                    color: Color(0xff9C9FB0),
-                                    fontSize: 14
+                                    color: Color(0xff9C9FB0)
                                 )))),
                     Expanded(
                         flex: 2,
                         child: Center(
                             child: Text('에이전트',
-                                style: TextStyle(
-                                    fontWeight: FontWeight.w500,
+                                style: f14w500Size().copyWith(
                                     fontFamily: 'Noto Sans KR',
-                                    color: Color(0xff9C9FB0),
-                                    fontSize: 14
+                                    color: Color(0xff9C9FB0)
                                 )))),
                     Expanded(
                         flex: 2,
                         child: Center(
                             child: Text('결과',
-                                style: TextStyle(
-                                    fontWeight: FontWeight.w500,
+                                style: f14w500Size().copyWith(
                                     fontFamily: 'Noto Sans KR',
-                                    color: Color(0xff9C9FB0),
-                                    fontSize: 14
+                                    color: Color(0xff9C9FB0)
                                 )))),
                     Expanded(
                         flex: 2,
                         child: Center(
                             child: Text('영상',
-                                style: TextStyle(
-                                    fontWeight: FontWeight.w500,
+                                style: f14w500Size().copyWith(
                                     fontFamily: 'Noto Sans KR',
-                                    color: Color(0xff9C9FB0),
-                                    fontSize: 14
+                                    color: Color(0xff9C9FB0)
                                 )))),
                   ],
                 ),
@@ -243,18 +226,16 @@ class _RecordViewState extends State<RecordView>
                   bottom: BorderSide(color: Color(0xffd5d5d5), width: 1),
                 ),
               ),
-              child: const Row(
+              child: Row(
                 children: [
                   Expanded(
                       flex: 3,
                       child: Padding(
                         padding: EdgeInsets.only(left: 16),
                         child: Text('날짜',
-                            style: TextStyle(
-                                fontWeight: FontWeight.w500,
+                            style: f14w500Size().copyWith(
                                 fontFamily: 'Noto Sans KR',
-                                color: Color(0xff9C9FB0),
-                                fontSize: 14
+                                color: Color(0xff9C9FB0)
                             )
                             ),
                       )),
@@ -263,41 +244,33 @@ class _RecordViewState extends State<RecordView>
                       child: Align(
                           alignment: Alignment.centerLeft,
                           child: Text('알림',
-                              style: TextStyle(
-                                  fontWeight: FontWeight.w500,
+                              style: f14w500Size().copyWith(
                                   fontFamily: 'Noto Sans KR',
-                                  color: Color(0xff9C9FB0),
-                                  fontSize: 14
+                                  color: Color(0xff9C9FB0)
                               )))),
                   Expanded(
                       flex: 2,
                       child: Center(
                           child: Text('에이전트',
-                              style: TextStyle(
-                                  fontWeight: FontWeight.w500,
+                              style: f14w500Size().copyWith(
                                   fontFamily: 'Noto Sans KR',
-                                  color: Color(0xff9C9FB0),
-                                  fontSize: 14
+                                  color: Color(0xff9C9FB0)
                               )))),
                   Expanded(
                       flex: 2,
                       child: Center(
                           child: Text('결과',
-                              style: TextStyle(
-                                  fontWeight: FontWeight.w500,
+                              style: f14w500Size().copyWith(
                                   fontFamily: 'Noto Sans KR',
-                                  color: Color(0xff9C9FB0),
-                                  fontSize: 14
+                                  color: Color(0xff9C9FB0)
                               )))),
                   Expanded(
                       flex: 2,
                       child: Center(
                           child: Text('영상',
-                              style: TextStyle(
-                                  fontWeight: FontWeight.w500,
+                              style: f14w500Size().copyWith(
                                   fontFamily: 'Noto Sans KR',
-                                  color: Color(0xff9C9FB0),
-                                  fontSize: 14
+                                  color: Color(0xff9C9FB0)
                               )))),
                 ],
               ),
@@ -316,11 +289,10 @@ class _RecordViewState extends State<RecordView>
                     ? Container(
                         width: Get.width,
                         child: Center(
-                          child: const Text(
+                          child: Text(
                             '알림 내역이 없습니다',
-                            style: TextStyle(
+                            style: f14w400Size().copyWith(
                               color: Colors.grey,
-                              fontSize: 14,
                             ),
                           ),
                         ),
@@ -392,9 +364,7 @@ class _RecordViewState extends State<RecordView>
               padding: const EdgeInsets.only(left: 16),
               child: Text(
                 record.dateText,
-                style: const TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w400,
+                style: f14w400Size().copyWith(
                   fontFamily: "Noto Sans KR",
                 ),
                 textAlign: TextAlign.left,
@@ -408,9 +378,7 @@ class _RecordViewState extends State<RecordView>
               alignment: Alignment.centerLeft,
               child: Text(
                 record.alertType,
-                style: const TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w400,
+                style: f14w400Size().copyWith(
                   fontFamily: "Noto Sans KR",
                 ),
               ),
@@ -425,9 +393,7 @@ class _RecordViewState extends State<RecordView>
                 alignment: Alignment.centerLeft,
                 child: Text(
                   record.eventType,
-                  style: TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w400,
+                  style: f14w400Size().copyWith(
                     fontFamily: "Noto Sans KR",
                     color: record.eventColor,
                   ),
@@ -444,9 +410,7 @@ class _RecordViewState extends State<RecordView>
                 alignment: Alignment.centerLeft,
                 child: Text(
                   record.result,
-                  style: TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w400,
+                  style: f14w400Size().copyWith(
                     fontFamily: "Noto Sans KR",
                     color: record.resultColor,
                   ),

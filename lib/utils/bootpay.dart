@@ -17,7 +17,8 @@ import '../screen/login/find/find_pw_change_screen.dart';
 import '../screen/login/terms_screen.dart';
 import '../screen/setting/private/private_change_screen.dart';
 
-Future<void> goBootpayRequest(BuildContext context, String pw, String email, String path) async {
+Future<void> goBootpayRequest(
+    BuildContext context, String pw, String email, String path) async {
   final us = Get.put(UserState());
   final config = AppConfig();
   Payload payload = Payload();
@@ -50,8 +51,11 @@ Future<void> goBootpayRequest(BuildContext context, String pw, String email, Str
       http.Response response = await http.get(Uri.parse(url));
       try {
         var data = response.body;
-        us.bootName.value = jsonDecode(data)['authenticate_data']['name'].toString();
-        us.bootPhone.value = jsonDecode(data)['authenticate_data']['phone'].toString();
+        us.bootName.value =
+            jsonDecode(data)['authenticate_data']['name'].toString();
+        us.bootPhone.value =
+            jsonDecode(data)['authenticate_data']['phone'].toString();
+
         /// 아이디 찾기일떄
         switch (path) {
           case 'id':
@@ -67,25 +71,25 @@ Future<void> goBootpayRequest(BuildContext context, String pw, String email, Str
             }
             break;
           case 'pw':
-            String responseBody = await findPw(pw,email);
+            String responseBody = await findPw(pw, email);
             if (pw != us.bootPhone.value) {
               showOnlyConfirmDialog(context, '정보가 일치하지 않습니다');
             } else if ((responseBody == '[]')) {
               showOnlyConfirmDialog(context, '등록된 아이디가 없습니다');
             } else {
-              Get.to(() => FindPwChange(responseBody: responseBody,));
+              Get.to(() => FindPwChange(
+                    responseBody: responseBody,
+                  ));
             }
             break;
 
           /// 개인정보 변경 핸드폰 번호 변경
           case 'setting':
-            us.userData['phone_number'] = us.bootPhone.value;
-            // us.userInfoList[4] = us.bootPhone.value;
-            // us.userInfoList.refresh();
-            // us.userList.refresh();
-            // us.update();
             await changePhoneNumber(us.bootPhone.value);
-            Get.to(() => PrivateChange());
+            us.userData.value = Map<String, dynamic>.from(us.userData.value);
+            us.userData.value['phone_number'] = us.bootPhone.value;
+            us.userData.refresh();
+            showOnlyConfirmDialog(context, '휴대폰 번호가 변경되었습니다');
             break;
           case 'first':
             if (us.userList[0]['phoneNumber'] != us.bootPhone.value) {
@@ -119,12 +123,10 @@ Future<String> findId(String phoneNum) async {
     ),
   );
 
-  final params = {
-    "phoneNumber": phoneNum,
-    "status": "1"
-  };
+  final params = {"phoneNumber": phoneNum, "status": "1"};
 
-  final url = Uri.parse('${config.baseUrl}/agents').replace(queryParameters: params);
+  final url =
+      Uri.parse('${config.baseUrl}/agents').replace(queryParameters: params);
   final response = await http.get(url);
 
   if (response.statusCode != 200) {
@@ -160,7 +162,7 @@ Future<String> findId(String phoneNum) async {
 }
 
 /// 아이디 찾기
-Future<String> findPw(String phoneNum,String email) async {
+Future<String> findPw(String phoneNum, String email) async {
   // Secure Storage 인스턴스 생성
   const storage = FlutterSecureStorage(
     aOptions: AndroidOptions(
@@ -168,13 +170,10 @@ Future<String> findPw(String phoneNum,String email) async {
     ),
   );
 
-  final params = {
-    "phoneNumber": phoneNum,
-    "email": email,
-    "status": "1"
-  };
+  final params = {"phoneNumber": phoneNum, "email": email, "status": "1"};
 
-  final url = Uri.parse('${config.baseUrl}/agents').replace(queryParameters: params);
+  final url =
+      Uri.parse('${config.baseUrl}/agents').replace(queryParameters: params);
   final response = await http.get(url);
 
   if (response.statusCode != 200) {

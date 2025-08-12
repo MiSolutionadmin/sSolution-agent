@@ -8,23 +8,36 @@ import 'find/find_id_screen.dart';
 import 'find/find_pw_screen.dart';
 import 'login_view_model.dart';
 
-class LoginView extends StatelessWidget {
+class LoginView extends StatefulWidget {
   const LoginView({super.key});
 
   @override
+  State<LoginView> createState() => _LoginViewState();
+}
+
+class _LoginViewState extends State<LoginView> {
+  late final LoginViewModel viewModel;
+
+  @override
+  void initState() {
+    super.initState();
+    viewModel = Get.put(LoginViewModel(), tag: 'login');
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final LoginViewModel viewModel = Get.put(LoginViewModel(), tag: 'login');
-    
     return GestureDetector(
       onTap: () => FocusScope.of(context).unfocus(),
       child: WillPopScope(
         onWillPop: () => viewModel.handleWillPop(context),
         child: Scaffold(
           backgroundColor: Colors.white,
-          body: Obx(() => viewModel.isLoading.value 
-            ? LoadingScreen() 
-            : _buildLoginBody(viewModel)
-          ),
+          body: Obx(() {
+            if (viewModel.isLoading.value) {
+              return LoadingScreen();
+            }
+            return _buildLoginBody(viewModel);
+          }),
         ),
       ),
     );

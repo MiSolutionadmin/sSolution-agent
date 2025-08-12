@@ -6,6 +6,8 @@ import 'package:video_player/video_player.dart';
 import 'package:http/http.dart' as http;
 import 'package:get/get.dart';
 import 'package:url_launcher/url_launcher.dart';
+import '../../utils/font/font.dart';
+import '../../provider/user_state.dart';
 import 'video_fullscreen_page.dart';
 import 'dart:async';
 import '../navigation/bottom_navigator_view_model.dart';
@@ -34,6 +36,7 @@ class _VideoPageState extends State<VideoPage> {
   String _currentVideoUrl = '';
   bool _isVideoExpired = false;
   bool _isSubmissionCompleted = false;
+  final UserState us = Get.find<UserState>();
 
   @override
   void initState() {
@@ -468,7 +471,7 @@ class _VideoPageState extends State<VideoPage> {
             padding: const EdgeInsets.all(20),
             child: Text(
               "실시간 경보 영상",
-              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
+              style: f20w700Size(),
             ),
           ),
           centerTitle: false,
@@ -488,9 +491,7 @@ class _VideoPageState extends State<VideoPage> {
               SizedBox(height: 20),
               Text(
                 '진행중인 이벤트가 없습니다.',
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w500,
+                style: f18w500Size().copyWith(
                   color: Colors.grey[700],
                 ),
               ),
@@ -518,10 +519,7 @@ class _VideoPageState extends State<VideoPage> {
           padding: const EdgeInsets.all(20),
           child: Text(
             "실시간 경보 영상",
-            style: TextStyle(
-              fontWeight: FontWeight.bold,
-              fontSize: 20,
-            ),
+            style: f20w700Size(),
           ),
         ),
         centerTitle: false,
@@ -585,10 +583,7 @@ class _VideoPageState extends State<VideoPage> {
                             SizedBox(height: 16),
                             Text(
                               '영상 재생 오류',
-                              style: TextStyle(
-                                fontSize: 18,
-                                fontWeight: FontWeight.bold,
-                              ),
+                              style: f18w700Size(),
                             ),
                             SizedBox(height: 8),
                             Padding(
@@ -596,8 +591,7 @@ class _VideoPageState extends State<VideoPage> {
                                   const EdgeInsets.symmetric(horizontal: 20),
                               child: Text(
                                 _errorMessage,
-                                style: TextStyle(
-                                  fontSize: 14,
+                                style: f14w400Size().copyWith(
                                   color: Colors.grey,
                                 ),
                                 textAlign: TextAlign.center,
@@ -644,8 +638,7 @@ class _VideoPageState extends State<VideoPage> {
                                   SizedBox(height: 8),
                                   Text(
                                     'HTTP 트래픽이 차단되었을 수 있습니다',
-                                    style: TextStyle(
-                                      fontSize: 12,
+                                    style: f12w400Size().copyWith(
                                       color: Colors.grey,
                                     ),
                                   ),
@@ -672,9 +665,7 @@ class _VideoPageState extends State<VideoPage> {
               padding: const EdgeInsets.symmetric(horizontal: 20),
               child: Text(
                 '이벤트가 발생한 화면을 보고\n\n화재 또는 비화재로 판단하여 주시기 바랍니다.\n\n판단의 결과가 포인트 지급에 영향을 미칩니다.',
-                style: const TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
+                style: f16w700Size().copyWith(
                   height: 1, // 줄 간격 조정
                 ),
                 textAlign: TextAlign.left,
@@ -746,10 +737,8 @@ class _VideoPageState extends State<VideoPage> {
                         child: Center(
                           child: Text(
                             _getButtonText(),
-                            style: const TextStyle(
+                            style: f16w700Size().copyWith(
                               color: Colors.white,
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
                             ),
                           ),
                         ),
@@ -809,12 +798,10 @@ class _VideoPageState extends State<VideoPage> {
                               : const Color(0xFF030303),
                           borderRadius: BorderRadius.circular(4),
                         ),
-                        child: const Center(
+                        child: Center(
                           child: Text(
                             '비화재',
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
+                            style: f16w700Size().copyWith(
                               color: Colors.white,
                             ),
                           ),
@@ -866,19 +853,14 @@ class _VideoPageState extends State<VideoPage> {
                   ),
                   child: Text(
                     buttonText,
-                    style: TextStyle(
+                    style: f14w700Size().copyWith(
                       color: Colors.white,
-                      fontSize: 14,
-                      fontWeight: FontWeight.w700,
                     ),
                   ),
                 ),
                 Text(
                   '로 판단하시겠습니까?',
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w700,
-                  ),
+                  style: f16w700Size(),
                 ),
               ],
             ),
@@ -906,10 +888,8 @@ class _VideoPageState extends State<VideoPage> {
                           child: Center(
                             child: Text(
                               '확인',
-                              style: TextStyle(
+                              style: f16w700Size().copyWith(
                                 color: Colors.white,
-                                fontSize: 16,
-                                fontWeight: FontWeight.w700,
                               ),
                             ),
                           ),
@@ -935,10 +915,7 @@ class _VideoPageState extends State<VideoPage> {
                           child: Center(
                             child: Text(
                               '취소',
-                              style: TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.w700,
-                              ),
+                              style: f16w700Size(),
                             ),
                           ),
                         ),

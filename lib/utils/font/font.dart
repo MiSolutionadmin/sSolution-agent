@@ -115,6 +115,13 @@ var f14w700Size = () => TextStyle(
   fontFamily: 'Pretendard',
 );
 
+var f12w700Size = () => TextStyle(
+  fontSize: 12 - (0.8 * double.parse('${us.userFont.value}')),
+  color: blackColor,
+  fontWeight: FontWeight.w700,
+  fontFamily: 'Pretendard',
+);
+
 const TextStyle f14w700 = TextStyle(
     fontSize: 14,
     color: blackColor,
@@ -177,6 +184,13 @@ var f18w500Size = () => TextStyle(
   fontFamily: 'Pretendard',
 );
 
+var f16w500Size = () => TextStyle(
+  fontSize: 16 - (0.8 * double.parse('${us.userFont.value}')),
+  color: blackColor,
+  fontWeight: FontWeight.w500,
+  fontFamily: 'Pretendard',
+);
+
 /// w400
 var f24w400Size = () => TextStyle(
   fontSize: 24 - (0.8 * double.parse('${us.userFont.value}')),
@@ -195,6 +209,21 @@ var f18w400Size = () => TextStyle(
   fontWeight: FontWeight.w400,
   fontFamily: 'Pretendard',
 );
+
+var f14w400Size = () => TextStyle(
+  fontSize: 14 - (0.8 * double.parse('${us.userFont.value}')),
+  color: blackColor,
+  fontWeight: FontWeight.w400,
+  fontFamily: 'Pretendard',
+);
+
+var f12w400Size = () => TextStyle(
+  fontSize: 12 - (0.8 * double.parse('${us.userFont.value}')),
+  color: blackColor,
+  fontWeight: FontWeight.w400,
+  fontFamily: 'Pretendard',
+);
+
 /// white
 const TextStyle f12Whitew700 = TextStyle(
     fontSize: 12,

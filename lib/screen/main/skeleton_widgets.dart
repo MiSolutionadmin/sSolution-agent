@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
+import '../../utils/font/font.dart';
 
 class SkeletonLoader extends StatefulWidget {
   final Widget child;
-  
+
   const SkeletonLoader({
     super.key,
     required this.child,
@@ -152,10 +153,7 @@ class StatisticsSkeleton extends StatelessWidget {
           width: 100,
           child: Text(
             label,
-            style: const TextStyle(
-              fontSize: 14,
-              fontWeight: FontWeight.w500,
-            ),
+            style: f14w500Size(),
           ),
         ),
         Expanded(
@@ -167,8 +165,8 @@ class StatisticsSkeleton extends StatelessWidget {
             ),
             child: SkeletonLoader(
               child: Text(
-                '로딩중...',  // 더미 텍스트
-                style: const TextStyle(fontSize: 14, color: Colors.transparent),
+                '로딩중...', // 더미 텍스트
+                style: f14w400Size().copyWith(color: Colors.transparent),
               ),
             ),
           ),
@@ -208,12 +206,20 @@ class EventTableSkeleton extends StatelessWidget {
                 topRight: Radius.circular(8),
               ),
             ),
-            child: const Row(
+            child: Row(
               children: [
-                Expanded(flex: 3, child: Center(child: Text('날짜', style: TextStyle(fontWeight: FontWeight.bold)))),
-                Expanded(flex: 2, child: Center(child: Text('경과', style: TextStyle(fontWeight: FontWeight.bold)))),
-                Expanded(flex: 2, child: Center(child: Text('판단', style: TextStyle(fontWeight: FontWeight.bold)))),
-                Expanded(flex: 2, child: Center(child: Text('포인트', style: TextStyle(fontWeight: FontWeight.bold)))),
+                Expanded(
+                    flex: 3,
+                    child: Center(child: Text('날짜', style: f14w700Size()))),
+                Expanded(
+                    flex: 2,
+                    child: Center(child: Text('경과', style: f14w700Size()))),
+                Expanded(
+                    flex: 2,
+                    child: Center(child: Text('판단', style: f14w700Size()))),
+                Expanded(
+                    flex: 2,
+                    child: Center(child: Text('포인트', style: f14w700Size()))),
               ],
             ),
           ),
@@ -241,7 +247,8 @@ class EventTableSkeleton extends StatelessWidget {
               child: SkeletonLoader(
                 child: Text(
                   '2025-01-15\n10:30:45',
-                  style: const TextStyle(fontSize: 12, color: Colors.transparent),
+                  style:
+                      f12w400Size().copyWith(color: Colors.transparent),
                   textAlign: TextAlign.center,
                 ),
               ),
@@ -254,7 +261,8 @@ class EventTableSkeleton extends StatelessWidget {
               child: SkeletonLoader(
                 child: Text(
                   '15초',
-                  style: const TextStyle(fontSize: 12, color: Colors.transparent),
+                  style:
+                      f12w400Size().copyWith(color: Colors.transparent),
                 ),
               ),
             ),
@@ -266,7 +274,8 @@ class EventTableSkeleton extends StatelessWidget {
               child: SkeletonLoader(
                 child: Text(
                   '화재',
-                  style: const TextStyle(fontSize: 12, color: Colors.transparent),
+                  style:
+                      f12w400Size().copyWith(color: Colors.transparent),
                 ),
               ),
             ),
@@ -278,7 +287,8 @@ class EventTableSkeleton extends StatelessWidget {
               child: SkeletonLoader(
                 child: Text(
                   '1000 P',
-                  style: const TextStyle(fontSize: 12, color: Colors.transparent),
+                  style:
+                      f12w400Size().copyWith(color: Colors.transparent),
                 ),
               ),
             ),

@@ -5,6 +5,7 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:get/get.dart';
 
 import '../../components/dialog.dart';
+import '../../utils/font/font.dart';
 import '../../notification/firebase_cloud_messaging.dart';
 import '../../notification/local_notification_setting.dart';
 import '../../provider/camera_state.dart';
@@ -18,14 +19,14 @@ import 'navigation_service.dart';
 
 class BottomNavigatorViewModel extends GetxController {
   // TabController 제거 - Ticker 문제 해결
-  
+
   // Reactive Variables
   final RxInt currentIndex = 0.obs;
   final RxBool isLoading = true.obs;
   final RxList<Widget> widgetOptions = <Widget>[].obs;
   final RxString alertVideoUrl = ''.obs;
   final RxString alertVideoType = ''.obs;
-  
+
   // Dependencies
   final UserState userState = Get.put(UserState());
   final CameraState cameraState = Get.put(CameraState());
@@ -35,12 +36,12 @@ class BottomNavigatorViewModel extends GetxController {
       encryptedSharedPreferences: true,
     ),
   );
-  
+
   // FCM 관련
-  final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin = 
+  final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
       FlutterLocalNotificationsPlugin();
   AndroidNotificationChannel? androidNotificationChannel;
-  
+
   // Back press handling
   DateTime? currentBackPressTime;
   static OverlayEntry? _snackBarEntry;
@@ -77,10 +78,10 @@ class BottomNavigatorViewModel extends GetxController {
     widgetOptions.value = [
       const MainView(),
       VideoPage(
-        key: ValueKey('${alertVideoUrl.value}_${DateTime.now().millisecondsSinceEpoch}'), // 고유 키로 새 인스턴스 보장
-        videoUrl: alertVideoUrl.value, 
-        type: alertVideoType.value.isNotEmpty ? alertVideoType.value : '경보'
-      ),
+          key: ValueKey(
+              '${alertVideoUrl.value}_${DateTime.now().millisecondsSinceEpoch}'), // 고유 키로 새 인스턴스 보장
+          videoUrl: alertVideoUrl.value,
+          type: alertVideoType.value.isNotEmpty ? alertVideoType.value : '경보'),
       const RecordView(),
       const SettingView(),
     ];
@@ -130,7 +131,7 @@ class BottomNavigatorViewModel extends GetxController {
 
   /// 릴리즈 노트 체크
   void _checkReleaseNote() {
-    if (userState.userList.isNotEmpty && 
+    if (userState.userList.isNotEmpty &&
         userState.userList[0]['checkRelease'] != 'true') {
       // releaseNoteDialog 호출 - context가 필요하므로 View에서 처리
       Get.find<BottomNavigatorViewModel>().showReleaseNoteDialog();
@@ -141,23 +142,30 @@ class BottomNavigatorViewModel extends GetxController {
   void onTabChanged(int index) async {
     navigationService.changeTab(index);
     currentIndex.value = index;
-    
-    // main 탭(index 0)으로 이동할 때 작업 시간 API 호출 및 현재 달로 리셋
+
+    // main 탭(index 0)으로 이동할 때 유저 정보 새로고침
     if (index == 0) {
-      final mainViewModel = Get.find<MainViewModel>();
-      await mainViewModel.fetchWorkTimeFromAPI();
-      mainViewModel.resetToCurrentMonth();
+      if (Get.isRegistered<MainViewModel>()) {
+        final mainViewModel = Get.find<MainViewModel>();
+        mainViewModel.refreshUserInfo(); // API 호출해서 유저 정보 갱신
+        await mainViewModel.fetchWorkTimeFromAPI();
+        mainViewModel.resetToCurrentMonth();
+      } else {
+        print('MainViewModel이 아직 등록되지 않음');
+        // 메인 페이지가 아직 로드되지 않아서 ViewModel이 없는 경우
+        // 메인 페이지에서 직접 새로고침이 실행될 것임
+      }
     }
-    
+
     // 탭 변경 시에는 VideoPage를 재생성하지 않음 (완료 상태 유지)
     // VideoPage 재생성은 새로운 FCM 알림이 올 때만 수행
   }
-  
 
   /// 뒤로가기 처리
   Future<bool> handleBackPress() async {
-    if (currentBackPressTime == null || 
-        DateTime.now().difference(currentBackPressTime!) > const Duration(seconds: 2)) {
+    if (currentBackPressTime == null ||
+        DateTime.now().difference(currentBackPressTime!) >
+            const Duration(seconds: 2)) {
       currentBackPressTime = DateTime.now();
       return false; // 첫 번째 클릭 - 스낵바 표시
     } else {
@@ -212,12 +220,10 @@ class BottomNavigatorViewModel extends GetxController {
                   ),
                 ),
                 const SizedBox(width: 10),
-                const Text(
+                Text(
                   '"뒤로" 버튼을 한 번 더 누르시면 종료됩니다',
-                  style: TextStyle(
+                  style: f12w700Size().copyWith(
                     color: Colors.white,
-                    fontSize: 12,
-                    fontWeight: FontWeight.w700,
                   ),
                 ),
               ],
@@ -254,10 +260,9 @@ class BottomNavigatorViewModel extends GetxController {
     // 경보 탭(index 1)이고 alertVideoUrl이 비어있으면 빈 VideoPage 반환
     if (currentIndex.value == 1 && alertVideoUrl.value.isEmpty) {
       return VideoPage(
-        key: ValueKey('empty_${DateTime.now().millisecondsSinceEpoch}'),
-        videoUrl: '', 
-        type: '경보'
-      );
+          key: ValueKey('empty_${DateTime.now().millisecondsSinceEpoch}'),
+          videoUrl: '',
+          type: '경보');
     }
     return widgetOptions[currentIndex.value];
   }
@@ -277,22 +282,22 @@ class BottomNavigatorViewModel extends GetxController {
     try {
       alertVideoUrl.value = videoUrl;
       alertVideoType.value = type;
-      
+
       // 새로운 FCM 알림이 올 때만 VideoPage 재생성 (고유 키로 새 인스턴스 보장)
       if (widgetOptions.length >= 2) {
         widgetOptions[1] = VideoPage(
-          key: ValueKey('${videoUrl}_${DateTime.now().millisecondsSinceEpoch}'),
-          videoUrl: videoUrl, 
-          type: type
-        );
+            key: ValueKey(
+                '${videoUrl}_${DateTime.now().millisecondsSinceEpoch}'),
+            videoUrl: videoUrl,
+            type: type);
         widgetOptions.refresh(); // RxList 강제 업데이트
       } else {
         _initializeWidgetOptions();
       }
-      
+
       // 경보 탭(index 1)로 이동
       onTabChanged(1);
-      
+
       // TabController 제거로 인해 별도 애니메이션 처리 불필요
     } catch (e) {
       print('navigateToAlertWithVideo 오류: $e');
