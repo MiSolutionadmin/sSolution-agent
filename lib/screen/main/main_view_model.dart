@@ -498,6 +498,8 @@ class MainViewModel extends GetxController {
 
   /// 캘린더 아이콘 클릭
   void onCalendarTap(BuildContext context) {
+    // 달력을 열 때마다 현재 달로 초기화
+    focusedDay.value = DateTime.now();
     _loadScheduledWorkDates().then((_) {
       _showCalendarDialog(context);
     });

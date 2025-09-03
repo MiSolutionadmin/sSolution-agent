@@ -36,6 +36,7 @@ class _VideoPageState extends State<VideoPage> {
   String _currentVideoUrl = '';
   bool _isVideoExpired = false;
   bool _isSubmissionCompleted = false;
+  bool _isRequestingUpdate = false; // 업데이트 요청 중인지 확인
   final UserState us = Get.find<UserState>();
 
   @override
@@ -69,6 +70,7 @@ class _VideoPageState extends State<VideoPage> {
           _isVideoExpired = false;
           _hasError = false;
           _errorMessage = '';
+          _isRequestingUpdate = false;
         });
       }
 
@@ -306,12 +308,28 @@ class _VideoPageState extends State<VideoPage> {
     final pos = value.position;
     final dur = value.duration;
 
-    // 🎬 영상 종료 시 마지막 프레임 유지
-    if (pos >= dur && value.isPlaying) {
-      _controller!.pause();
-      _controller!.seekTo(dur - Duration(milliseconds: 100) > Duration.zero
-          ? dur - Duration(milliseconds: 100)
-          : Duration.zero);
+    // 영상 상태 디버깅 로그 (5초마다 출력 + 끝 근처에서는 더 자주)
+    bool shouldLog = pos.inSeconds % 5 == 0 && pos.inMilliseconds % 1000 < 100;
+    bool nearEnd = dur.inSeconds > 0 && (dur.inSeconds - pos.inSeconds <= 2);
+    
+    if (shouldLog || nearEnd) {
+      print("📹 영상 상태 - pos: ${pos.inSeconds}s, dur: ${dur.inSeconds}s, isPlaying: ${value.isPlaying}, isRequestingUpdate: $_isRequestingUpdate");
+    }
+
+    // 🎬 영상 종료 또는 끝에 거의 도달 시 새로운 영상 요청하여 계속 재생
+    bool isAtEnd = pos >= dur;
+    bool isNearEnd = dur.inSeconds > 0 && (dur.inSeconds - pos.inSeconds <= 1);
+    
+    if ((isAtEnd || isNearEnd) && !_isRequestingUpdate && !_isSubmissionCompleted) {
+      print("📹 영상 끝 도달/근접 - 새로운 영상 부분 요청 (pos: $pos, dur: $dur, isPlaying: ${value.isPlaying})");
+      if (!isAtEnd) {
+        // 아직 끝이 아니라면 일시정지하지 않고 계속 재생
+        _requestUpdatedVideo();
+      } else {
+        // 완전히 끝에 도달했으면 일시정지하고 요청
+        _controller!.pause();
+        _requestUpdatedVideo();
+      }
     }
 
     _lastPosition = pos;
@@ -337,6 +355,98 @@ class _VideoPageState extends State<VideoPage> {
     }
 
     _initializeVideo();
+  }
+
+  /// 영상 끝에 도달했을 때 업데이트된 영상 요청
+  void _requestUpdatedVideo() async {
+    if (_currentVideoUrl.isEmpty || _controller == null || _isRequestingUpdate) return;
+
+    _isRequestingUpdate = true; // 요청 시작
+    print("📹 업데이트된 영상 요청 중...");
+    
+    try {
+      // 현재 재생 위치 저장
+      final currentPosition = _controller!.value.position;
+      
+      // 새로운 컨트롤러로 같은 URL 재초기화
+      final oldController = _controller;
+      if (oldController != null) {
+        await oldController.pause();
+        oldController.removeListener(_videoListener);
+        await oldController.dispose();
+        _controller = null;
+      }
+
+      // 잠시 로딩 상태로 변경
+      if (mounted) {
+        setState(() {
+          _isReady = false;
+        });
+      }
+
+      // 새 컨트롤러 생성
+      final controller = VideoPlayerController.networkUrl(
+        Uri.parse(_currentVideoUrl),
+        videoPlayerOptions: VideoPlayerOptions(
+          mixWithOthers: true,
+          allowBackgroundPlayback: false,
+        ),
+        httpHeaders: {
+          'User-Agent': 'Flutter VideoPlayer',
+          'Accept': 'video/mp4,video/*,*/*',
+          'Cache-Control': 'no-cache',
+          'Connection': 'keep-alive',
+        },
+        formatHint: VideoFormat.other,
+      );
+
+      await controller.initialize();
+      print("✅ 업데이트된 영상 초기화 성공, 새로운 duration: ${controller.value.duration}");
+
+      // 이전 위치로 복원 (새로운 duration보다 작은 경우에만)
+      if (currentPosition < controller.value.duration) {
+        await controller.seekTo(currentPosition);
+        print("📹 재생 위치 복원: $currentPosition");
+      } else {
+        // 이전 위치가 새로운 duration보다 크거나 같다면, 새로운 부분부터 재생
+        await controller.seekTo(currentPosition);
+        print("📹 새로운 부분부터 재생: $currentPosition");
+      }
+
+      if (mounted) {
+        setState(() {
+          _controller = controller;
+          _isReady = true;
+        });
+      }
+
+      // 리스너 추가 및 재생 시작
+      _controller!.addListener(_videoListener);
+      _controller!.play();
+      
+      print("📹 업데이트된 영상 재생 시작");
+
+    } catch (e) {
+      print("❌ 업데이트된 영상 요청 실패: $e");
+      
+      // 실패 시 기존 방식대로 마지막 프레임 유지
+      if (_controller != null && _controller!.value.isInitialized) {
+        final dur = _controller!.value.duration;
+        await _controller!.seekTo(dur - Duration(milliseconds: 100) > Duration.zero
+            ? dur - Duration(milliseconds: 100)
+            : Duration.zero);
+      }
+      
+      // 3초 후 다시 시도
+      Future.delayed(Duration(seconds: 3), () {
+        if (mounted && !_isSubmissionCompleted) {
+          _isRequestingUpdate = false; // 재시도 전에 플래그 해제
+          _requestUpdatedVideo();
+        }
+      });
+    } finally {
+      _isRequestingUpdate = false; // 요청 완료
+    }
   }
 
   @override

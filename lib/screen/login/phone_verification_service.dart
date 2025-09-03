@@ -35,13 +35,19 @@ class PhoneVerificationService {
           print('부트페이 인증 완료: $json');
           try {
             final receiptId = jsonDecode(json)['data']['receipt_id'] as String;
+            print('영수증 ID 추출 성공: $receiptId');
             final response = await _verifyBootpayReceipt(receiptId);
+            print('영수증 검증 완료: ${response.toString()}');
             
             Bootpay().dismiss(context);
             if (!completer.isCompleted) {
+              print('Completer에 성공 응답 완료');
               completer.complete(response);
+            } else {
+              print('Completer가 이미 완료됨 - 중복 호출 방지');
             }
           } catch (e) {
+            print('onDone에서 오류 발생: $e');
             Bootpay().dismiss(context);
             if (!completer.isCompleted) {
               completer.complete(PhoneVerificationResponse.error('인증 처리 중 오류가 발생했습니다: $e'));
@@ -49,16 +55,23 @@ class PhoneVerificationService {
           }
         },
         onCancel: (String json) {
+          print('부트페이 인증 취소: $json');
           Bootpay().dismiss(context);
           if (!completer.isCompleted) {
+            print('Completer에 취소 응답 완료');
             completer.complete(PhoneVerificationResponse.error('인증이 취소되었습니다.'));
+          } else {
+            print('Completer가 이미 완료됨 - onCancel 무시');
           }
         },
         onError: (String json) {
           print('Bootpay 오류: $json');
           Bootpay().dismiss(context);
           if (!completer.isCompleted) {
+            print('Completer에 에러 응답 완료');
             completer.complete(PhoneVerificationResponse.error('인증 중 오류가 발생했습니다.'));
+          } else {
+            print('Completer가 이미 완료됨 - onError 무시');
           }
         },
       );
@@ -137,7 +150,11 @@ class PhoneVerificationService {
     final cleanUserPhone = userInfo.phoneNumber.replaceAll(RegExp(r'[^\d]'), '');
     final cleanVerifiedPhone = verifiedPhone.replaceAll(RegExp(r'[^\d]'), '');
     
-    return cleanUserPhone == cleanVerifiedPhone;
+    print('전화번호 검증 - 유저폰: $cleanUserPhone, 인증폰: $cleanVerifiedPhone');
+    final isValid = cleanUserPhone == cleanVerifiedPhone;
+    print('전화번호 검증 결과: $isValid');
+    
+    return isValid;
   }
 
   /// 아이디 찾기 API 호출

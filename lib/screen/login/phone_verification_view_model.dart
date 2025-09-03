@@ -81,44 +81,83 @@ class PhoneVerificationViewModel extends GetxController {
       return;
     }
 
+    // 이미 인증 중이면 중복 실행 방지
+    if (isVerifying.value) {
+      print('이미 인증이 진행 중입니다.');
+      return;
+    }
+
     isVerifying.value = true;
 
     try {
+      print('Bootpay 인증 요청 시작');
       final response = await _verificationService.requestPhoneVerification(
         context: context,
         verificationData: userInfo.value!,
       );
 
+      print('Bootpay 인증 응답 받음: ${response.toString()}');
+
       if (response.success) {
+        print('Bootpay 인증 성공 - 데이터 설정 중');
         verifiedName.value = response.data?['name'] ?? '';
         verifiedPhone.value = response.data?['phone'] ?? '';
         
+        print('verifiedName: ${verifiedName.value}');
+        print('verifiedPhone: ${verifiedPhone.value}');
+        
+        print('_handleVerificationSuccess 호출 시작');
         await _handleVerificationSuccess(context);
+        print('_handleVerificationSuccess 완료');
+        // 성공 후에만 로딩 해제
+        isVerifying.value = false;
+        print('isVerifying을 false로 설정 완료');
       } else {
-        _showErrorDialog(context, response.message);
+        print('Bootpay 인증 실패: ${response.message}');
+        // 실패 시 로딩 해제
+        isVerifying.value = false;
+        // 취소나 에러 메시지 표시
+        if (response.message != '인증이 취소되었습니다.') {
+          _showErrorDialog(context, response.message);
+        } else {
+          print('인증 취소됨 - 에러 다이얼로그 표시 안함');
+        }
       }
     } catch (e) {
       print('휴대폰 인증 오류: $e');
-      _showErrorDialog(context, '인증 중 오류가 발생했습니다.');
-    } finally {
       isVerifying.value = false;
+      _showErrorDialog(context, '인증 중 오류가 발생했습니다.');
     }
   }
 
   /// 인증 성공 처리
   Future<void> _handleVerificationSuccess(BuildContext context) async {
-    if (userInfo.value == null) return;
+    if (userInfo.value == null) {
+      print('휴대폰 인증 성공 처리 - userInfo가 null입니다.');
+      return;
+    }
+
+    print('휴대폰 인증 성공 처리 시작');
+    print('verifiedPhone: ${verifiedPhone.value}');
+    print('userInfo: ${userInfo.value?.toString()}');
 
     try {
+      print('verifyFirstLogin 호출 시작');
       final verificationResult = await _verificationService.verifyFirstLogin(
         userInfo: userInfo.value!,
         verifiedPhone: verifiedPhone.value,
       );
 
+      print('verifyFirstLogin 결과: ${verificationResult.toString()}');
+
       if (verificationResult.success) {
+        print('인증 성공 - 비밀번호 변경 화면으로 이동');
+        print('_navigateToPasswordReset 호출 시작');
         // 인증 성공 시 비밀번호 초기화 화면으로 이동
         _navigateToPasswordReset();
+        print('_navigateToPasswordReset 완료');
       } else {
+        print('인증 실패: ${verificationResult.message}');
         _showErrorDialog(context, verificationResult.message);
       }
     } catch (e) {
@@ -129,7 +168,13 @@ class PhoneVerificationViewModel extends GetxController {
 
   /// 비밀번호 초기화 화면으로 이동
   void _navigateToPasswordReset() {
-    Get.to(() => const PasswordResetView());
+    print('PasswordResetView로 네비게이션 시작');
+    try {
+      Get.to(() => const PasswordResetView());
+      print('PasswordResetView로 네비게이션 완료');
+    } catch (e) {
+      print('네비게이션 오류: $e');
+    }
   }
 
   /// 메인 화면으로 이동 (인증 완료 후)
@@ -155,8 +200,10 @@ class PhoneVerificationViewModel extends GetxController {
 
   /// 뒤로가기 처리
   void handleBackPress() {
+    // 인증 중이면 로딩 상태 해제
     if (isVerifying.value) {
-      // 인증 중일 때는 뒤로가기 막기
+      isVerifying.value = false;
+      print('인증 취소 - 로딩 상태 해제');
       return;
     }
     

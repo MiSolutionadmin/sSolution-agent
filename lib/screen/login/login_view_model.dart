@@ -203,14 +203,20 @@ class LoginViewModel extends GetxController {
       
       userState.userData.value = response.user;
       
-      // 유저정보 및 토큰 저장
-      print("저장할 토큰: ${response.token}");
-      await loginService.saveLoginInfo(idController.text, passwordController.text);
-      await loginService.saveToken(response.token);
-      
-      // 토큰 저장 확인
-      final savedToken = await loginService.getToken();
-      print("저장된 토큰: $savedToken");
+      // first가 1이 아닐 때만 자동로그인 정보 저장
+      if (response.user['first'] != 1) {
+        print("저장할 토큰: ${response.token}");
+        await loginService.saveLoginInfo(idController.text, passwordController.text);
+        await loginService.saveToken(response.token);
+        
+        // 토큰 저장 확인
+        final savedToken = await loginService.getToken();
+        print("저장된 토큰: $savedToken");
+      } else {
+        print("최초 로그인 - 자동로그인 정보 저장 안함");
+        // 토큰은 임시로 메모리에만 보관 (API 호출을 위해)
+        await loginService.saveToken(response.token);
+      }
       
       // 로그인 성공 후 공통 처리
       _safeHideLoading();

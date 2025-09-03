@@ -181,7 +181,19 @@ class PasswordResetViewModel extends GetxController {
     isLoading.value = true;
 
     try {
-      await _performPasswordChange(passwordController.text.trim());
+      final newPassword = passwordController.text.trim();
+      await _performPasswordChange(newPassword);
+
+      // pageType이 initial인 경우 (최초 로그인 후 비밀번호 변경)
+      // 자동로그인 정보 저장
+      if (pageType.value != 'setting') {
+        // 아이디 가져오기 (userState에서)
+        final userId = _userState.userData['user_id'] ?? '';
+        if (userId.isNotEmpty) {
+          print("최초 로그인 비밀번호 변경 - 자동로그인 정보 저장");
+          await _loginService.saveLoginInfo(userId, newPassword);
+        }
+      }
 
       // 성공 메시지 표시 후 적절한 화면으로 이동
       if (pageType.value == 'setting') {
