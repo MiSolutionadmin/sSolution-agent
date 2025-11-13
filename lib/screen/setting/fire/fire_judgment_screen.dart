@@ -58,12 +58,12 @@ class FireJudgmentScreen extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            '화재 판단',
+            '화재 판단 기준',
             style: f18w700Size(),
           ),
           const SizedBox(height: 12),
           Text(
-            '- 실제 불꽃과 연기로 인해 알림이 울린 경우 화재로 판단',
+            '- 실제 불꽃과 연기로 인해 알림이 울린 경우',
             style: f16w400Size(),
           ),
           const SizedBox(height: 16),
@@ -89,7 +89,7 @@ class FireJudgmentScreen extends StatelessWidget {
           ),
           const SizedBox(height: 12),
           Text(
-            '- 실제 불꽃과 연기가 아닌 경우로 알림이 울린 경우 비화재로 판단',
+            '- 실제 불꽃과 연기가 아닌 경우의 알림',
             style: f16w400Size(),
           ),
           const SizedBox(height: 16),

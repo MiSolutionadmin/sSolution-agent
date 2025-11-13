@@ -6,14 +6,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:get/get.dart';
-import 'package:package_info_plus/package_info_plus.dart';
-import '../../components/dialog.dart';
-import '../../db/user_table.dart';
 import '../../provider/term_state.dart';
 import '../../provider/user_state.dart';
+import '../../services/camera_notification_service.dart';
 import '../navigation/bottom_navigator_view.dart';
 import '../login/login_view.dart';
-import '../login/login_view_model.dart';
+import '../login/login_service.dart';
+import '../login/login_model.dart';
 
 class SplashPage extends StatefulWidget {
   const SplashPage({Key? key}) : super(key: key);
@@ -56,8 +55,6 @@ class _SplashPageState extends State<SplashPage> {
 
   /// ✅ init + 버전 업데이트 함수
   void fetchInitWithVersionUpdate() async {
-    PackageInfo packageInfo = await PackageInfo.fromPlatform();
-
     await requestPermissions();
 
     /// ✅ 알림권한 여부설정
@@ -66,26 +63,6 @@ class _SplashPageState extends State<SplashPage> {
 
     /// ✅ 자동로그인
 
-    //us.versionList.value = await getVersion(); /// ✅ 앱 버전 가져오기
-
-    //String fullVersion = "${packageInfo.version}+${packageInfo.buildNumber}";
-    /// 강제 업데이트
-    // if(Version.parse(fullVersion)<Version.parse(us.versionList[0]['force_version'])&& us.versionList[0]['force']=='true'){
-    //   await forceUpdateVersionDialog(context);
-    // }
-
-    /// 일반 업데이트
-    // else if(us.userList.isNotEmpty&&us.userList[0]['appVersionCheck']!='false'){
-    //   if (Platform.isIOS) {
-    //     if (Version.parse(fullVersion) < Version.parse(us.versionList[0]['ios_app'])) {
-    //       await updateVersionDialog(context);
-    //     }
-    //   } else if (Platform.isAndroid) {
-    //     if (Version.parse(fullVersion) < Version.parse(us.versionList[0]['android_app'])) {
-    //       await updateVersionDialog(context);
-    //     }
-    //   }
-    // }
     setState(() {});
   }
 
@@ -142,24 +119,67 @@ class _SplashPageState extends State<SplashPage> {
     String? username = (await storage.read(key: "ids"));
     String? password = (await storage.read(key: "pws"));
 
+    if (username != null && password != null) {
+      try {
+        print("🔄 자동로그인 시도 중... (ID: $username)");
+
+        final loginService = LoginService();
+        final loginData = LoginModel(
+          id: username,
+          password: password,
+          saveId: true,
+        );
+
+        final response = await loginService.login(loginData);
+
+        if (response.success && response.user.isNotEmpty) {
+          print("✅ 자동로그인 성공");
+
+          // 사용자 데이터 저장
+          us.userData.value = response.user;
+
+          // 토큰 저장
+          if (response.token.isNotEmpty) {
+            await loginService.saveToken(response.token);
+          }
+
+          // ⭐ 자동로그인 성공 시 대기중인 알림 확인
+          await _checkAndHandlePendingNotification();
+        } else {
+          print("❌ 자동로그인 실패: ${response.message}");
+          // 실패 시 저장된 비밀번호 삭제
+          await storage.delete(key: "pws");
+        }
+      } catch (e) {
+        print("❌ 자동로그인 오류: $e");
+        // 오류 시 저장된 비밀번호 삭제
+        await storage.delete(key: "pws");
+      }
+    }
+
+    // ⭐ 핵심: 로딩 완료 후 isLoading을 false로 설정
+    isLoading = false;
+  }
+
+  /// ⭐ 대기중인 알림 목록 확인 및 처리
+  Future<void> _checkAndHandlePendingNotification() async {
     try {
-      final data = await getUser(username!, password!);
+      final cameraService = CameraNotificationService();
+      final pendingNotifications = await cameraService.checkPendingNotifications();
 
-      if (data.isEmpty) {
-        throw Exception('로그인 실패');
-      }
-
-      us.userData.value = data["user"];
-
-      // 공통 로그인 성공 처리 함수 사용
-      await LoginViewModel.handleLoginSuccess(data["user"]);
-    } catch (e) {
-      if (e.toString().contains('로그인 실패')) {
-        showOnlyConfirmDialog(context, '아이디 또는 비밀번호가 틀립니다');
+      if (pendingNotifications.isNotEmpty) {
+        print("🔔 자동로그인 시 대기중인 알림 발견: ${pendingNotifications.length}개");
+        // 대기중인 알림들을 NotificationState에 추가하고 경보 페이지로 이동
+        // 스플래쉬 화면이 표시된 후 이동하도록 처리
+        Future.delayed(Duration(milliseconds: 100), () async {
+          await cameraService.handlePendingNotifications(pendingNotifications);
+        });
       } else {
-        showOnlyConfirmDialog(context, "서버 오류로 로그인에 실패했습니다.\n잠시 후 다시 시도해주세요.");
+        print("✅ 자동로그인 시 대기중인 알림 없음");
       }
-      Get.offAll(() => LoginView());
+    } catch (e) {
+      print("❌ 대기중인 알림 확인 오류: $e");
+      // 오류가 발생해도 계속 진행
     }
   }
 
@@ -171,7 +191,6 @@ class _SplashPageState extends State<SplashPage> {
         /// ✅ 로딩
         : AnimatedSplashScreen.withScreenFunction(
             splashIconSize: double.maxFinite,
-            // pageTransitionType: PageTransitionType.rightToLeft,
             splash: Container(
               height: Get.height,
               child: Center(
@@ -184,12 +203,20 @@ class _SplashPageState extends State<SplashPage> {
                       width: Get.width * 0.5,
                       fit: BoxFit.contain,
                     ),
+                    const Text(
+                      '에이전트',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.orange,
+                      ),
+                    ),
                   ],
                 ),
               ),
             ),
             screenFunction: () async {
-              return us.userList.length == 1
+              return us.userData.isNotEmpty
                   ? BottomNavigatorView()
                   :
 

@@ -146,6 +146,7 @@ class _MainViewState extends State<MainView>
   /// 사용자 정보 아이템
   Widget _buildUserInfoItem(String label, String value) {
     return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         SizedBox(
           width: 90,

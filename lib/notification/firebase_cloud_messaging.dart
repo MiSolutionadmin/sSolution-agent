@@ -171,15 +171,21 @@ class FCM {
 
   /// 카메라 알림 처리
   Future<void> _handleCameraNotification(String docId, String type, RemoteMessage message) async {
-    // FCM 메시지 데이터를 직접 NotificationState에 저장
-    ns.notificationData.value = {
+    final notificationData = {
       'docId': docId,
       'type': type,
       'cameraUid': message.data['cameraUid'] ?? '',
       'ipcamId': message.data['ipcamId'] ?? '',
       'title': message.notification?.title ?? '',
       'body': message.notification?.body ?? '',
+      'createDate': message.data['createDate'] ?? DateTime.now().toIso8601String(), // ⭐ 서버의 createDate 사용
     };
+
+    // ⭐ 알림을 리스트에 추가 (중복 체크 및 정렬 포함)
+    ns.addNotification(notificationData);
+
+    // 현재 보고 있는 알림도 업데이트 (하위 호환성)
+    ns.notificationData.value = notificationData;
 
     // 새로운 서비스를 사용하여 알림 정보 저장
     final cameraService = CameraNotificationService();
@@ -198,7 +204,7 @@ class FCM {
     print("📷 FCM message data: ${message.data}");
     print("📷 Notification: ${message.notification?.title} - ${message.notification?.body}");
 
-    // 비디오 페이지로 이동
+    // 비디오 페이지로 이동 (가장 최신 영상을 보여줌)
     await openAgentVideoPage(docId, type);
   }
 

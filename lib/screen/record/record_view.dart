@@ -18,14 +18,19 @@ class _RecordViewState extends State<RecordView>
   bool get wantKeepAlive => true;
 
   @override
+  void initState() {
+    super.initState();
+    // 첫 로드 시에만 데이터 갱신
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final viewModel = Get.find<RecordViewModel>();
+      viewModel.refresh();
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
     super.build(context);
     final RecordViewModel viewModel = Get.put(RecordViewModel());
-
-    // 페이지가 나타날 때마다 데이터 갱신
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      viewModel.refresh();
-    });
 
     return Scaffold(
       backgroundColor: Colors.white,

@@ -501,12 +501,309 @@ class MainViewModel extends GetxController {
     // 달력을 열 때마다 현재 달로 초기화
     focusedDay.value = DateTime.now();
     _loadScheduledWorkDates().then((_) {
-      _showCalendarDialog(context);
+      _showCalendarViewDialog(context);
     });
   }
 
-  /// 달력 다이얼로그 표시 (근무 날짜 선택)
-  void _showCalendarDialog(BuildContext context) {
+  /// 달력 다이얼로그 표시 (근무 날짜 확인 - 읽기 전용)
+  void _showCalendarViewDialog(BuildContext context) {
+    // 이번 달로 초기화
+    focusedDay.value = DateTime.now();
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      isDismissible: true,
+      builder: (context) => Container(
+        padding: EdgeInsets.only(
+          left: 20,
+          right: 20,
+          top: 10,
+          bottom: MediaQuery.of(context).padding.bottom + 20,
+        ),
+        margin: const EdgeInsets.only(top: 50),
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.only(
+            topLeft: Radius.circular(10),
+            topRight: Radius.circular(10),
+          ),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // 네비게이션 바 힌트 (작대기)
+            Center(
+              child: Container(
+                width: 46,
+                height: 4,
+                margin: const EdgeInsets.only(bottom: 10),
+                decoration: BoxDecoration(
+                  color: Colors.black,
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+            ),
+            const SizedBox(height: 30),
+            // 다이얼로그 제목 및 변경 버튼
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  '근무일 확인',
+                  style: f16w700Size().copyWith(
+                    fontFamily: 'Noto Sans KR',
+                  ),
+                ),
+                GestureDetector(
+                  onTap: () {
+                    Navigator.pop(context);
+                    _showCalendarEditDialog(context);
+                  },
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: Colors.green,
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                    child: Text(
+                      '변경',
+                      style: f14w700Size().copyWith(
+                        color: Colors.white,
+                        fontFamily: 'Noto Sans KR',
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 36),
+
+            // 달력 (읽기 전용 - 비활성화 로직 제거)
+            SizedBox(
+              height: 450,
+              child: Obx(() => TableCalendar<DateTime>(
+                  firstDay: DateTime.utc(2020, 1, 1),
+                  lastDay: DateTime.utc(2030, 12, 31),
+                  focusedDay: focusedDay.value,
+                  selectedDayPredicate: (day) {
+                    return selectedWorkDates
+                        .any((selected) => isSameDay(selected, day));
+                  },
+                  calendarFormat: CalendarFormat.month,
+                  daysOfWeekHeight: 48,
+                  rowHeight: 56,
+                  headerStyle: HeaderStyle(
+                    formatButtonVisible: false,
+                    titleCentered: true,
+                    leftChevronPadding: const EdgeInsets.only(left: 0),
+                    rightChevronPadding: const EdgeInsets.only(right: 0),
+                    headerMargin: const EdgeInsets.only(bottom: 20),
+                    leftChevronIcon: SvgPicture.asset(
+                      'assets/main/calendar_arrow_left.svg',
+                      width: 24,
+                      height: 24,
+                    ),
+                    rightChevronIcon: SvgPicture.asset(
+                      'assets/main/calendar_arrow_right.svg',
+                      width: 24,
+                      height: 24,
+                    ),
+                  ),
+                  calendarBuilders: CalendarBuilders(
+                    dowBuilder: (context, day) {
+                      final text = ['일', '월', '화', '수', '목', '금', '토'][day.weekday % 7];
+                      return Container(
+                        margin: const EdgeInsets.only(bottom: 8),
+                        height: 40,
+                        child: Center(
+                          child: Text(
+                            text,
+                            style: f14w400Size().copyWith(
+                              color: Color(0xff989BA9),
+                              fontFamily: "Pretendard",
+                              height: 1.0,
+                            ),
+                          ),
+                        ),
+                      );
+                    },
+                    headerTitleBuilder: (context, day) {
+                      return Center(
+                        child: Text(
+                          '${day.year}.${day.month.toString().padLeft(2, '0')}',
+                          style: f18w700Size().copyWith(
+                            color: Colors.black,
+                          ),
+                        ),
+                      );
+                    },
+                    defaultBuilder: (context, day, focusedDay) {
+                      final isToday = isSameDay(day, DateTime.now());
+                      if (isToday) {
+                        return Container(
+                          margin: const EdgeInsets.only(bottom: 12),
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            border: Border.all(
+                              color: Colors.black,
+                              width: 1.5,
+                            ),
+                          ),
+                          child: Center(
+                            child: Text(
+                              '${day.day}',
+                              style: f16w600Size().copyWith(
+                                color: Color(0xFF4D505E),
+                                fontFamily: "Pretendard",
+                              ),
+                            ),
+                          ),
+                        );
+                      }
+                      return null;
+                    },
+                    disabledBuilder: (context, day, focusedDay) {
+                      final isToday = isSameDay(day, DateTime.now());
+                      if (isToday) {
+                        return Container(
+                          margin: const EdgeInsets.only(bottom: 12),
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            border: Border.all(
+                              color: Colors.black,
+                              width: 1.5,
+                            ),
+                          ),
+                          child: Center(
+                            child: Text(
+                              '${day.day}',
+                              style: f16w600Size().copyWith(
+                                color: Color(0xFF4D505E),
+                                fontFamily: "Pretendard",
+                              ),
+                            ),
+                          ),
+                        );
+                      }
+                      return null;
+                    },
+                    selectedBuilder: (context, day, focusedDay) {
+                      final isToday = isSameDay(day, DateTime.now());
+                      if (isToday) {
+                        // 오늘 날짜가 근무일로 선택된 경우: 네모 배경 + 동그라미 테두리
+                        return Container(
+                          margin: const EdgeInsets.only(bottom: 12),
+                          decoration: const BoxDecoration(
+                            color: Color(0xFFD6E2FF),
+                            shape: BoxShape.rectangle,
+                          ),
+                          child: Center(
+                            child: Container(
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                border: Border.all(
+                                  color: Colors.black,
+                                  width: 1.5,
+                                ),
+                              ),
+                              child: Center(
+                                child: Text(
+                                  '${day.day}',
+                                  style: f16w600Size().copyWith(
+                                    color: Color(0xFF1955EE),
+                                    fontFamily: "Pretendard",
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                        );
+                      }
+                      return null;
+                    },
+                  ),
+                  calendarStyle: CalendarStyle(
+                    outsideDaysVisible: true,
+                    weekendTextStyle: f16w600Size().copyWith(
+                      color: Color(0xFF4D505E),
+                      fontFamily: "Pretendard",
+                    ),
+                    defaultTextStyle: f16w600Size().copyWith(
+                      color: Color(0xFF4D505E),
+                      fontFamily: "Pretendard",
+                    ),
+                    cellMargin: const EdgeInsets.only(bottom: 12),
+                    selectedDecoration: const BoxDecoration(
+                      color: Color(0xFFD6E2FF),
+                      shape: BoxShape.rectangle,
+                    ),
+                    selectedTextStyle: f16w600Size().copyWith(
+                      color: Color(0xFF1955EE),
+                      fontFamily: "Pretendard",
+                    ),
+                    todayDecoration: BoxDecoration(
+                      color: Colors.transparent,
+                      shape: BoxShape.circle,
+                      border: Border.all(
+                        color: Colors.black,
+                        width: 1.5,
+                      ),
+                    ),
+                    todayTextStyle: f16w600Size().copyWith(
+                      color: Color(0xFF4D505E),
+                      fontFamily: "Pretendard",
+                    ),
+                    disabledDecoration: const BoxDecoration(
+                      color: Colors.transparent,
+                      shape: BoxShape.rectangle,
+                    ),
+                    disabledTextStyle: f16w600Size().copyWith(
+                      color: Color(0xFFCACAD7),
+                      fontFamily: "Pretendard",
+                    ),
+                    outsideTextStyle: f16w600Size().copyWith(
+                      color: Color(0xFFCACAD7),
+                      fontFamily: "Pretendard",
+                    ),
+                  ),
+                  onPageChanged: (focusedDay) {
+                    this.focusedDay.value = focusedDay;
+                  },
+                )),
+            ),
+            const SizedBox(height: 70),
+            // 확인 버튼
+            Center(
+              child: TextButton(
+                onPressed: () => Navigator.pop(context),
+                style: TextButton.styleFrom(
+                  backgroundColor: const Color(0xFF2753DC),
+                  minimumSize: const Size(double.infinity, 46),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                ),
+                child: Text(
+                  '확인',
+                  style: f16w700Size().copyWith(
+                    color: Colors.white,
+                    fontFamily: 'Noto Sans KR',
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// 달력 다이얼로그 표시 (근무 날짜 선택 - 수정 가능)
+  void _showCalendarEditDialog(BuildContext context) {
+    // 이번 달로 초기화
+    focusedDay.value = DateTime.now();
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -565,7 +862,7 @@ class MainViewModel extends GetxController {
             SizedBox(
               height: 450, // 달력 최대 높이 고정
               child: Obx(() => TableCalendar<DateTime>(
-                  firstDay: DateTime.now(),
+                  firstDay: DateTime.utc(2020, 1, 1),
                   lastDay: DateTime.utc(2030, 12, 31),
                   focusedDay: focusedDay.value,
                   selectedDayPredicate: (day) {
@@ -620,6 +917,47 @@ class MainViewModel extends GetxController {
                         ),
                       );
                     },
+                    defaultBuilder: (context, day, focusedDay) {
+                      // 수정 불가능한 날짜 처리 (오늘 + 6일 이전)
+                      final minSelectableDate = DateTime.now().add(const Duration(days: 6));
+                      final isDisabled = day.isBefore(minSelectableDate) && !isSameDay(day, minSelectableDate);
+                      final isSelected = selectedWorkDates.any((selected) => isSameDay(selected, day));
+
+                      if (isDisabled && isSelected) {
+                        // 수정 불가능한 날짜 중 근무일로 선택된 경우 파란색 배경 표시
+                        return Container(
+                          margin: const EdgeInsets.only(bottom: 12),
+                          decoration: const BoxDecoration(
+                            color: Color(0xFFD6E2FF),
+                            shape: BoxShape.rectangle,
+                          ),
+                          child: Center(
+                            child: Text(
+                              '${day.day}',
+                              style: f16w600Size().copyWith(
+                                color: Color(0xFF1955EE),
+                                fontFamily: "Pretendard",
+                              ),
+                            ),
+                          ),
+                        );
+                      } else if (isDisabled) {
+                        // 수정 불가능한 날짜는 회색으로 표시 (단, 클릭은 가능)
+                        return Container(
+                          margin: const EdgeInsets.only(bottom: 12),
+                          child: Center(
+                            child: Text(
+                              '${day.day}',
+                              style: f16w600Size().copyWith(
+                                color: Color(0xFFCACAD7),
+                                fontFamily: "Pretendard",
+                              ),
+                            ),
+                          ),
+                        );
+                      }
+                      return null;
+                    },
                   ),
                   calendarStyle: CalendarStyle(
                     outsideDaysVisible: true,
@@ -640,9 +978,17 @@ class MainViewModel extends GetxController {
                       color: Color(0xFF1955EE),
                       fontFamily: "Pretendard",
                     ),
-                    todayDecoration: const BoxDecoration(
-                      color: Color(0xFF1955EE),
-                      shape: BoxShape.rectangle,
+                    todayDecoration: BoxDecoration(
+                      color: Colors.transparent,
+                      shape: BoxShape.circle,
+                      border: Border.all(
+                        color: Colors.black,
+                        width: 1.5,
+                      ),
+                    ),
+                    todayTextStyle: f16w600Size().copyWith(
+                      color: Color(0xFF4D505E),
+                      fontFamily: "Pretendard",
                     ),
                     // 과거 날짜 비활성화
                     disabledDecoration: const BoxDecoration(
@@ -658,15 +1004,19 @@ class MainViewModel extends GetxController {
                       fontFamily: "Pretendard",
                     ),
                   ),
-                  enabledDayPredicate: (day) {
-                    // 오늘 + 6일 후부터 선택 가능
-                    final minSelectableDate =
-                        DateTime.now().add(const Duration(days: 6));
-                    return day.isAfter(minSelectableDate
-                            .subtract(const Duration(days: 1))) ||
-                        isSameDay(day, minSelectableDate);
-                  },
                   onDaySelected: (selectedDay, focusedDay) {
+                    // 비활성화된 날짜인지 확인 (오늘 + 6일 이전)
+                    final minSelectableDate = DateTime.now().add(const Duration(days: 6));
+                    final isDisabled = selectedDay.isBefore(minSelectableDate) &&
+                                       !isSameDay(selectedDay, minSelectableDate);
+
+                    if (isDisabled) {
+                      // 비활성화된 날짜를 클릭한 경우 안내 다이얼로그 표시
+                      final formattedDate = '${minSelectableDate.year.toString().substring(2)}-${minSelectableDate.month.toString().padLeft(2, '0')}-${minSelectableDate.day.toString().padLeft(2, '0')}';
+                      showOnlyConfirmDialog(context, '근무일 변경은 $formattedDate 날짜부터 가능합니다.');
+                      return;
+                    }
+
                     _handleDateSelection(selectedDay);
                     this.focusedDay.value = focusedDay;
 
@@ -684,47 +1034,56 @@ class MainViewModel extends GetxController {
             const SizedBox(height: 70),
             // 버튼들
             Obx(() => Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                   children: [
-                    TextButton(
-                      onPressed: () => Navigator.pop(context),
-                      style: TextButton.styleFrom(
-                        backgroundColor: const Color(0xFFF6F6F7),
-                        minimumSize: const Size(164, 46),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(4),
+                    Expanded(
+                      flex: 1,
+                      child: TextButton(
+                        onPressed: () {
+                          Navigator.pop(context);
+                          _showCalendarViewDialog(context);
+                        },
+                        style: TextButton.styleFrom(
+                          backgroundColor: const Color(0xFFD9D6E0),
+                          minimumSize: const Size(0, 46),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(4),
+                          ),
                         ),
-                      ),
-                      child: Text(
-                        '취소',
-                        style: f16w700Size().copyWith(
-                          color: Color(0xFF5C5E6B),
-                          fontFamily: 'Noto Sans KR',
+                        child: Text(
+                          '취소',
+                          style: f16w700Size().copyWith(
+                            color: Color(0xFF5C5E6B),
+                            fontFamily: 'Noto Sans KR',
+                          ),
                         ),
                       ),
                     ),
-                    TextButton(
-                      onPressed: (addDates.isNotEmpty || deleteDates.isNotEmpty)
-                          ? () {
-                              _showWorkDateConfirmDialog(context);
-                            }
-                          : null,
-                      style: TextButton.styleFrom(
-                        backgroundColor: (addDates.isNotEmpty || deleteDates.isNotEmpty)
-                            ? const Color(0xFFD6E2FF)
-                            : const Color(0xFFF6F6F7),
-                        foregroundColor: (addDates.isNotEmpty || deleteDates.isNotEmpty)
-                            ? const Color(0xFF1955EE)
-                            : const Color(0xFF5C5E6B),
-                        minimumSize: const Size(164, 46),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(4),
+                    const SizedBox(width: 30),
+                    Expanded(
+                      flex: 1,
+                      child: TextButton(
+                        onPressed: (addDates.isNotEmpty || deleteDates.isNotEmpty)
+                            ? () {
+                                _showWorkDateConfirmDialog(context);
+                              }
+                            : null,
+                        style: TextButton.styleFrom(
+                          backgroundColor: (addDates.isNotEmpty || deleteDates.isNotEmpty)
+                              ? const Color(0xFF2753DC)
+                              : const Color(0xFFF6F6F7),
+                          minimumSize: const Size(0, 46),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(4),
+                          ),
                         ),
-                      ),
-                      child: Text(
-                        '저장',
-                        style: f16w700Size().copyWith(
-                          fontFamily: 'Noto Sans KR',
+                        child: Text(
+                          '저장',
+                          style: f16w700Size().copyWith(
+                            color: (addDates.isNotEmpty || deleteDates.isNotEmpty)
+                                ? Colors.white
+                                : const Color(0xFF5C5E6B),
+                            fontFamily: 'Noto Sans KR',
+                          ),
                         ),
                       ),
                     ),
@@ -819,7 +1178,7 @@ class MainViewModel extends GetxController {
                   padding: EdgeInsets.symmetric(vertical: 12),
                   child: Text(
                     '근무일을 저장 하시겠습니까?',
-                    style: f20w500Size(),
+                    style: f16w500Size(),
                     textAlign: TextAlign.center,
                   ),
                 ),
@@ -950,11 +1309,12 @@ class MainViewModel extends GetxController {
                 Padding(
                   padding: EdgeInsets.symmetric(vertical: 12),
                   child: Text(
-                    '${selectedDay.month}/${selectedDay.day}을 결근으로 처리하시겠습니까?\n\n결근으로 처리시 해당 날짜에는 알림을 받을 수 없습니다.',
+                    '${selectedDay.month}/${selectedDay.day}을 결근 처리하시겠습니까?\n\n결근 처리시 해당 날짜에는\n알림을 받을 수 없습니다.',
                     style: f16w500Size().copyWith(
                       height: 1.5,
                     ),
                     textAlign: TextAlign.center,
+                    softWrap: false,
                   ),
                 ),
               ],
@@ -1065,7 +1425,7 @@ class MainViewModel extends GetxController {
       case 2:
         return '야간 ${formatTime(nightStart.value)} ~ ${formatTime(nightEnd.value)}';
       case 3:
-        return '주+야간 ${formatTime(dayStart.value)} ~ ${formatTime(dayEnd.value)}, ${formatTime(nightStart.value)} ~ ${formatTime(nightEnd.value)}';
+        return '주간 ${formatTime(dayStart.value)} ~ ${formatTime(dayEnd.value)}\n야간 ${formatTime(nightStart.value)} ~ ${formatTime(nightEnd.value)}';
       default:
         return '미정';
     }

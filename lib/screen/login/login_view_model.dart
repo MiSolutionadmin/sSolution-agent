@@ -6,6 +6,7 @@ import 'package:mms/components/dialogManager.dart';
 import '../../base_config/config.dart';
 import '../../components/dialog.dart';
 import '../../provider/user_state.dart';
+import '../../services/camera_notification_service.dart';
 import '../navigation/bottom_navigator_view.dart';
 import 'login_model.dart';
 import 'login_service.dart';
@@ -260,15 +261,38 @@ class LoginViewModel extends GetxController {
     final user = UserModel.fromJson(userData);
     print("유저 정보 first: ${user.first}");
     print("유저 정보 전체: ${user.toString()}");
-    
+
     // 약간의 지연 후 네비게이션
     await Future.delayed(const Duration(milliseconds: 200));
-    
+
     if (user.first == 1) {
       print("최초 로그인 사용자 - 휴대폰 인증 화면으로 이동");
       Get.offAll(() => const PhoneVerificationView());
     } else {
       print("기존 사용자 - 메인 화면으로 이동");
+
+      // ⭐ 대기중인 알림 확인
+      await _checkAndHandlePendingNotification();
+    }
+  }
+
+  /// ⭐ 대기중인 알림 목록 확인 및 처리
+  static Future<void> _checkAndHandlePendingNotification() async {
+    try {
+      final cameraService = CameraNotificationService();
+      final pendingNotifications = await cameraService.checkPendingNotifications();
+
+      if (pendingNotifications.isNotEmpty) {
+        print("🔔 로그인 시 대기중인 알림 발견: ${pendingNotifications.length}개");
+        // 대기중인 알림들을 NotificationState에 추가하고 경보 페이지로 이동
+        await cameraService.handlePendingNotifications(pendingNotifications);
+      } else {
+        print("✅ 로그인 시 대기중인 알림 없음 - 메인 화면으로 이동");
+        Get.offAll(() => const BottomNavigatorView());
+      }
+    } catch (e) {
+      print("❌ 대기중인 알림 확인 오류: $e");
+      // 오류가 발생해도 메인 화면으로 이동
       Get.offAll(() => const BottomNavigatorView());
     }
   }

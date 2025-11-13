@@ -169,7 +169,7 @@ class _PrivateChangeState extends State<PrivateChange>
               workTimeString = '야간($nightStart ~ $nightEnd)';
               break;
             case 3: // 주+야간
-              workTimeString = '주+야간($dayStart ~ $nightEnd)';
+              workTimeString = '주간($dayStart ~ $dayEnd)\n야간($nightStart ~ $nightEnd)';
               break;
             default:
               workTimeString = '주간($dayStart ~ $dayEnd)'; // 기본값
@@ -207,10 +207,10 @@ class _PrivateChangeState extends State<PrivateChange>
     }
   }
 
-  /// 전화번호를 010-****-**** 형식으로 마스킹
+  /// 전화번호를 010-1234-5678 형식으로 표시
   String _maskPhoneNumber(String? phoneNumber) {
     if (phoneNumber == null || phoneNumber.isEmpty) {
-      return '010-****-****';
+      return '010-0000-0000';
     }
 
     try {
@@ -218,20 +218,24 @@ class _PrivateChangeState extends State<PrivateChange>
       String digits = phoneNumber.replaceAll(RegExp(r'[^0-9]'), '');
 
       if (digits.length >= 11) {
-        // 010-1234-5678 -> 010-****-****
+        // 010-1234-5678 형식으로 변환
         String prefix = digits.substring(0, 3);
-        String suffix = digits.substring(digits.length - 4);
-        return '$prefix-****-****';
-      } else if (digits.length >= 8) {
-        // 짧은 번호의 경우
+        String middle = digits.substring(3, 7);
+        String suffix = digits.substring(7, 11);
+        return '$prefix-$middle-$suffix';
+      } else if (digits.length >= 10) {
+        // 10자리 번호의 경우
         String prefix = digits.substring(0, 3);
-        return '$prefix-****-****';
+        String middle = digits.substring(3, 6);
+        String suffix = digits.substring(6);
+        return '$prefix-$middle-$suffix';
       } else {
-        return '010-****-****';
+        // 그대로 반환
+        return phoneNumber;
       }
     } catch (e) {
-      print("전화번호 마스킹 오류: $e");
-      return '010-****-****';
+      print("전화번호 포맷 오류: $e");
+      return phoneNumber;
     }
   }
 
@@ -289,14 +293,20 @@ class _PrivateChangeState extends State<PrivateChange>
                                   _titleL[index],
                                   style: f16w400Size(),
                                 ),
-                                Row(
-                                  children: [
-                                    Text(
-                                      us.userInfoList.length > index
-                                          ? us.userInfoList[index]
-                                          : '...',
-                                      style: f16w800GreySize(),
-                                    ),
+                                Expanded(
+                                  child: Row(
+                                    mainAxisAlignment: MainAxisAlignment.end,
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Flexible(
+                                        child: Text(
+                                          us.userInfoList.length > index
+                                              ? us.userInfoList[index]
+                                              : '...',
+                                          style: f16w800GreySize(),
+                                          textAlign: TextAlign.right,
+                                        ),
+                                      ),
                                     if (index == 4 || index == 5)
                                       GestureDetector(
                                         onTap: () async {
@@ -329,7 +339,8 @@ class _PrivateChangeState extends State<PrivateChange>
                                               style: f13w400BlueSize()),
                                         ),
                                       ),
-                                  ],
+                                    ],
+                                  ),
                                 ),
                               ],
                             ),

@@ -32,6 +32,40 @@ class NotificationState extends GetxController{
     // Timer.periodic(Duration(seconds: 10), (_) => removeExpiredNotifications());
   }
 
+  /// 알림을 notificationList에 추가 (createDate 기준 정렬)
+  void addNotification(Map<String, dynamic> notification) {
+    // 중복 체크 (docId 기준)
+    final existingIndex = notificationList.indexWhere(
+      (item) => item['docId'] == notification['docId']
+    );
+
+    if (existingIndex != -1) {
+      print('⚠️ 이미 존재하는 알림: ${notification['docId']}');
+      return;
+    }
+
+    notificationList.add(notification);
+
+    // createDate 기준으로 정렬 (오래된 것 → 최신 순)
+    notificationList.sort((a, b) {
+      try {
+        final aDate = DateTime.parse(a['createDate'] ?? '');
+        final bDate = DateTime.parse(b['createDate'] ?? '');
+        return aDate.compareTo(bDate);
+      } catch (e) {
+        return 0;
+      }
+    });
+
+    print('✅ 알림 추가됨: ${notification['docId']}, 총 ${notificationList.length}개');
+  }
+
+  /// docId로 알림 제거
+  void removeNotification(String docId) {
+    notificationList.removeWhere((item) => item['docId'] == docId);
+    print('✅ 알림 제거됨: $docId, 남은 알림: ${notificationList.length}개');
+  }
+
   void removeExpiredNotifications() {
     final now = DateTime.now();
 

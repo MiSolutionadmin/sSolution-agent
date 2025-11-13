@@ -10,6 +10,8 @@ import '../../notification/firebase_cloud_messaging.dart';
 import '../../notification/local_notification_setting.dart';
 import '../../provider/camera_state.dart';
 import '../../provider/user_state.dart';
+import '../../provider/notification_state.dart';
+import '../../services/camera_notification_service.dart';
 import '../main/main_view.dart';
 import '../main/main_view_model.dart';
 import '../video/video_page.dart';
@@ -27,6 +29,9 @@ class BottomNavigatorViewModel extends GetxController {
   final RxString alertVideoUrl = ''.obs;
   final RxString alertVideoType = ''.obs;
 
+  // ⭐ 현재 보고 있는 영상의 인덱스 (notificationList 기준)
+  final RxInt currentVideoIndex = 0.obs;
+
   // Dependencies
   final UserState userState = Get.put(UserState());
   final CameraState cameraState = Get.put(CameraState());
@@ -36,6 +41,9 @@ class BottomNavigatorViewModel extends GetxController {
       encryptedSharedPreferences: true,
     ),
   );
+
+  // ⭐ NotificationState 의존성 추가
+  NotificationState get ns => Get.find<NotificationState>();
 
   // FCM 관련
   final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
@@ -155,6 +163,12 @@ class BottomNavigatorViewModel extends GetxController {
         // 메인 페이지가 아직 로드되지 않아서 ViewModel이 없는 경우
         // 메인 페이지에서 직접 새로고침이 실행될 것임
       }
+    }
+
+    // ⭐ 경보 탭(index 1)으로 이동할 때 대기 중인 알림 확인
+    if (index == 1) {
+      print('카메라 탭 활성화');
+      await _checkPendingNotificationsOnTabChange();
     }
 
     // 탭 변경 시에는 VideoPage를 재생성하지 않음 (완료 상태 유지)
@@ -283,6 +297,16 @@ class BottomNavigatorViewModel extends GetxController {
       alertVideoUrl.value = videoUrl;
       alertVideoType.value = type;
 
+      // ⭐ 가장 최신 영상(마지막)을 먼저 보여줌
+      if (ns.notificationList.isNotEmpty) {
+        currentVideoIndex.value = ns.notificationList.length - 1;
+        final latestNotification = ns.notificationList[currentVideoIndex.value];
+
+        // 최신 알림의 데이터 사용
+        alertVideoUrl.value = videoUrl;
+        alertVideoType.value = latestNotification['type'] ?? type;
+      }
+
       // 새로운 FCM 알림이 올 때만 VideoPage 재생성 (고유 키로 새 인스턴스 보장)
       if (widgetOptions.length >= 2) {
         widgetOptions[1] = VideoPage(
@@ -306,4 +330,142 @@ class BottomNavigatorViewModel extends GetxController {
       onTabChanged(1);
     }
   }
+
+  /// ⭐ 이전 영상으로 이동 (더 최신 영상, createDate 기준 오른쪽)
+  void moveToPreviousVideo() {
+    if (ns.notificationList.isEmpty) return;
+
+    // 인덱스 증가 (리스트의 뒤쪽 = 최신)
+    if (currentVideoIndex.value < ns.notificationList.length - 1) {
+      currentVideoIndex.value++;
+      loadVideoAtIndex(currentVideoIndex.value);
+    }
+  }
+
+  /// ⭐ 다음 영상으로 이동 (더 오래된 영상, createDate 기준 왼쪽)
+  void moveToNextVideo() {
+    if (ns.notificationList.isEmpty) return;
+
+    // 인덱스 감소 (리스트의 앞쪽 = 오래됨)
+    if (currentVideoIndex.value > 0) {
+      currentVideoIndex.value--;
+      loadVideoAtIndex(currentVideoIndex.value);
+    }
+  }
+
+  /// ⭐ 특정 인덱스의 영상 로드 (public으로 변경하여 VideoPage에서도 접근 가능)
+  Future<void> loadVideoAtIndex(int index) async {
+    if (index < 0 || index >= ns.notificationList.length) return;
+
+    final notification = ns.notificationList[index];
+    final docId = notification['docId'];
+    final type = notification['type'] ?? '경보';
+
+    try {
+      print('🔄 영상 전환 시작: 인덱스 $index/${ns.notificationList.length - 1}');
+
+      // ⭐ 로딩 상태 표시를 위해 먼저 빈 VideoPage로 교체
+      if (widgetOptions.length >= 2) {
+        widgetOptions[1] = VideoPage(
+            key: ValueKey('loading_${DateTime.now().millisecondsSinceEpoch}'),
+            videoUrl: '',  // 빈 URL로 로딩 화면 표시
+            type: '로딩 중...');
+        widgetOptions.refresh();
+      }
+
+      // 잠시 대기 (로딩 화면이 표시되도록)
+      await Future.delayed(Duration(milliseconds: 100));
+
+      // 비디오 URL 가져오기
+      final cameraService = CameraNotificationService();
+      final videoUrl = await cameraService.getVideoUrl(docId);
+
+      // 현재 알림 데이터 업데이트
+      ns.notificationData.value = notification;
+
+      // VideoPage 재생성 (새로운 영상)
+      alertVideoUrl.value = videoUrl;
+      alertVideoType.value = type;
+
+      if (widgetOptions.length >= 2) {
+        widgetOptions[1] = VideoPage(
+            key: ValueKey('${videoUrl}_${DateTime.now().millisecondsSinceEpoch}'),
+            videoUrl: videoUrl,
+            type: type);
+        widgetOptions.refresh();
+      }
+
+      print('✅ 영상 전환 완료: 인덱스 $index/${ns.notificationList.length - 1}');
+    } catch (e) {
+      print('❌ 영상 로드 실패: $e');
+    }
+  }
+
+  /// ⭐ 현재 영상의 개수
+  int get totalVideoCount => ns.notificationList.length;
+
+  /// ⭐ 이전 영상이 있는지 (더 최신 영상)
+  bool get hasPreviousVideo => currentVideoIndex.value < ns.notificationList.length - 1;
+
+  /// ⭐ 다음 영상이 있는지 (더 오래된 영상)
+  bool get hasNextVideo => currentVideoIndex.value > 0;
+
+  /// ⭐ 경보 탭 활성화 시 대기 중인 알림 확인
+  Future<void> _checkPendingNotificationsOnTabChange() async {
+    try {
+      print('🔍 경보 탭 활성화 - 대기 중인 알림 확인 시작');
+
+      // NotificationState에 이미 알림이 있으면 새로 불러오지 않음
+      if (ns.notificationList.isNotEmpty) {
+        print('ℹ️ 이미 ${ns.notificationList.length}개의 알림이 있음 - 새로 불러오지 않음');
+        return;
+      }
+
+      // 대기 중인 알림 목록 확인
+      final cameraService = CameraNotificationService();
+      final pendingNotifications = await cameraService.checkPendingNotifications();
+
+      if (pendingNotifications.isNotEmpty) {
+        print('🔔 경보 탭 활성화 시 대기중인 알림 발견: ${pendingNotifications.length}개');
+
+        // 알림들을 NotificationState에 추가
+        for (final notification in pendingNotifications) {
+          ns.addNotification(notification);
+        }
+
+        // 가장 최신 알림을 표시
+        if (ns.notificationList.isNotEmpty) {
+          final latestNotification = ns.notificationList.last;
+          final docId = latestNotification['docId'];
+          final type = latestNotification['type'] ?? '경보';
+
+          // 현재 알림 데이터 설정
+          ns.notificationData.value = latestNotification;
+
+          // 비디오 URL 가져오기
+          final videoUrl = await cameraService.getVideoUrl(docId.toString());
+
+          // VideoPage 재생성
+          alertVideoUrl.value = videoUrl;
+          alertVideoType.value = type;
+          currentVideoIndex.value = ns.notificationList.length - 1;
+
+          if (widgetOptions.length >= 2) {
+            widgetOptions[1] = VideoPage(
+                key: ValueKey('${videoUrl}_${DateTime.now().millisecondsSinceEpoch}'),
+                videoUrl: videoUrl,
+                type: type);
+            widgetOptions.refresh();
+          }
+
+          print('✅ 경보 탭 활성화 시 알림 로드 완료');
+        }
+      } else {
+        print('ℹ️ 경보 탭 활성화 시 대기중인 알림 없음');
+      }
+    } catch (e) {
+      print('❌ 경보 탭 활성화 시 알림 확인 오류: $e');
+    }
+  }
 }
+

@@ -8,6 +8,7 @@ import 'package:get/get.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../utils/font/font.dart';
 import '../../provider/user_state.dart';
+import '../../provider/notification_state.dart';
 import 'video_fullscreen_page.dart';
 import 'dart:async';
 import '../navigation/bottom_navigator_view_model.dart';
@@ -37,18 +38,33 @@ class _VideoPageState extends State<VideoPage> {
   bool _isVideoExpired = false;
   bool _isSubmissionCompleted = false;
   bool _isRequestingUpdate = false; // 업데이트 요청 중인지 확인
+  bool _isPending = false; // ⭐ 보류 상태 추가
+  Duration? _lastKnownDuration; // ⭐ 마지막으로 알려진 duration 저장
   final UserState us = Get.find<UserState>();
+  final NotificationState ns = Get.find<NotificationState>();
 
   @override
   void initState() {
     super.initState();
+    print('🎬 VideoPage initState - videoUrl: ${widget.videoUrl.isEmpty ? "empty" : "present"}');
+
+    // ⭐ 모든 상태 초기화
     _currentVideoUrl = widget.videoUrl;
-    _isSubmissionCompleted = false; // 새 인스턴스에서 항상 초기화
+    _isSubmissionCompleted = false;
+    _isReady = false;
+    _hasError = false;
+    _errorMessage = '';
+    _lastPosition = Duration.zero;  // ⭐ 타임라인 초기화
+    _isRequestingUpdate = false;
+    _isPending = false;
+    _lastKnownDuration = null;
 
     if (_currentVideoUrl.isNotEmpty) {
+      print('✅ 영상 URL 존재 - 초기화 시작');
       _initializeVideo();
       _startExpirationTimer();
     } else {
+      print('⚠️ 영상 URL 없음 - 빈 화면 표시');
       if (mounted) {
         setState(() {
           _isVideoExpired = true;
@@ -63,6 +79,21 @@ class _VideoPageState extends State<VideoPage> {
 
     // videoUrl이 변경되면 상태 초기화
     if (oldWidget.videoUrl != widget.videoUrl) {
+      print('🔄 VideoPage didUpdateWidget - URL 변경 감지');
+      print('   이전: ${oldWidget.videoUrl.isEmpty ? "empty" : "present"}');
+      print('   현재: ${widget.videoUrl.isEmpty ? "empty" : "present"}');
+
+      // ⭐ 기존 컨트롤러 정리
+      if (_controller != null) {
+        _controller!.removeListener(_videoListener);
+        _controller!.pause();
+        _controller!.dispose();
+        _controller = null;
+      }
+
+      // ⭐ 타이머 정리
+      _timer?.cancel();
+
       if (mounted) {
         setState(() {
           _currentVideoUrl = widget.videoUrl;
@@ -71,13 +102,20 @@ class _VideoPageState extends State<VideoPage> {
           _hasError = false;
           _errorMessage = '';
           _isRequestingUpdate = false;
+          _isPending = false;
+          _lastKnownDuration = null;
+          _isReady = false;  // ⭐ 로딩 상태로 전환
+          _lastPosition = Duration.zero;  // ⭐ 타임라인 초기화
         });
       }
 
       // 새로운 비디오로 초기화
       if (_currentVideoUrl.isNotEmpty) {
+        print('✅ 새로운 영상 초기화 시작');
         _initializeVideo();
         _startExpirationTimer();
+      } else {
+        print('⚠️ 빈 URL - 로딩 화면 유지');
       }
     }
   }
@@ -130,7 +168,7 @@ class _VideoPageState extends State<VideoPage> {
     });
   }
 
-  void _checkVideoExpiration() {
+  void _checkVideoExpiration() async {
     if (_currentVideoUrl.isEmpty) {
       if (mounted) {
         setState(() {
@@ -142,20 +180,125 @@ class _VideoPageState extends State<VideoPage> {
     }
 
     try {
-      // URL에서 날짜 추출 (record_2025-07-21-10-29-24.mp4)
-      final regex = RegExp(
-          r'record_(\d{4})-(\d{2})-(\d{2})-(\d{2})-(\d{2})-(\d{2})\.mp4');
-      final match = regex.firstMatch(_currentVideoUrl);
+      // ⭐ control_complete 체크 (주기적으로 확인)
+      final docId = ns.notificationData['docId'];
+      print('🔍 control_complete 체크 시작: docId=$docId');
+      print('🔍 현재 notificationList: ${ns.notificationList.map((n) => n['docId']).toList()}');
+      print('🔍 현재 notificationData 전체: ${ns.notificationData}');
 
-      if (match != null) {
-        final year = int.parse(match.group(1)!);
-        final month = int.parse(match.group(2)!);
-        final day = int.parse(match.group(3)!);
-        final hour = int.parse(match.group(4)!);
-        final minute = int.parse(match.group(5)!);
-        final second = int.parse(match.group(6)!);
+      if (docId != null && docId.toString().isNotEmpty) {
+        final cameraService = CameraNotificationService();
+        final controlComplete = await cameraService.checkControlComplete(docId.toString());
+        print('🔍 control_complete 결과: $controlComplete (타입: ${controlComplete.runtimeType})');
 
-        final videoDate = DateTime(year, month, day, hour, minute, second);
+        // ⭐ control_complete가 null이면 서버에서 알림이 삭제됨 (404) → 앱에서도 제거
+        if (controlComplete == null) {
+          print('⚠️ 서버에 알림이 없음 (404) - 앱에서도 제거');
+
+          // 알림 리스트에서 제거
+          ns.removeNotification(docId.toString());
+
+          // 페이지 종료 또는 다음 영상으로 전환
+          if (mounted) {
+            setState(() {
+              _isSubmissionCompleted = true;
+              _currentVideoUrl = '';
+              _isVideoExpired = true;
+            });
+          }
+
+          // BottomNavigatorViewModel의 alertVideoUrl도 초기화
+          final bottomNavViewModel = Get.find<BottomNavigatorViewModel>();
+
+          // 다른 영상이 있으면 다음 영상으로 전환
+          if (ns.notificationList.isNotEmpty) {
+            // 현재 인덱스가 범위를 벗어나면 마지막 영상으로
+            if (bottomNavViewModel.currentVideoIndex.value >= ns.notificationList.length) {
+              bottomNavViewModel.currentVideoIndex.value = ns.notificationList.length - 1;
+            }
+
+            // 다음 영상 로드
+            await bottomNavViewModel.loadVideoAtIndex(bottomNavViewModel.currentVideoIndex.value);
+          } else {
+            // 더 이상 영상이 없으면 빈 페이지
+            bottomNavViewModel.alertVideoUrl.value = '';
+            bottomNavViewModel.alertVideoType.value = '';
+          }
+
+          return;
+        }
+
+        // control_complete가 1이면 자동 만료 (제출 완료)
+        if (controlComplete == 1) {
+          print('✅ control_complete=1 감지됨, 영상 자동 제거');
+
+          // 알림 리스트에서 제거
+          ns.removeNotification(docId.toString());
+
+          // 페이지 종료 또는 다음 영상으로 전환
+          if (mounted) {
+            setState(() {
+              _isSubmissionCompleted = true;
+              _currentVideoUrl = '';
+              _isVideoExpired = true;
+            });
+          }
+
+          // BottomNavigatorViewModel의 alertVideoUrl도 초기화
+          final bottomNavViewModel = Get.find<BottomNavigatorViewModel>();
+
+          // 다른 영상이 있으면 다음 영상으로 전환
+          if (ns.notificationList.isNotEmpty) {
+            // 현재 인덱스가 범위를 벗어나면 마지막 영상으로
+            if (bottomNavViewModel.currentVideoIndex.value >= ns.notificationList.length) {
+              bottomNavViewModel.currentVideoIndex.value = ns.notificationList.length - 1;
+            }
+
+            // 다음 영상 로드
+            await bottomNavViewModel.loadVideoAtIndex(bottomNavViewModel.currentVideoIndex.value);
+          } else {
+            // 더 이상 영상이 없으면 빈 페이지
+            bottomNavViewModel.alertVideoUrl.value = '';
+            bottomNavViewModel.alertVideoType.value = '';
+          }
+
+          _timer?.cancel();
+          return;
+        }
+      }
+
+      // ⭐ NotificationState에서 createDate 가져오기 (우선순위 1)
+      final createDateStr = ns.notificationData['createDate'];
+
+      DateTime? videoDate;
+
+      if (createDateStr != null && createDateStr.toString().isNotEmpty) {
+        // createDate가 있으면 사용
+        videoDate = DateTime.parse(createDateStr.toString());
+        print('📅 createDate 사용: $videoDate');
+      } else {
+        // createDate가 없으면 URL에서 날짜 추출 (기존 로직)
+        final regex = RegExp(
+            r'record_(\d{4})-(\d{2})-(\d{2})-(\d{2})-(\d{2})-(\d{2})\.mp4');
+        final match = regex.firstMatch(_currentVideoUrl);
+
+        if (match != null) {
+          final year = int.parse(match.group(1)!);
+          final month = int.parse(match.group(2)!);
+          final day = int.parse(match.group(3)!);
+          final hour = int.parse(match.group(4)!);
+          final minute = int.parse(match.group(5)!);
+          final second = int.parse(match.group(6)!);
+
+          videoDate = DateTime(year, month, day, hour, minute, second);
+          print('📹 URL에서 날짜 추출: $videoDate');
+        } else {
+          print('⚠️ 날짜를 추출할 수 없습니다');
+          return;
+        }
+      }
+
+      if (videoDate != null) {
         final now = DateTime.now();
         final difference = now.difference(videoDate);
 
@@ -163,25 +306,17 @@ class _VideoPageState extends State<VideoPage> {
         print('현재 시간: $now');
         print('경과 시간: ${difference.inSeconds}초');
 
+        // ⭐ 60초 경과 시 보류 상태로 변경 (영상은 유지)
         if (difference.inMinutes >= 1) {
-          // GetX의 videoUrl 초기화
-          final bottomNavViewModel = Get.find<BottomNavigatorViewModel>();
-          bottomNavViewModel.alertVideoUrl.value = '';
-
-          if (mounted) {
-            setState(() {
-              _currentVideoUrl = '';
-              _isVideoExpired = true;
-            });
+          if (!_isPending) {
+            if (mounted) {
+              setState(() {
+                _isPending = true;
+              });
+            }
+            print('⏸️ 영상이 보류 상태로 전환됨 (60초 경과)');
           }
-
-          if (_controller != null) {
-            _controller!.pause();
-            _controller!.dispose();
-            _controller = null;
-          }
-
-          _timer?.cancel();
+          // 타이머는 계속 실행하여 control_complete 체크
         }
       }
     } catch (e) {
@@ -242,6 +377,9 @@ class _VideoPageState extends State<VideoPage> {
 
       await controller.initialize();
       print("✅ 영상 초기화 성공, duration: ${controller.value.duration}");
+
+      // ⭐ duration 저장
+      _lastKnownDuration = controller.value.duration;
 
       // 마지막 위치 복원
       if (_lastPosition < controller.value.duration) {
@@ -363,28 +501,13 @@ class _VideoPageState extends State<VideoPage> {
 
     _isRequestingUpdate = true; // 요청 시작
     print("📹 업데이트된 영상 요청 중...");
-    
+
     try {
-      // 현재 재생 위치 저장
+      // 현재 재생 위치와 duration 저장
       final currentPosition = _controller!.value.position;
-      
-      // 새로운 컨트롤러로 같은 URL 재초기화
-      final oldController = _controller;
-      if (oldController != null) {
-        await oldController.pause();
-        oldController.removeListener(_videoListener);
-        await oldController.dispose();
-        _controller = null;
-      }
+      final oldDuration = _controller!.value.duration;
 
-      // 잠시 로딩 상태로 변경
-      if (mounted) {
-        setState(() {
-          _isReady = false;
-        });
-      }
-
-      // 새 컨트롤러 생성
+      // 새 컨트롤러 생성 (기존 컨트롤러는 아직 유지)
       final controller = VideoPlayerController.networkUrl(
         Uri.parse(_currentVideoUrl),
         videoPlayerOptions: VideoPlayerOptions(
@@ -401,17 +524,53 @@ class _VideoPageState extends State<VideoPage> {
       );
 
       await controller.initialize();
-      print("✅ 업데이트된 영상 초기화 성공, 새로운 duration: ${controller.value.duration}");
+      final newDuration = controller.value.duration;
+      print("✅ 업데이트된 영상 초기화 성공, 기존 duration: $oldDuration, 새 duration: $newDuration");
 
-      // 이전 위치로 복원 (새로운 duration보다 작은 경우에만)
-      if (currentPosition < controller.value.duration) {
-        await controller.seekTo(currentPosition);
-        print("📹 재생 위치 복원: $currentPosition");
-      } else {
-        // 이전 위치가 새로운 duration보다 크거나 같다면, 새로운 부분부터 재생
-        await controller.seekTo(currentPosition);
-        print("📹 새로운 부분부터 재생: $currentPosition");
+      // ⭐ duration이 증가하지 않았으면 새 컨트롤러 버리고 마지막 프레임에서 멈춤
+      if (newDuration <= oldDuration) {
+        print("⏸️ 새로운 영상 부분 없음 - 마지막 프레임에서 일시정지");
+
+        // 새 컨트롤러 dispose
+        await controller.dispose();
+
+        // 기존 컨트롤러를 마지막 프레임에서 일시정지
+        if (_controller != null && _controller!.value.isInitialized) {
+          final dur = _controller!.value.duration;
+          await _controller!.seekTo(dur - Duration(milliseconds: 100) > Duration.zero
+              ? dur - Duration(milliseconds: 100)
+              : Duration.zero);
+          await _controller!.pause();
+        }
+
+        _isRequestingUpdate = false;
+        return;
       }
+
+      // ⭐ duration이 증가했으므로 기존 컨트롤러를 새 컨트롤러로 교체
+      print("✅ 새로운 영상 부분 감지됨 - 컨트롤러 교체");
+
+      // 기존 컨트롤러 정리
+      final oldController = _controller;
+      if (oldController != null) {
+        await oldController.pause();
+        oldController.removeListener(_videoListener);
+        await oldController.dispose();
+        _controller = null;
+      }
+
+      // 로딩 상태로 변경
+      if (mounted) {
+        setState(() {
+          _isReady = false;
+        });
+      }
+
+      _lastKnownDuration = newDuration;
+
+      // 이전 위치로 복원
+      await controller.seekTo(currentPosition);
+      print("📹 재생 위치 복원: $currentPosition");
 
       if (mounted) {
         setState(() {
@@ -423,27 +582,20 @@ class _VideoPageState extends State<VideoPage> {
       // 리스너 추가 및 재생 시작
       _controller!.addListener(_videoListener);
       _controller!.play();
-      
-      print("📹 업데이트된 영상 재생 시작");
+
+      print("📹 업데이트된 영상 재생 시작 (duration: $oldDuration → $newDuration)");
 
     } catch (e) {
       print("❌ 업데이트된 영상 요청 실패: $e");
-      
-      // 실패 시 기존 방식대로 마지막 프레임 유지
+
+      // 실패 시 마지막 프레임에서 일시정지
       if (_controller != null && _controller!.value.isInitialized) {
         final dur = _controller!.value.duration;
         await _controller!.seekTo(dur - Duration(milliseconds: 100) > Duration.zero
             ? dur - Duration(milliseconds: 100)
             : Duration.zero);
+        await _controller!.pause();
       }
-      
-      // 3초 후 다시 시도
-      Future.delayed(Duration(seconds: 3), () {
-        if (mounted && !_isSubmissionCompleted) {
-          _isRequestingUpdate = false; // 재시도 전에 플래그 해제
-          _requestUpdatedVideo();
-        }
-      });
     } finally {
       _isRequestingUpdate = false; // 요청 완료
     }
@@ -768,31 +920,31 @@ class _VideoPageState extends State<VideoPage> {
           // 영상과 버튼 사이 간격 (30px)
           SizedBox(height: 30),
 
-          // 안내 텍스트
-          if (_isReady && isControllerReady)
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.symmetric(horizontal: 20),
-              child: Text(
-                '이벤트가 발생한 화면을 보고\n\n화재 또는 비화재로 판단하여 주시기 바랍니다.\n\n판단의 결과가 포인트 지급에 영향을 미칩니다.',
-                style: f16w700Size().copyWith(
-                  height: 1, // 줄 간격 조정
-                ),
-                textAlign: TextAlign.left,
+          // ⭐ 안내 텍스트 (항상 표시)
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            child: Text(
+              '이벤트가 발생한 화면을 보고\n\n화재 또는 비화재로 판단하여 주시기 바랍니다.\n\n판단의 결과가 포인트 지급에 영향을 미칩니다.',
+              style: f16w700Size().copyWith(
+                height: 1, // 줄 간격 조정
               ),
+              textAlign: TextAlign.left,
             ),
+          ),
 
           // 텍스트와 버튼 사이 간격 (20px)
           SizedBox(height: 50),
 
-          // 액션 버튼들 (영상 아래)
-          if (_isReady && isControllerReady)
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: GestureDetector(
+          // ⭐ 액션 버튼들 (항상 표시, 로딩 중에는 비활성화)
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            child: Column(
+              children: [
+                Row(
+                  children: [
+                    Expanded(
+                      child: GestureDetector(
                       onTap: _isSubmissionCompleted
                           ? null
                           : () {
@@ -821,12 +973,23 @@ class _VideoPageState extends State<VideoPage> {
                                       });
                                     }
 
-                                    // BottomNavigatorViewModel의 alertVideoUrl도 초기화
+                                    // ⭐ 다음 영상으로 전환 또는 페이지 초기화
                                     final bottomNavViewModel =
                                         Get.find<BottomNavigatorViewModel>();
-                                    bottomNavViewModel.alertVideoUrl.value = '';
-                                    bottomNavViewModel.alertVideoType.value =
-                                        '';
+
+                                    if (ns.notificationList.isNotEmpty) {
+                                      // 현재 인덱스가 범위를 벗어나면 조정
+                                      if (bottomNavViewModel.currentVideoIndex.value >= ns.notificationList.length) {
+                                        bottomNavViewModel.currentVideoIndex.value = ns.notificationList.length - 1;
+                                      }
+
+                                      // 다음 영상 로드
+                                      await bottomNavViewModel.loadVideoAtIndex(bottomNavViewModel.currentVideoIndex.value);
+                                    } else {
+                                      // 더 이상 영상이 없으면 빈 페이지
+                                      bottomNavViewModel.alertVideoUrl.value = '';
+                                      bottomNavViewModel.alertVideoType.value = '';
+                                    }
                                   } catch (e) {
                                     DialogManager.hideLoading();
                                     Get.snackbar('오류', '서버 전송 중 오류가 발생했습니다');
@@ -885,12 +1048,23 @@ class _VideoPageState extends State<VideoPage> {
                                       });
                                     }
 
-                                    // BottomNavigatorViewModel의 alertVideoUrl도 초기화
+                                    // ⭐ 다음 영상으로 전환 또는 페이지 초기화
                                     final bottomNavViewModel =
                                         Get.find<BottomNavigatorViewModel>();
-                                    bottomNavViewModel.alertVideoUrl.value = '';
-                                    bottomNavViewModel.alertVideoType.value =
-                                        '';
+
+                                    if (ns.notificationList.isNotEmpty) {
+                                      // 현재 인덱스가 범위를 벗어나면 조정
+                                      if (bottomNavViewModel.currentVideoIndex.value >= ns.notificationList.length) {
+                                        bottomNavViewModel.currentVideoIndex.value = ns.notificationList.length - 1;
+                                      }
+
+                                      // 다음 영상 로드
+                                      await bottomNavViewModel.loadVideoAtIndex(bottomNavViewModel.currentVideoIndex.value);
+                                    } else {
+                                      // 더 이상 영상이 없으면 빈 페이지
+                                      bottomNavViewModel.alertVideoUrl.value = '';
+                                      bottomNavViewModel.alertVideoType.value = '';
+                                    }
                                   } catch (e) {
                                     DialogManager.hideLoading();
                                     Get.snackbar('오류', '서버 전송 중 오류가 발생했습니다');
@@ -921,7 +1095,13 @@ class _VideoPageState extends State<VideoPage> {
                   ),
                 ],
               ),
-            ),
+
+              // ⭐ 페이지 넘김 UI (화재/비화재 버튼 아래)
+                const SizedBox(height: 80),
+              _buildVideoNavigationControls(),
+            ],
+          ),
+        ),
 
           // 나머지 공간
           Spacer(),
@@ -933,6 +1113,92 @@ class _VideoPageState extends State<VideoPage> {
   // 버튼 텍스트 결정 함수
   String _getButtonText() {
     return (widget.type ?? '') == '불꽃 감지' ? '화재' : '연기';
+  }
+
+  /// ⭐ 페이지 넘김 컨트롤 UI
+  Widget _buildVideoNavigationControls() {
+    final bottomNavViewModel = Get.find<BottomNavigatorViewModel>();
+
+    return Obx(() {
+      final totalCount = bottomNavViewModel.totalVideoCount;
+      final currentIndex = bottomNavViewModel.currentVideoIndex.value;
+      final hasPrevious = bottomNavViewModel.hasPreviousVideo;
+      final hasNext = bottomNavViewModel.hasNextVideo;
+
+      // 영상이 1개만 있으면 UI를 표시하지 않거나 비활성화
+      if (totalCount <= 1) {
+        return Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            Padding(
+              padding: EdgeInsets.all(16),
+              child: Icon(Icons.arrow_back_ios, size: 36, color: Colors.grey),
+            ),
+            SizedBox(width: 16),
+            Text(
+              '1 / 1',
+              style: f16w700Size().copyWith(color: Colors.grey),
+            ),
+            SizedBox(width: 16),
+            Padding(
+              padding: EdgeInsets.all(16),
+              child: Icon(Icons.arrow_forward_ios, size: 36, color: Colors.grey),
+            ),
+          ],
+        );
+      }
+
+      return Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          // 다음 영상 버튼 (더 오래된 영상, createDate 기준 왼쪽)
+          GestureDetector(
+            onTap: hasNext ? () {
+              bottomNavViewModel.moveToNextVideo();
+            } : null,
+            behavior: HitTestBehavior.opaque,
+            child: Padding(
+              padding: EdgeInsets.all(16),
+              child: Icon(
+                Icons.arrow_back_ios,
+                size: 36,
+                color: hasNext ? Color(0xff1955EE) : Colors.grey,
+              ),
+            ),
+          ),
+
+          SizedBox(width: 16),
+
+          // 현재 위치 표시
+          Text(
+            '${currentIndex + 1} / $totalCount',
+            style: f16w700Size().copyWith(
+              color: Colors.black,
+            ),
+          ),
+
+          SizedBox(width: 16),
+
+          // 이전 영상 버튼 (더 최신 영상, createDate 기준 오른쪽)
+          GestureDetector(
+            onTap: hasPrevious ? () {
+              bottomNavViewModel.moveToPreviousVideo();
+            } : null,
+            behavior: HitTestBehavior.opaque,
+            child: Padding(
+              padding: EdgeInsets.all(16),
+              child: Icon(
+                Icons.arrow_forward_ios,
+                size: 36,
+                color: hasPrevious ? Color(0xff1955EE) : Colors.grey,
+              ),
+            ),
+          ),
+        ],
+      );
+    });
   }
 
   // 버튼 스타일이 적용된 확인 다이얼로그

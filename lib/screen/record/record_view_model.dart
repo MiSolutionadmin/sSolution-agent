@@ -37,7 +37,8 @@ class RecordViewModel extends GetxController {
   @override
   void onInit() {
     super.onInit();
-    _loadRecords();
+    // 초기 로드는 View의 initState에서 refresh()를 통해 수행
+    // _loadRecords(); // 중복 호출 제거
   }
 
   /// 새로고침
@@ -109,7 +110,19 @@ class RecordViewModel extends GetxController {
 
       if (result['success'] == true) {
         final notisData = result['data']['result'] as List?;
-        print('알림 내역 데이터: ${notisData}개');
+        print('알림 내역 데이터: ${notisData?.length}개');
+        print('🔍 전체 데이터 내용:');
+        notisData?.forEach((item) {
+          print('-------------------');
+          print('ID: ${item['id']}');
+          print('createDate: ${item['createDate']}');
+          print('type: ${item['type']}');
+          print('false_positive: ${item['false_positive']}');
+          print('agent_false_positive: ${item['agent_false_positive']}');
+          print('admin_false_positive: ${item['admin_false_positive']}');
+          print('control_complete: ${item['control_complete']}');
+          print('-------------------');
+        });
 
         if (notisData != null && notisData.isNotEmpty) {
           final recordItems = notisData
@@ -119,11 +132,9 @@ class RecordViewModel extends GetxController {
                     dateText: _formatDateText(item['createDate']),
                     alertType: _getAlertType(item['type']),
                     eventType: _getEventType(item['false_positive']),
-                    result: item['control_complete'] == null
-                        ? ""
-                        : item['control_complete'] == 1
-                            ? "OK"
-                            : "NG",
+                    adminFalsePositive: item['admin_false_positive'],
+                    agentFalsePositive: item['false_positive'],
+                    result: _calculateResult(item['admin_false_positive'], item['false_positive']),
                   ))
               .toList();
 
@@ -272,7 +283,22 @@ class RecordViewModel extends GetxController {
     } else if (falsePositive == 0 || falsePositive == '0') {
       return '화재';
     } else {
-      return '미정';
+      return '미응답';
+    }
+  }
+
+  /// 결과 계산 (admin과 agent의 false_positive 비교)
+  String _calculateResult(dynamic adminFalsePositive, dynamic agentFalsePositive) {
+    // 둘 중 하나라도 null이면 -
+    if (adminFalsePositive == null || agentFalsePositive == null) {
+      return '-';
+    }
+    
+    // 값이 일치하면 OK, 불일치하면 NG
+    if (adminFalsePositive == agentFalsePositive) {
+      return 'OK';
+    } else {
+      return 'NG';
     }
   }
 
@@ -373,6 +399,8 @@ class RecordItem {
   final String alertType;
   final String eventType;
   final String result;
+  final dynamic adminFalsePositive;
+  final dynamic agentFalsePositive;
 
   RecordItem({
     required this.id,
@@ -381,6 +409,8 @@ class RecordItem {
     required this.alertType,
     required this.eventType,
     required this.result,
+    this.adminFalsePositive,
+    this.agentFalsePositive,
   });
 
   /// 이벤트 유형에 따른 색상 반환
@@ -390,7 +420,7 @@ class RecordItem {
         return Colors.red;
       case '비화재':
         return Colors.black;
-      case '미정':
+      case '미응답':
         return Colors.grey;
       default:
         return Colors.grey;
@@ -404,6 +434,8 @@ class RecordItem {
         return Colors.red;
       case 'OK':
         return Colors.black;
+      case '-':
+        return Colors.grey;
       default:
         return Colors.grey;
     }

@@ -72,6 +72,9 @@ class SavedVideoView extends StatelessWidget {
 
   /// 상단 정보 섹션
   Widget _buildInfoSection(SavedVideoViewModel viewModel) {
+    // 날짜 형식 변환: "yyyy-MM-dd\nHH:mm:ss" -> "yyyy-MM-dd / HH:mm:ss"
+    final formattedDate = viewModel.date.replaceAll('\n', ' / ');
+
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(16),
@@ -84,7 +87,7 @@ class SavedVideoView extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _buildInfoRow('날짜', viewModel.date),
+          _buildInfoRow('날짜', formattedDate),
           const SizedBox(height: 8),
           _buildInfoRow('알림', viewModel.alertType),
           const SizedBox(height: 8),
